@@ -1,0 +1,2 @@
+#! /bin/bash
+sudo apt-get update -y && sudo apt-get upgrade -y && sudo apt-get dist-upgrade -y && sudo apt-get full-upgrade -y && sudo apt-get install -y gcc-multilib libc6-dev-i386 genisoimage && sudo apt-get autoremove -y && sudo apt-get autoclean -y && sudo apt-get clean -y && sudo rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
