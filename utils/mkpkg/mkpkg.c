@@ -224,7 +224,7 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
         chksum = 0;
         for (n = 0; n < TAR_BLKSIZ; n++)
             chksum += blk[n];
-        sprintf(hdr->chksum, "%06o", chksum);
+        snprintf(hdr->chksum, sizeof(hdr->chksum), "%06o", chksum);
 
         if (fwrite(blk, 1, TAR_BLKSIZ, archive) < 0)
         {
