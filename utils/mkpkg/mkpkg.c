@@ -209,7 +209,7 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
         while (*dstfn == '/')
             dstfn++;
         strcpy(hdr->name, dstfn);
-        sprintf(hdr->mode, "%07o", st.st_mode);
+        snprintf(hdr->mode, sizeof(hdr->mode), "%07o", st.st_mode);
         snprintf(hdr->uid, sizeof(hdr->uid), "%07o", 0);
         snprintf(hdr->gid, sizeof(hdr->gid), "%07o", 0);
         snprintf(hdr->size, sizeof(hdr->size), "%011o", st.st_size);
