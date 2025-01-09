@@ -210,10 +210,10 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
             dstfn++;
         strcpy(hdr->name, dstfn);
         sprintf(hdr->mode, "%07o", st.st_mode);
-        sprintf(hdr->uid, "%07o", 0);
-        sprintf(hdr->gid, "%07o", 0);
-        sprintf(hdr->size, "%011o", st.st_size);
-        sprintf(hdr->mtime, "%011o", prebuilt ? *time : st.st_mtime);
+        snprintf(hdr->uid, sizeof(hdr->uid), "%07o", 0);
+        snprintf(hdr->gid, sizeof(hdr->gid), "%07o", 0);
+        snprintf(hdr->size, sizeof(hdr->size), "%011o", st.st_size);
+        snprintf(hdr->mtime, sizeof(hdr->mtime), "%011o", prebuilt ? *time : st.st_mtime);
         memcpy(hdr->chksum, "        ", 8);
         hdr->typeflag = '0';
         strncpy(hdr->magic, "ustar", 6);
