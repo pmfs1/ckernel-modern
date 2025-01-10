@@ -204,10 +204,8 @@ static void define_macros_early(void)
     struct tm lt, *lt_p, gm, *gm_p;
     int64_t posix_time;
 
-    lt_p = localtime(&official_compile_time);
-    if (lt_p)
+    if (localtime_r(&official_compile_time, &lt))
     {
-        lt = *lt_p;
 
         strftime(temp, sizeof temp, "__DATE__=\"%Y-%m-%d\"", &lt);
         pp_pre_define(temp);
@@ -219,10 +217,8 @@ static void define_macros_early(void)
         pp_pre_define(temp);
     }
 
-    gm_p = gmtime(&official_compile_time);
-    if (gm_p)
+    if (gmtime_r(&official_compile_time, &gm))
     {
-        gm = *gm_p;
 
         strftime(temp, sizeof temp, "__UTC_DATE__=\"%Y-%m-%d\"", &gm);
         pp_pre_define(temp);
