@@ -219,10 +219,9 @@ static void define_macros_early(void)
         pp_pre_define(temp);
     }
 
-    gm_p = gmtime(&official_compile_time);
+    gm_p = gmtime_r(&official_compile_time, &gm);
     if (gm_p)
     {
-        gm = *gm_p;
 
         strftime(temp, sizeof temp, "__UTC_DATE__=\"%Y-%m-%d\"", &gm);
         pp_pre_define(temp);
