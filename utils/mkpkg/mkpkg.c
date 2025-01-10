@@ -231,22 +231,18 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
             perror("write");
             return 1;
         }
-        if (access(srcfn, F_OK) != 0)
+        int fd = open(srcfn, O_RDONLY);
+        if (fd == -1)
         {
-            fprintf(stderr, "Error: file %s does not exist\n", srcfn);
+            perror("Error opening file");
             return -1;
         }
 
-        if (access(srcfn, R_OK) != 0)
-        {
-            fprintf(stderr, "Error: cannot read file %s\n", srcfn);
-            return -1;
-        }
-
-        f = fopen(srcfn, "r");
+        f = fdopen(fd, "r");
         if (f == NULL)
         {
-            fprintf(stderr, "Error: cannot open file %s\n", srcfn);
+            perror("Error converting file descriptor to FILE*");
+            close(fd);
             return -1;
         }
         while ((n = fread(blk, 1, TAR_BLKSIZ, f)) > 0)
