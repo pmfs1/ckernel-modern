@@ -1,7 +1,8 @@
 #ifndef AS_DIRECTIVES_H
 #define AS_DIRECTIVES_H
 
-enum directives {
+enum directives
+{
     D_none,
     D_unknown,
     D_ABSOLUTE,

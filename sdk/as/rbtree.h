@@ -7,7 +7,8 @@
 /* This structure should be embedded in a larger data structure;
    the final output from rb_search() can then be converted back
    to the larger data structure via container_of(). */
-struct rbtree {
+struct rbtree
+{
     uint64_t key;
     struct rbtree *left, *right;
     bool red;

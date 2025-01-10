@@ -14,14 +14,16 @@
 
 #include "aslib.h"
 
-#define BUFFER_SIZE     65536   /* Bigger than any string we might print... */
+#define BUFFER_SIZE 65536 /* Bigger than any string we might print... */
 
 static char snprintf_buffer[BUFFER_SIZE];
 
-int vsnprintf(char *str, size_t size, const char *format, va_list ap) {
+int vsnprintf(char *str, size_t size, const char *format, va_list ap)
+{
     int rv, bytes;
 
-    if (size > BUFFER_SIZE) {
+    if (size > BUFFER_SIZE)
+    {
         as_error(ERR_PANIC | ERR_NOFILE,
                  "vsnprintf: size (%d) > BUFFER_SIZE (%d)",
                  size, BUFFER_SIZE);
@@ -32,8 +34,9 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap) {
     if (rv >= BUFFER_SIZE)
         as_error(ERR_PANIC | ERR_NOFILE, "vsnprintf buffer overflow");
 
-    if (size > 0) {
-        if ((size_t) rv < size - 1)
+    if (size > 0)
+    {
+        if ((size_t)rv < size - 1)
             bytes = rv;
         else
             bytes = size - 1;

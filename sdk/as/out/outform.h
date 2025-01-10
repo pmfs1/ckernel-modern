@@ -59,11 +59,11 @@
 
 #ifndef OF_ONLY
 #ifndef OF_ALL
-#define OF_ALL                  /* default is to have all formats */
+#define OF_ALL /* default is to have all formats */
 #endif
 #endif
 
-#ifdef OF_ALL                   /* set all formats on... */
+#ifdef OF_ALL /* set all formats on... */
 #ifndef OF_BIN
 #define OF_BIN
 #endif
@@ -109,7 +109,7 @@
 #ifndef OF_DBG
 #define OF_DBG
 #endif
-#endif                          /* OF_ALL */
+#endif /* OF_ALL */
 
 /* turn on groups of formats specified.... */
 #ifdef OF_DOS
@@ -120,7 +120,7 @@
 #define OF_BIN
 #endif
 #ifndef OF_COFF
-#define OF_COFF                 /* COFF is used by DJGPP */
+#define OF_COFF /* COFF is used by DJGPP */
 #endif
 #ifndef OF_WIN32
 #define OF_WIN32
@@ -238,7 +238,7 @@ extern struct ofmt of_macho32;
 extern struct ofmt of_macho64;
 extern struct ofmt of_dbg;
 
-#ifdef BUILD_DRIVERS_ARRAY      /* only if included from outform.c */
+#ifdef BUILD_DRIVERS_ARRAY /* only if included from outform.c */
 
 /*
  * pull in the externs for the different formats, then make the
@@ -294,8 +294,7 @@ static struct ofmt *drivers[] = {
     &of_dbg,
 #endif
 
-    NULL
-};
+    NULL};
 
 static struct ofmt_alias ofmt_aliases[] = {
 #ifdef OF_ELF32
@@ -319,8 +318,7 @@ static struct ofmt_alias ofmt_aliases[] = {
         &of_win32,
     },
 #endif
-    { NULL, NULL, NULL }
-};
+    {NULL, NULL, NULL}};
 
 #endif /* BUILD_DRIVERS_ARRAY */
 

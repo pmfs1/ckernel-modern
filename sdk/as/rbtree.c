@@ -9,15 +9,18 @@
 
 #include "rbtree.h"
 
-struct rbtree *rb_search(struct rbtree *tree, uint64_t key) {
+struct rbtree *rb_search(struct rbtree *tree, uint64_t key)
+{
     struct rbtree *best = NULL;
 
-    while (tree) {
+    while (tree)
+    {
         if (tree->key == key)
             return tree;
         else if (tree->key > key)
             tree = tree->left;
-        else {
+        else
+        {
             best = tree;
             tree = tree->right;
         }
@@ -25,11 +28,13 @@ struct rbtree *rb_search(struct rbtree *tree, uint64_t key) {
     return best;
 }
 
-static bool is_red(struct rbtree *h) {
+static bool is_red(struct rbtree *h)
+{
     return h && h->red;
 }
 
-static struct rbtree *rotate_left(struct rbtree *h) {
+static struct rbtree *rotate_left(struct rbtree *h)
+{
     struct rbtree *x = h->right;
     h->right = x->left;
     x->left = h;
@@ -38,7 +43,8 @@ static struct rbtree *rotate_left(struct rbtree *h) {
     return x;
 }
 
-static struct rbtree *rotate_right(struct rbtree *h) {
+static struct rbtree *rotate_right(struct rbtree *h)
+{
     struct rbtree *x = h->left;
     h->left = x->right;
     x->right = h;
@@ -47,14 +53,17 @@ static struct rbtree *rotate_right(struct rbtree *h) {
     return x;
 }
 
-static void color_flip(struct rbtree *h) {
+static void color_flip(struct rbtree *h)
+{
     h->red = !h->red;
     h->left->red = !h->left->red;
     h->right->red = !h->right->red;
 }
 
-struct rbtree *rb_insert(struct rbtree *tree, struct rbtree *node) {
-    if (!tree) {
+struct rbtree *rb_insert(struct rbtree *tree, struct rbtree *node)
+{
+    if (!tree)
+    {
         node->red = true;
         return node;
     }

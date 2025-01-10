@@ -8,7 +8,8 @@
 
 #include "as.h"
 
-enum float_round {
+enum float_round
+{
     FLOAT_RC_NEAR,
     FLOAT_RC_ZERO,
     FLOAT_RC_DOWN,

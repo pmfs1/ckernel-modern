@@ -9,7 +9,8 @@
 #include "as.h"
 
 /* offsets */
-enum stab_offsets {
+enum stab_offsets
+{
     STAB_strdxoff = 0,
     STAB_typeoff = 4,
     STAB_otheroff = 5,
@@ -19,7 +20,8 @@ enum stab_offsets {
 };
 
 /* stab/non-stab types */
-enum stab_types {
+enum stab_types
+{
     N_UNDF = 0x00,
     N_ABS = 0x02,
     N_ABS_EXT = 0x03,
@@ -97,7 +99,8 @@ enum stab_types {
     N_LENG = 0xfe,
 };
 
-enum stab_source_file {
+enum stab_source_file
+{
     N_SO_AS = 0x01,
     N_SO_C = 0x02,
     N_SO_ANSI_C = 0x03,

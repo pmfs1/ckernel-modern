@@ -2,13 +2,14 @@
 
 #ifdef USE_I386_BITOPS
 
-int find_first_zero_bit(void *bitmap, int len) {
-    int result;
+int find_first_zero_bit(void *bitmap, int len)
+{
+  int result;
 
-    if (!len) return 0;
+  if (!len)
+    return 0;
 
-    __asm
-    {
+  __asm {
             mov ebx, bitmap
             mov edi, ebx
             mov ecx, len
@@ -28,38 +29,40 @@ int find_first_zero_bit(void *bitmap, int len) {
             shl edi, 3
             add edx, edi
             mov result, edx
-    }
+  }
 
-    return result;
+  return result;
 }
 
-int find_next_zero_bit(void *bitmap, int len, int start) {
-    unsigned long *p = ((unsigned long *) bitmap) + (start >> 5);
-    int set = 0;
-    int bit = start & 31;
-    int result;
+int find_next_zero_bit(void *bitmap, int len, int start)
+{
+  unsigned long *p = ((unsigned long *)bitmap) + (start >> 5);
+  int set = 0;
+  int bit = start & 31;
+  int result;
 
-    if (start >= len) return len;
-    if (bit) {
-        unsigned long mask = ~(*p >> bit);
+  if (start >= len)
+    return len;
+  if (bit)
+  {
+    unsigned long mask = ~(*p >> bit);
 
-        __asm
-        {
+    __asm {
                 mov eax, mask
                 bsf edx, eax
                 jne fnzb1
                 mov edx, 32
                 fnzb1:
                 mov set, edx
-        }
-
-        if (set < (32 - bit)) return set + start;
-        set = 32 - bit;
-        p++;
     }
 
-    result = find_first_zero_bit(p, len - 32 * (p - (unsigned long *) bitmap));
-    return start + set + result;
+    if (set < (32 - bit)) return set + start;
+    set = 32 - bit;
+    p++;
+  }
+
+  result = find_first_zero_bit(p, len - 32 * (p - (unsigned long *)bitmap));
+  return start + set + result;
 }
 
 #else
@@ -69,7 +72,8 @@ static __inline unsigned long ffz(unsigned long word)
   unsigned long i;
   for (i = 0; i < 32; i++)
   {
-    if (!(word & (1 << i))) return i;
+    if (!(word & (1 << i)))
+      return i;
   }
 
   return 0;
@@ -77,29 +81,34 @@ static __inline unsigned long ffz(unsigned long word)
 
 int find_next_zero_bit(void *bitmap, int len, int start)
 {
-  unsigned long *p = ((unsigned long *) bitmap) + (start >> 5);
+  unsigned long *p = ((unsigned long *)bitmap) + (start >> 5);
   unsigned long result = start & ~31UL;
   unsigned long tmp;
 
-  if (start >= len) return len;
+  if (start >= len)
+    return len;
   len -= result;
   start &= 31UL;
-  if (start) 
+  if (start)
   {
     tmp = *(p++);
-    tmp |= ((unsigned long) ~0UL) >> (32 - start);
-    if (len < 32) goto found_first;
-    if (~tmp) goto found_middle;
+    tmp |= ((unsigned long)~0UL) >> (32 - start);
+    if (len < 32)
+      goto found_first;
+    if (~tmp)
+      goto found_middle;
     len -= 32;
     result += 32;
   }
-  while (len & ~31UL) 
+  while (len & ~31UL)
   {
-    if (~(tmp = *(p++))) goto found_middle;
+    if (~(tmp = *(p++)))
+      goto found_middle;
     result += 32;
     len -= 32;
   }
-  if (!len) return result;
+  if (!len)
+    return result;
   tmp = *p;
 
 found_first:
@@ -109,13 +118,12 @@ found_middle:
   return result + ffz(tmp);
 }
 
-int find_first_zero_bit(void *bitmap, int len) 
+int find_first_zero_bit(void *bitmap, int len)
 {
   return find_next_zero_bit(bitmap, len, 0);
 }
 
 #endif
-
 
 #if 0
 #define BUFLEN 4096

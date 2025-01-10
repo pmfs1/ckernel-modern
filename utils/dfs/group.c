@@ -9,34 +9,42 @@
 
 void panic(char *reason);
 
-static void mark_group_desc_dirty(struct filsys *fs, int group) {
+static void mark_group_desc_dirty(struct filsys *fs, int group)
+{
     mark_buffer_updated(fs->groupdesc_buffers[group / fs->groupdescs_per_block]);
 }
 
-vfs_blkno_t new_block(struct filsys *fs, vfs_blkno_t goal) {
+vfs_blkno_t new_block(struct filsys *fs, vfs_blkno_t goal)
+{
     unsigned int group;
     unsigned int i;
     struct buf *buf;
     vfs_blkno_t block;
 
-    if (goal < fs->super->block_count) {
+    if (goal < fs->super->block_count)
+    {
         // Check the goal
         group = goal / fs->super->blocks_per_group;
         block = goal % fs->super->blocks_per_group;
         buf = get_buffer(fs->cache, fs->groups[group].desc->block_bitmap_block);
-        if (!test_bit(buf->data, block)) goto block_found;
+        if (!test_bit(buf->data, block))
+            goto block_found;
 
         // Try to find first free block in group after goal
         block = find_next_zero_bit(buf->data, fs->groups[group].desc->block_count, block + 1);
-        if (block != fs->groups[group].desc->block_count) goto block_found;
+        if (block != fs->groups[group].desc->block_count)
+            goto block_found;
 
         release_buffer(fs->cache, buf);
-    } else
+    }
+    else
         group = 0;
 
     // Try to locate a free block by going through all groups cyclicly
-    for (i = 0; i < fs->super->group_count; i++) {
-        if (fs->groups[group].desc->free_block_count > 0) {
+    for (i = 0; i < fs->super->group_count; i++)
+    {
+        if (fs->groups[group].desc->free_block_count > 0)
+        {
             // Get block bitmap
             buf = get_buffer(fs->cache, fs->groups[group].desc->block_bitmap_block);
 
@@ -44,32 +52,36 @@ vfs_blkno_t new_block(struct filsys *fs, vfs_blkno_t goal) {
             if (fs->groups[group].first_free_block != -1)
                 block = find_next_zero_bit(buf->data, fs->groups[group].desc->block_count,
                                            fs->groups[group].first_free_block);
-            else {
+            else
+            {
                 block = find_first_zero_bit(buf->data, fs->groups[group].desc->block_count);
                 fs->groups[group].first_free_block = block;
             }
 
-            if (block != fs->groups[group].desc->block_count) goto block_found;
+            if (block != fs->groups[group].desc->block_count)
+                goto block_found;
 
             release_buffer(fs->cache, buf);
         }
 
         // Try next group
         group++;
-        if (group >= fs->super->group_count) group = 0;
+        if (group >= fs->super->group_count)
+            group = 0;
     }
 
     panic("disk full");
     return -1;
 
-    block_found:
+block_found:
     set_bit(buf->data, block);
     mark_buffer_updated(buf);
 
     fs->super->free_block_count--;
     fs->super_dirty = 1;
 
-    if (fs->groups[group].first_free_block == block) fs->groups[group].first_free_block = block + 1;
+    if (fs->groups[group].first_free_block == block)
+        fs->groups[group].first_free_block = block + 1;
     fs->groups[group].desc->free_block_count--;
     mark_group_desc_dirty(fs, group);
 
@@ -79,7 +91,8 @@ vfs_blkno_t new_block(struct filsys *fs, vfs_blkno_t goal) {
     return block;
 }
 
-void free_blocks(struct filsys *fs, vfs_blkno_t *blocks, int count) {
+void free_blocks(struct filsys *fs, vfs_blkno_t *blocks, int count)
+{
     unsigned int group;
     unsigned int prev_group;
     struct buf *buf;
@@ -89,12 +102,15 @@ void free_blocks(struct filsys *fs, vfs_blkno_t *blocks, int count) {
     prev_group = -1;
     buf = NULL;
 
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < count; i++)
+    {
         group = blocks[i] / fs->super->blocks_per_group;
         block = blocks[i] % fs->super->blocks_per_group;
 
-        if (group != prev_group) {
-            if (buf) release_buffer(fs->cache, buf);
+        if (group != prev_group)
+        {
+            if (buf)
+                release_buffer(fs->cache, buf);
             buf = get_buffer(fs->cache, fs->groups[group].desc->block_bitmap_block);
             prev_group = group;
         }
@@ -105,41 +121,54 @@ void free_blocks(struct filsys *fs, vfs_blkno_t *blocks, int count) {
         fs->super->free_block_count++;
         fs->super_dirty = 1;
 
-        if (fs->groups[group].first_free_block > block) fs->groups[group].first_free_block = block;
+        if (fs->groups[group].first_free_block > block)
+            fs->groups[group].first_free_block = block;
         fs->groups[group].desc->free_block_count++;
         mark_group_desc_dirty(fs, group);
     }
 
-    if (buf) release_buffer(fs->cache, buf);
+    if (buf)
+        release_buffer(fs->cache, buf);
 }
 
-vfs_ino_t new_inode(struct filsys *fs, vfs_ino_t parent, int dir) {
+vfs_ino_t new_inode(struct filsys *fs, vfs_ino_t parent, int dir)
+{
     unsigned int group;
     unsigned int i;
     unsigned int avefreei;
     struct buf *buf;
     vfs_ino_t ino;
 
-    if (dir) {
+    if (dir)
+    {
         // Find group with above average free inodes with most free blocks
         avefreei = fs->super->free_inode_count / fs->super->group_count;
 
         group = -1;
-        for (i = 0; i < fs->super->group_count; i++) {
-            if (fs->groups[i].desc->free_inode_count && fs->groups[i].desc->free_inode_count >= avefreei) {
-                if (group == -1 || fs->groups[i].desc->free_block_count > fs->groups[group].desc->free_block_count) {
+        for (i = 0; i < fs->super->group_count; i++)
+        {
+            if (fs->groups[i].desc->free_inode_count && fs->groups[i].desc->free_inode_count >= avefreei)
+            {
+                if (group == -1 || fs->groups[i].desc->free_block_count > fs->groups[group].desc->free_block_count)
+                {
                     group = i;
                 }
             }
         }
-        if (group == -1) group = 0;
-    } else {
+        if (group == -1)
+            group = 0;
+    }
+    else
+    {
         // Try to locate a free inode by going through all groups cyclicly starting with parents group
         group = parent / fs->super->inodes_per_group;
-        for (i = 0; i < fs->super->group_count; i++) {
-            if (fs->groups[group].desc->free_inode_count) break;
+        for (i = 0; i < fs->super->group_count; i++)
+        {
+            if (fs->groups[group].desc->free_inode_count)
+                break;
             group++;
-            if (group >= fs->super->group_count) group = 0;
+            if (group >= fs->super->group_count)
+                group = 0;
         }
     }
 
@@ -149,12 +178,14 @@ vfs_ino_t new_inode(struct filsys *fs, vfs_ino_t parent, int dir) {
     // Find first free inode in block
     if (fs->groups[group].first_free_inode != -1)
         ino = find_next_zero_bit(buf->data, fs->super->inodes_per_group, fs->groups[group].first_free_inode);
-    else {
+    else
+    {
         ino = find_first_zero_bit(buf->data, fs->super->inodes_per_group);
         fs->groups[group].first_free_inode = ino;
     }
 
-    if (ino == fs->super->inodes_per_group) {
+    if (ino == fs->super->inodes_per_group)
+    {
         release_buffer(fs->cache, buf);
         panic("inode table full");
         return -1;
@@ -167,7 +198,8 @@ vfs_ino_t new_inode(struct filsys *fs, vfs_ino_t parent, int dir) {
     fs->super->free_inode_count--;
     fs->super_dirty = 1;
 
-    if (fs->groups[group].first_free_inode == ino) fs->groups[group].first_free_inode = ino + 1;
+    if (fs->groups[group].first_free_inode == ino)
+        fs->groups[group].first_free_inode = ino + 1;
     fs->groups[group].desc->free_inode_count--;
     mark_group_desc_dirty(fs, group);
 
@@ -177,7 +209,8 @@ vfs_ino_t new_inode(struct filsys *fs, vfs_ino_t parent, int dir) {
     return ino;
 }
 
-void free_inode(struct filsys *fs, vfs_ino_t ino) {
+void free_inode(struct filsys *fs, vfs_ino_t ino)
+{
     unsigned int group;
     struct buf *buf;
 
@@ -192,7 +225,8 @@ void free_inode(struct filsys *fs, vfs_ino_t ino) {
     fs->super->free_inode_count++;
     fs->super_dirty = 1;
 
-    if (fs->groups[group].first_free_inode > ino) fs->groups[group].first_free_inode = ino;
+    if (fs->groups[group].first_free_inode > ino)
+        fs->groups[group].first_free_inode = ino;
     fs->groups[group].desc->free_inode_count++;
     mark_group_desc_dirty(fs, group);
 

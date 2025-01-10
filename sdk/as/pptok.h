@@ -1,4 +1,5 @@
-enum preproc_token {
+enum preproc_token
+{
     PP_ELIF = 0,
     PP_ELIFN = 1,
     PP_ELIFCTX = 2,
@@ -94,7 +95,8 @@ enum preproc_token {
     PP_INVALID = -1
 };
 
-enum pp_conditional {
+enum pp_conditional
+{
     PPC_IF = 0,
     PPC_IFCTX = 2,
     PPC_IFDEF = 4,
@@ -109,57 +111,57 @@ enum pp_conditional {
     PPC_IFTOKEN = 22,
 };
 
-#define PP_COND(x)     ((enum pp_conditional)((x) & 0x1e))
-#define PP_IS_COND(x)  ((unsigned int)(x) < PP_ARG)
-#define PP_NEGATIVE(x) ((x) & 1)
+#define PP_COND(x) ((enum pp_conditional)((x)&0x1e))
+#define PP_IS_COND(x) ((unsigned int)(x) < PP_ARG)
+#define PP_NEGATIVE(x) ((x)&1)
 
-#define CASE_PP_ELIF \
-    case PP_ELIF: \
-    case PP_ELIFN:\
-    case PP_ELIFCTX: \
-    case PP_ELIFNCTX:\
-    case PP_ELIFDEF: \
-    case PP_ELIFNDEF:\
-    case PP_ELIFEMPTY: \
-    case PP_ELIFNEMPTY:\
-    case PP_ELIFENV: \
-    case PP_ELIFNENV:\
-    case PP_ELIFID: \
-    case PP_ELIFNID:\
-    case PP_ELIFIDN: \
-    case PP_ELIFNIDN:\
-    case PP_ELIFIDNI: \
-    case PP_ELIFNIDNI:\
-    case PP_ELIFMACRO: \
-    case PP_ELIFNMACRO:\
-    case PP_ELIFNUM: \
-    case PP_ELIFNNUM:\
-    case PP_ELIFSTR: \
-    case PP_ELIFNSTR:\
-    case PP_ELIFTOKEN: \
+#define CASE_PP_ELIF    \
+    case PP_ELIF:       \
+    case PP_ELIFN:      \
+    case PP_ELIFCTX:    \
+    case PP_ELIFNCTX:   \
+    case PP_ELIFDEF:    \
+    case PP_ELIFNDEF:   \
+    case PP_ELIFEMPTY:  \
+    case PP_ELIFNEMPTY: \
+    case PP_ELIFENV:    \
+    case PP_ELIFNENV:   \
+    case PP_ELIFID:     \
+    case PP_ELIFNID:    \
+    case PP_ELIFIDN:    \
+    case PP_ELIFNIDN:   \
+    case PP_ELIFIDNI:   \
+    case PP_ELIFNIDNI:  \
+    case PP_ELIFMACRO:  \
+    case PP_ELIFNMACRO: \
+    case PP_ELIFNUM:    \
+    case PP_ELIFNNUM:   \
+    case PP_ELIFSTR:    \
+    case PP_ELIFNSTR:   \
+    case PP_ELIFTOKEN:  \
     case PP_ELIFNTOKEN
-#define CASE_PP_IF \
-    case PP_IF: \
-    case PP_IFN:\
-    case PP_IFCTX: \
-    case PP_IFNCTX:\
-    case PP_IFDEF: \
-    case PP_IFNDEF:\
-    case PP_IFEMPTY: \
-    case PP_IFNEMPTY:\
-    case PP_IFENV: \
-    case PP_IFNENV:\
-    case PP_IFID: \
-    case PP_IFNID:\
-    case PP_IFIDN: \
-    case PP_IFNIDN:\
-    case PP_IFIDNI: \
-    case PP_IFNIDNI:\
-    case PP_IFMACRO: \
-    case PP_IFNMACRO:\
-    case PP_IFNUM: \
-    case PP_IFNNUM:\
-    case PP_IFSTR: \
-    case PP_IFNSTR:\
-    case PP_IFTOKEN: \
+#define CASE_PP_IF    \
+    case PP_IF:       \
+    case PP_IFN:      \
+    case PP_IFCTX:    \
+    case PP_IFNCTX:   \
+    case PP_IFDEF:    \
+    case PP_IFNDEF:   \
+    case PP_IFEMPTY:  \
+    case PP_IFNEMPTY: \
+    case PP_IFENV:    \
+    case PP_IFNENV:   \
+    case PP_IFID:     \
+    case PP_IFNID:    \
+    case PP_IFIDN:    \
+    case PP_IFNIDN:   \
+    case PP_IFIDNI:   \
+    case PP_IFNIDNI:  \
+    case PP_IFMACRO:  \
+    case PP_IFNMACRO: \
+    case PP_IFNUM:    \
+    case PP_IFNNUM:   \
+    case PP_IFSTR:    \
+    case PP_IFNSTR:   \
+    case PP_IFTOKEN:  \
     case PP_IFNTOKEN

@@ -298,8 +298,8 @@ int make_package(struct pkgdb *db, char *inffn)
     description = get_property(manifest, "package", "description", NULL);
 
     strcpy(dstinffn, "/usr/share/pkg/");
-    strcat(dstinffn, pkgname);
-    strcat(dstinffn, ".inf");
+    strncat(dstinffn, pkgname, STRLEN - strlen(dstinffn) - 1);
+    strncat(dstinffn, ".inf", STRLEN - strlen(dstinffn) - 1);
 
     pkg = find_package(db, pkgname);
     if (!pkg)

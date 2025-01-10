@@ -5,38 +5,38 @@
 #include "directiv.h"
 
 const char *const directives[26] =
-        {
-                NULL,
-                NULL,
-                "absolute",
-                "bits",
-                "common",
-                "cpu",
-                "debug",
-                "default",
-                "extern",
-                "float",
-                "global",
-                "list",
-                "section",
-                "segment",
-                "warning",
-                "sectalign",
-                "export",
-                "group",
-                "import",
-                "library",
-                "map",
-                "module",
-                "org",
-                "osabi",
-                "safeseh",
-                "uppercase"
-        };
+    {
+        NULL,
+        NULL,
+        "absolute",
+        "bits",
+        "common",
+        "cpu",
+        "debug",
+        "default",
+        "extern",
+        "float",
+        "global",
+        "list",
+        "section",
+        "segment",
+        "warning",
+        "sectalign",
+        "export",
+        "group",
+        "import",
+        "library",
+        "map",
+        "module",
+        "org",
+        "osabi",
+        "safeseh",
+        "uppercase"};
 
-enum directives find_directive(const char *token) {
+enum directives find_directive(const char *token)
+{
 #define UNUSED 16383
-    static const int16_t hash1[32] = {
+        static const int16_t hash1[32] = {
             0,
             UNUSED,
             UNUSED,
@@ -69,8 +69,8 @@ enum directives find_directive(const char *token) {
             -18,
             14,
             3,
-    };
-    static const int16_t hash2[32] = {
+        };
+        static const int16_t hash2[32] = {
             0,
             UNUSED,
             UNUSED,
@@ -103,22 +103,22 @@ enum directives find_directive(const char *token) {
             UNUSED,
             -4,
             UNUSED,
-    };
-    uint32_t k1, k2;
-    uint64_t crc;
-    uint16_t ix;
+        };
+        uint32_t k1, k2;
+        uint64_t crc;
+        uint16_t ix;
 
-    crc = crc64i(UINT64_C(0x076259c3e291c26c), token);
-    k1 = (uint32_t) crc;
-    k2 = (uint32_t)(crc >> 32);
+        crc = crc64i(UINT64_C(0x076259c3e291c26c), token);
+        k1 = (uint32_t)crc;
+        k2 = (uint32_t)(crc >> 32);
 
-    ix = hash1[k1 & 0x1f] + hash2[k2 & 0x1f];
-    if (ix >= 24)
-        return D_unknown;
+        ix = hash1[k1 & 0x1f] + hash2[k2 & 0x1f];
+        if (ix >= 24)
+                return D_unknown;
 
-    ix += 2;
-    if (as_stricmp(token, directives[ix]))
-        return D_unknown;
+        ix += 2;
+        if (as_stricmp(token, directives[ix]))
+                return D_unknown;
 
-    return ix;
+        return ix;
 }
