@@ -39,12 +39,23 @@
 #define S_IFDIR _S_IFDIR
 #endif
 
-bool validate_path(const char *path)
+bool resolve_and_validate_path(const char *baseDir, const char *path, char *resolvedPath, size_t resolvedPathSize)
 {
-    if (strstr(path, "..") || strchr(path, '/') || strchr(path, '\\'))
+    char fullPath[PATH_MAX];
+    snprintf(fullPath, sizeof(fullPath), "%s/%s", baseDir, path);
+
+    if (realpath(fullPath, resolvedPath) == NULL)
     {
+        perror("Error resolving path");
         return false;
     }
+
+    if (strncmp(baseDir, resolvedPath, strlen(baseDir)) != 0)
+    {
+        fprintf(stderr, "Resolved path is outside the base directory: %s\n", resolvedPath);
+        return false;
+    }
+
     return true;
 }
 
@@ -459,15 +470,18 @@ void process_filelist(FILE *f)
         }
         else
         {
-            if (validate_path(src))
+            char resolvedPath[PATH_MAX];
+            const char *baseDir = "/home/user/public"; // Adjust base directory as needed
+
+            if (resolve_and_validate_path(baseDir, src, resolvedPath, sizeof(resolvedPath)))
             {
-                if (isdir(src))
+                if (isdir(resolvedPath))
                 {
                     make_directory(dst);
-                    transfer_files(dst, src);
+                    transfer_files(dst, resolvedPath);
                 }
                 else
-                    transfer_file(dst, src);
+                    transfer_file(dst, resolvedPath);
             }
             else
             {
