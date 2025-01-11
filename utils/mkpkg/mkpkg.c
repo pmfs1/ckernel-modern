@@ -324,7 +324,17 @@ int make_package(struct pkgdb *db, char *inffn)
     joinpath(dstdir, pkgname, dstpkgfn);
     strcat(dstpkgfn, ".pkg");
 
-    archive = fopen(dstpkgfn, "w");
+    int fd = open(dstpkgfn, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
+    if (fd < 0) {
+        // handle error
+        return 1;
+    }
+    archive = fdopen(fd, "w");
+    if (archive == NULL) {
+        close(fd);
+        // handle error
+        return 1;
+    }
     if (add_file(archive, inffn, pkg->inffile, &pkg->time, 0) != 0)
     {
         fclose(archive);
