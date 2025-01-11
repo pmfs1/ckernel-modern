@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -120,9 +122,16 @@ static int write_pkgdb(char *dbfile, struct pkgdb *db)
     FILE *f;
     struct pkg *pkg;
 
-    f = fopen(dbfile, "w");
+    int fd = open(dbfile, O_WRONLY | O_CREAT | O_TRUNC, S_IWUSR | S_IRUSR);
+    if (fd < 0)
+    {
+        perror(dbfile);
+        return 1;
+    }
+    f = fdopen(fd, "w");
     if (!f)
     {
+        close(fd);
         perror(dbfile);
         return 1;
     }
