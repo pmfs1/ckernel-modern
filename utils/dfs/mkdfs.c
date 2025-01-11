@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -37,6 +38,15 @@
 #define S_IFMT _S_IFMT
 #define S_IFDIR _S_IFDIR
 #endif
+
+bool validate_path(const char *path)
+{
+    if (strstr(path, "..") || strchr(path, '/') || strchr(path, '\\'))
+    {
+        return false;
+    }
+    return true;
+}
 
 extern struct fs *mountlist;
 
@@ -449,13 +459,20 @@ void process_filelist(FILE *f)
         }
         else
         {
-            if (isdir(src))
+            if (validate_path(src))
             {
-                make_directory(dst);
-                transfer_files(dst, src);
+                if (isdir(src))
+                {
+                    make_directory(dst);
+                    transfer_files(dst, src);
+                }
+                else
+                    transfer_file(dst, src);
             }
             else
-                transfer_file(dst, src);
+            {
+                fprintf(stderr, "Invalid path: %s\n", src);
+            }
         }
     }
 }
