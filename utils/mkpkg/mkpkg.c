@@ -394,6 +394,15 @@ int is_valid_filename(const char *filename) {
     return 1;
 }
 
+int is_valid_directory(const char *dir) {
+    char resolved_path[PATH_MAX];
+    if (realpath(dir, resolved_path) == NULL) {
+        return 0;
+    }
+    // Additional checks can be added here if needed
+    return 1;
+}
+
 int main(int argc, char *argv[])
 {
     int i;
@@ -409,6 +418,11 @@ int main(int argc, char *argv[])
     memset(&db, 0, sizeof(struct pkgdb));
     srcdir = argv[1];
     dstdir = argv[2];
+
+    if (!is_valid_directory(srcdir) || (!is_valid_directory(dstdir) && strcmp(dstdir, "-") != 0)) {
+        fprintf(stderr, "Invalid directory path.\n");
+        return 1;
+    }
 
     if (strcmp(dstdir, "-") == 0)
     {
