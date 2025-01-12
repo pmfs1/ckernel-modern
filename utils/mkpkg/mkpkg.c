@@ -231,10 +231,17 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
             perror("write");
             return 1;
         }
-        f = fopen(srcfn, "r");
-        if (!f)
+        int fd = open(srcfn, O_RDONLY);
+        if (fd == -1)
         {
             perror(srcfn);
+            return 1;
+        }
+        f = fdopen(fd, "r");
+        if (!f)
+        {
+            perror("fdopen");
+            close(fd);
             return 1;
         }
         while ((n = fread(blk, 1, TAR_BLKSIZ, f)) > 0)
