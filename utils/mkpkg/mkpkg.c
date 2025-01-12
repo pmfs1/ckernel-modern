@@ -391,7 +391,8 @@ int make_package(struct pkgdb *db, char *inffn)
 
 int is_valid_filename(const char *filename)
 {
-    if (strstr(filename, "..") || strchr(filename, '/') || strchr(filename, '\\'))
+    // Check for invalid sequences in the user input
+    if (strstr(filename, "..") || strchr(filename, '/') || strchr(filename, '\\') || strchr(filename, ':') || strchr(filename, '*') || strchr(filename, '?') || strchr(filename, '"') || strchr(filename, '<') || strchr(filename, '>') || strchr(filename, '|'))
     {
         return 0;
     }
