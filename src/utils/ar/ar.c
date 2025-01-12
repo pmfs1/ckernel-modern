@@ -483,6 +483,12 @@ int main(int argc, char *argv[]) {
     while (optind < argc) {
         // Open next input file
         char *input_file = argv[optind++];
+        // Check for invalid sequences in the user input
+        if (strstr(input_file, "..") || strchr(input_file, '/') || strchr(input_file, '\\')) {
+            fprintf(stderr, "Invalid input file: %s\n", input_file);
+            free_archive(&ar);
+            return 1;
+        }
         fd = open(input_file, O_RDONLY | O_BINARY);
         if (fd < 0) {
             perror(input_file);
