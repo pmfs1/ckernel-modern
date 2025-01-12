@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
         - language: c-cpp
-          build-mode: manual
+          build-mode: autobuild
     steps:
     - name: 'CHECKOUT'
       uses: actions/checkout@v4

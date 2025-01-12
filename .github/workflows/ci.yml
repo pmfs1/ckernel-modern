@@ -1,0 +1,31 @@
+name: "CI"
+on:
+  push:
+    branches: [ "trunk" ]
+  pull_request:
+    branches: [ "trunk" ]
+  schedule:
+    - cron: '43 15 * * 3'
+jobs:
+  ci:
+    name: 'CI'
+    runs-on: 'ubuntu-latest'
+    permissions:
+      actions: read
+      contents: read
+    steps:
+    - name: 'CHECKOUT'
+      uses: actions/checkout@v4
+    - name: 'COMPILE'
+      shell: bash
+      run: |
+        sudo apt-get update -y && sudo apt-get install -y gcc-multilib libc6-dev-i386 genisoimage
+        make
+    - name: 'BUILD'
+      shell: bash
+      run: |
+        make krlean cdrom floppy vmdk hdmin
+    - name: 'CLEAN'
+      shell: bash
+      run: |
+        make clean

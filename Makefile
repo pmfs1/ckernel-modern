@@ -15,7 +15,7 @@ PKGREPO=/mnt/pkg
 PKGDIR=bin/install/usr/share/pkg
 
 krlean: dirs build-utils boot sys libc utils cmds sdk
-	cp -p build/krlean.inf $(PKGDIR)
+	cp -p krlean.inf $(PKGDIR)
 
 dirs: bin/.timestamp
 
@@ -40,9 +40,9 @@ bin/.timestamp:
 	mkdir -p bin/install/usr/share
 	mkdir -p bin/install/usr/share/pkg
 	mkdir -p bin/install/var
-	[ -d bin/install/boot/krnl.ini ]         || ln -s ../../../build/krnl.ini bin/install/boot/krnl.ini
-	[ -d bin/install/etc/os.ini ]            || ln -s ../../../build/os.ini bin/install/etc/os.ini
-	[ -d bin/install/etc/setup.ini ]         || ln -s ../../../build/setup.ini bin/install/etc/setup.ini
+	[ -d bin/install/boot/krnl.ini ]         || ln -s ../../../krnl.ini bin/install/boot/krnl.ini
+	[ -d bin/install/etc/os.ini ]            || ln -s ../../../os.ini bin/install/etc/os.ini
+	[ -d bin/install/etc/setup.ini ]         || ln -s ../../../setup.ini bin/install/etc/setup.ini
 	[ -d bin/install/usr/include ]           || ln -s ../../../src/include bin/install/usr/include
 	[ -d bin/install/usr/src/lib ]           || ln -s ../../../../src/lib bin/install/usr/src/lib
 	[ -d bin/install/usr/src/sys ]           || ln -s ../../../../src/sys bin/install/usr/src/sys
@@ -127,7 +127,7 @@ $(MKPKG): utils/mkpkg/mkpkg.c utils/mkpkg/inifile.c
 	gcc $(GCC_FLAGS) -o $(MKPKG) utils/mkpkg/mkpkg.c utils/mkpkg/inifile.c
 
 sys: osldr kernel drivers os
-	cp -p build/sys.inf $(PKGDIR)
+	cp -p sys.inf $(PKGDIR)
 
 boot: bin/install/boot/boot bin/install/boot/cdboot bin/install/boot/cdemboot bin/install/boot/netboot
 
@@ -339,7 +339,7 @@ bin/install/boot/os.dll $(LIB_OS): $(OS_SRCS) $(OS_LIB_SRCS) $(OBJ)/modf.o
 	$(CC) -shared -entry _start@12 -fixed 0x7FF00000 -nostdlib -o bin/install/boot/os.dll -def $(LIB_OS) $^ -D OS_LIB $(CCFLAGS)
 
 libc: bin/install/usr/lib/libc.a
-	cp -p build/clib.inf $(PKGDIR)
+	cp -p clib.inf $(PKGDIR)
 
 LIBC_OBJ = \
   $(OBJ)/ccrt.o \
@@ -693,64 +693,64 @@ SH_CMDS= \
 
 bin/install/bin/sh.exe: $(SH_SRCS) $(SH_HDRS) $(SH_CMDS)
 	$(CC) -o $@ $(SH_SRCS) $(SH_CMDS) $(CCFLAGS) -D SHELL
-	cp -p build/sh.inf $(PKGDIR)
+	cp -p sh.inf $(PKGDIR)
 
 bin/install/bin/msh.exe: src/utils/msh/msh.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/msh.inf $(PKGDIR)
+	cp -p msh.inf $(PKGDIR)
 
 bin/install/bin/edit.exe: src/utils/edit/edit.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/edit.inf $(PKGDIR)
+	cp -p edit.inf $(PKGDIR)
 
 bin/install/bin/less.exe: src/utils/edit/edit.c
 	$(CC) -o $@ $^ $(CCFLAGS) -DLESS
 
 bin/install/bin/fdisk.exe: src/utils/fdisk/fdisk.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/fdisk.inf $(PKGDIR)
+	cp -p fdisk.inf $(PKGDIR)
 
 bin/install/bin/setup.exe: src/utils/setup/setup.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/setup.inf $(PKGDIR)
+	cp -p setup.inf $(PKGDIR)
 
 bin/install/bin/mkboot.exe: src/utils/mkboot/mkboot.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/mkboot.inf $(PKGDIR)
+	cp -p mkboot.inf $(PKGDIR)
 
 bin/install/bin/genvmdk.exe: src/utils/genvmdk/genvmdk.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/genvmdk.inf $(PKGDIR)
+	cp -p genvmdk.inf $(PKGDIR)
 
 bin/install/bin/ftpd.exe: src/utils/ftpd/ftpd.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/ftpd.inf $(PKGDIR)
+	cp -p ftpd.inf $(PKGDIR)
 
 bin/install/bin/telnetd.exe: src/utils/telnetd/telnetd.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/telnetd.inf $(PKGDIR)
+	cp -p telnetd.inf $(PKGDIR)
 
 bin/install/bin/login.exe: src/utils/login/login.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/login.inf $(PKGDIR)
+	cp -p login.inf $(PKGDIR)
 
 bin/install/usr/bin/make.exe: src/utils/make/make.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/make.inf $(PKGDIR)
+	cp -p make.inf $(PKGDIR)
 
 bin/install/usr/bin/ar.exe: src/utils/ar/ar.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/ar.inf $(PKGDIR)
+	cp -p ar.inf $(PKGDIR)
 
 bin/install/usr/bin/impdef.exe: src/utils/impdef/impdef.c
 	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p build/impdef.inf $(PKGDIR)
+	cp -p impdef.inf $(PKGDIR)
 
 cmds: \
   bin/install/bin/find.exe \
   bin/install/bin/grep.exe \
   bin/install/bin/ping.exe
-	cp -p build/cmds.inf $(PKGDIR)
+	cp -p cmds.inf $(PKGDIR)
 
 bin/install/bin/find.exe: src/cmds/find.c
 	$(CC) -o $@ $^ $(CCFLAGS) -DUSE_LOCAL_HEAP -noshare
@@ -762,15 +762,15 @@ bin/install/bin/ping.exe: src/cmds/ping.c
 	$(CC) -o $@ $^ $(CCFLAGS)
 
 sdk: bin/install/usr/bin/cc.exe bin/install/usr/bin/as.exe
-	cp -p build/sdk.inf $(PKGDIR)
+	cp -p sdk.inf $(PKGDIR)
 
 bin/install/usr/bin/cc.exe: $(CC_SRCFILES) $(CC_HDRFILES)
 	$(CC) -o $@ $(CC_SRCFILES) -I sdk/src/cc $(CCFLAGS) -DUSE_LOCAL_HEAP -noshare
-	cp -p build/cc.inf $(PKGDIR)
+	cp -p cc.inf $(PKGDIR)
 
 bin/install/usr/bin/as.exe: $(AS_SRCFILES)
 	$(CC) -o $@ $^ -I sdk/src/as $(CCFLAGS) $(AS_CFLAGS) -DUSE_LOCAL_HEAP -noshare
-	cp -p build/as.inf $(PKGDIR)
+	cp -p as.inf $(PKGDIR)
 
 vmdk: bin/img/krlean.vmdk
 
@@ -782,12 +782,12 @@ bin/img/krlean.vmdk: krlean
 hdmin: bin/img/hd.vmdk
 
 bin/img/hd.vmdk: krlean
-	$(MKDFS) -d bin/img/hd.vmdk -t vmdk -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 100M -i -f -S bin/install -F build/hdmin.lst
+	$(MKDFS) -d bin/img/hd.vmdk -t vmdk -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 100M -i -f -S bin/install -F hdmin.lst
 
 floppy: bin/img/krlean.flp
 
 bin/img/krlean.flp: krlean
-	$(MKDFS) -d bin/img/krlean.flp -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 1440 -i -f -S bin/install -F build/floppy.lst
+	$(MKDFS) -d bin/img/krlean.flp -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 1440 -i -f -S bin/install -F floppy.lst
 
 cdrom: bin/img/krlean.iso
 
@@ -799,5 +799,5 @@ bin/img/krlean.iso: krlean
 clean:
 	rm -rf bin
 
-pkgs: build/*.inf $(MKPKG)
-	$(MKPKG) bin/install $(PKGREPO) build/*.inf
+pkgs: *.inf $(MKPKG)
+	$(MKPKG) bin/install $(PKGREPO) *.inf

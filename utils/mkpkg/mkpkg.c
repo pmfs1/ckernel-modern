@@ -216,7 +216,8 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
         sprintf(hdr->mtime, "%011o", prebuilt ? *time : st.st_mtime);
         memcpy(hdr->chksum, "        ", 8);
         hdr->typeflag = '0';
-        strcpy(hdr->magic, "ustar  ");
+        strncpy(hdr->magic, "ustar  ", sizeof(hdr->magic) - 1);
+        hdr->magic[sizeof(hdr->magic) - 1] = '\0';
         strcpy(hdr->uname, "krlean");
         strcpy(hdr->gname, "krlean");
 
