@@ -325,12 +325,14 @@ int make_package(struct pkgdb *db, char *inffn)
     strcat(dstpkgfn, ".pkg");
 
     int fd = open(dstpkgfn, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
-    if (fd < 0) {
+    if (fd < 0)
+    {
         // handle error
         return 1;
     }
     archive = fdopen(fd, "w");
-    if (archive == NULL) {
+    if (archive == NULL)
+    {
         close(fd);
         // handle error
         return 1;
@@ -387,10 +389,23 @@ int make_package(struct pkgdb *db, char *inffn)
     return 0;
 }
 
-int is_valid_filename(const char *filename) {
-    if (strstr(filename, "..") || strchr(filename, '/') || strchr(filename, '\\')) {
+int is_valid_filename(const char *filename)
+{
+    if (strstr(filename, "..") || strchr(filename, '/') || strchr(filename, '\\'))
+    {
         return 0;
     }
+    return 1;
+}
+
+int is_valid_directory(const char *dir)
+{
+    char resolved_path[PATH_MAX];
+    if (realpath(dir, resolved_path) == NULL)
+    {
+        return 0;
+    }
+    // Additional checks can be added here if needed
     return 1;
 }
 
@@ -410,6 +425,12 @@ int main(int argc, char *argv[])
     srcdir = argv[1];
     dstdir = argv[2];
 
+    if (!is_valid_directory(srcdir) || (!is_valid_directory(dstdir) && strcmp(dstdir, "-") != 0))
+    {
+        fprintf(stderr, "Invalid directory path.\n");
+        return 1;
+    }
+
     if (strcmp(dstdir, "-") == 0)
     {
         strcpy(dbfile, "db");
@@ -422,7 +443,8 @@ int main(int argc, char *argv[])
 
     for (i = 3; i < argc; i++)
     {
-        if (!is_valid_filename(argv[i])) {
+        if (!is_valid_filename(argv[i]))
+        {
             fprintf(stderr, "Invalid filename: %s\n", argv[i]);
             return 1;
         }
