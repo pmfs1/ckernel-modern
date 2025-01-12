@@ -477,11 +477,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     archive_filename = argv[optind++];
-    // Validate archive_filename
-    if (strstr(archive_filename, "..") || strchr(archive_filename, '/') || strchr(archive_filename, '\\')) {
-        fprintf(stderr, "Invalid archive filename.\n");
-        return 1;
-    }
 
     // Read all the input object files
     init_archive(&ar);
