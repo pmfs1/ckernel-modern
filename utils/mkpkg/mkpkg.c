@@ -5,6 +5,8 @@
 #include <dirent.h>
 #include <utime.h>
 #include <sys/stat.h>
+// #define _GNU_SOURCE
+#include <fcntl.h>
 #include "inifile.h"
 
 #define STRLEN 1024
@@ -158,16 +160,21 @@ char *joinpath(char *dir, char *filename, char *path)
 int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
 {
     struct stat st;
-
-    // printf(" Adding %s from %s\n", dstfn, srcfn);
-    if (stat(srcfn, &st) < 0)
+    int fd;
+    if ((fd = open(srcfn, O_RDONLY)) < 0)
     {
         perror(srcfn);
         return 1;
     }
-
+    if (fstat(fd, &st) < 0)
+    {
+        perror(srcfn);
+        close(fd);
+        return 1;
+    }
     if (S_ISDIR(st.st_mode))
     {
+        close(fd);
         struct dirent *dp;
         DIR *dirp;
         char subsrcfn[STRLEN];
@@ -231,10 +238,11 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
             perror("write");
             return 1;
         }
-        f = fopen(srcfn, "r");
+        f = fdopen(fd, "r");
         if (!f)
         {
             perror(srcfn);
+            close(fd);
             return 1;
         }
         while ((n = fread(blk, 1, TAR_BLKSIZ, f)) > 0)
