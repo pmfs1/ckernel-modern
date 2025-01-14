@@ -272,8 +272,8 @@ struct filsys *open_filesystem(vfs_devno_t devno) {
     memset(fs, 0, sizeof(struct filsys));
 
     // Allocate and read super block
-    fs->super = (struct superblock *) malloc(SECTORSIZE);
-    memset(fs->super, 0, SECTORSIZE);
+    fs->super = (struct superblock *) malloc(sizeof(struct superblock));
+    memset(fs->super, 0, sizeof(struct superblock));
     if (dev_read(devno, fs->super, SECTORSIZE, 1) != SECTORSIZE) panic("unable to read superblock");
     fs->super_dirty = 0;
 
