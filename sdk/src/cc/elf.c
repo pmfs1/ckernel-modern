@@ -2123,9 +2123,10 @@ int cc_load_dll(CCState *s1, int fd, const char *filename, int level)
     }
 
     // add the dll and its level
-    dllref = cc_malloc(sizeof(DLLReference) + strlen(soname) + 1);
+    size_t soname_len = strlen(soname) + 1;
+    dllref = cc_malloc(sizeof(DLLReference) + soname_len);
     dllref->level = level;
-    strncpy(dllref->name, soname, strlen(soname) + 1);
+    strncpy(dllref->name, soname, soname_len);
     dynarray_add((void ***)&s1->loaded_dlls, &s1->nb_loaded_dlls, dllref);
 
     // add dynamic symbols in dynsym_section
