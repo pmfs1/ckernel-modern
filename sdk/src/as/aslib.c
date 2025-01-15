@@ -161,7 +161,8 @@ char *as_strdup(const char *s)
         fprintf(logfp, "%s %d strdup(%ld) returns %p\n",
                 file, line, (long)size, p);
 #endif
-    strcpy(p, s);
+    strncpy(p, s, size - 1);
+    p[size - 1] = '\0';
     return p;
 }
 
