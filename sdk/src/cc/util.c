@@ -50,8 +50,10 @@ void *cc_realloc(void *ptr, unsigned long size)
 char *cc_strdup(const char *str)
 {
     char *ptr;
-    ptr = cc_malloc(strlen(str) + 1);
-    strcpy(ptr, str);
+    size_t len = strlen(str) + 1;
+    ptr = cc_malloc(len);
+    strncpy(ptr, str, len - 1);
+    ptr[len - 1] = '\0';
     return ptr;
 }
 
