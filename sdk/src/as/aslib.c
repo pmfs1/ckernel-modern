@@ -672,9 +672,11 @@ char *as_strcat(const char *one, const char *two)
 {
     char *rslt;
     int l1 = strlen(one);
-    rslt = as_malloc(l1 + strlen(two) + 1);
-    strcpy(rslt, one);
-    strcpy(rslt + l1, two);
+    int l2 = strlen(two);
+    rslt = as_malloc(l1 + l2 + 1);
+    strncpy(rslt, one, l1);
+    strncpy(rslt + l1, two, l2);
+    rslt[l1 + l2] = '\0';
     return rslt;
 }
 
