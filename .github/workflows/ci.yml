@@ -20,19 +20,19 @@ jobs:
       shell: bash
       run: |
         sudo apt-get update -y && sudo apt-get install -y gcc-multilib libc6-dev-i386 genisoimage
-        make
-    - name: 'BUILD (CDROM)''
+        make krlean
+    - name: 'BUILD (CDROM)'
       shell: bash
       run: |
-        make krlean cdrom
+        make cdrom
     - name: 'BUILD (FLOPPY)'
       shell: bash
       run: |
-        make krlean floppy
+        make floppy
     - name: 'BUILD (VMDK)'
       shell: bash
       run: |
-        make krlean vmdk
+        make vmdk
     - name: 'CLEAN'
       shell: bash
       run: |

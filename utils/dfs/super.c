@@ -289,6 +289,11 @@ struct filsys *create_filesystem(vfs_devno_t devno, int blocksize, int inode_rat
 
     // Create root directory
     root = get_inode(fs, DFS_INODE_ROOT);
+    if (!root) {
+        close_filesystem(fs);
+        return NULL;
+    }
+
     root->desc->mode = VFS_S_IFDIR | VFS_S_IRWXU | VFS_S_IRWXG | VFS_S_IRWXO;
     root->desc->ctime = root->desc->mtime = time(NULL);
     root->desc->linkcount = 1;

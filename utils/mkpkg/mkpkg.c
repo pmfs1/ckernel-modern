@@ -216,9 +216,9 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
         while (*dstfn == '/')
             dstfn++;
         strcpy(hdr->name, dstfn);
-        sprintf(hdr->mode, "%07o", st.st_mode);
-        sprintf(hdr->uid, "%07o", 0);
-        sprintf(hdr->gid, "%07o", 0);
+        snprintf(hdr->mode, sizeof(hdr->mode), "%07o", st.st_mode);
+        snprintf(hdr->uid, sizeof(hdr->uid), "%07o", 0);
+        snprintf(hdr->gid, sizeof(hdr->gid), "%07o", 0);
         sprintf(hdr->size, "%011o", st.st_size);
         sprintf(hdr->mtime, "%011o", prebuilt ? *time : st.st_mtime);
         memcpy(hdr->chksum, "        ", 8);
@@ -231,7 +231,7 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
         chksum = 0;
         for (n = 0; n < TAR_BLKSIZ; n++)
             chksum += blk[n];
-        sprintf(hdr->chksum, "%06o", chksum);
+        snprintf(hdr->chksum, sizeof(hdr->chksum), "%06o", chksum);
 
         if (fwrite(blk, 1, TAR_BLKSIZ, archive) < 0)
         {
