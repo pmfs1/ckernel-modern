@@ -1772,7 +1772,8 @@ static FILE *inc_fopen(const char *file, StrList **dhead, StrList ***dtail,
             {
                 sl = as_malloc(len + 1 + sizeof sl->next);
                 sl->next = NULL;
-                strcpy(sl->str, file);
+                strncpy(sl->str, file, len);
+                sl->str[len] = '\0'; // Ensure null termination
                 **dtail = sl;
                 *dtail = &sl->next;
             }
