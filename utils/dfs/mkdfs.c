@@ -327,20 +327,20 @@ void transfer_files(char *dstdir, char *srcdir)
     char srcfn[255];
     char dstfn[255];
 
-    strcpy(srcfn, srcdir);
-    strcat(srcfn, "\\*");
+    strncpy(srcfn, srcdir, sizeof(srcfn) - 1);
+    strncat(srcfn, "\\*", sizeof(srcfn) - strlen(srcfn) - 1);
 
     hfind = FindFirstFile(srcfn, &finddata);
     more = hfind != INVALID_HANDLE_VALUE;
     while (more)
     {
-        strcpy(srcfn, srcdir);
-        strcat(srcfn, "\\");
-        strcat(srcfn, finddata.cFileName);
+        strncpy(srcfn, srcdir, sizeof(srcfn) - 1);
+        strncat(srcfn, "\\", sizeof(srcfn) - strlen(srcfn) - 1);
+        strncat(srcfn, finddata.cFileName, sizeof(srcfn) - strlen(srcfn) - 1);
 
-        strcpy(dstfn, dstdir);
-        strcat(dstfn, "/");
-        strcat(dstfn, finddata.cFileName);
+        strncpy(dstfn, dstdir, sizeof(dstfn) - 1);
+        strncat(dstfn, "/", sizeof(dstfn) - strlen(dstfn) - 1);
+        strncat(dstfn, finddata.cFileName, sizeof(dstfn) - strlen(dstfn) - 1);
 
         if (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
@@ -371,13 +371,13 @@ void transfer_files(char *dstdir, char *srcdir)
         return;
     while ((dp = readdir(dir)) != NULL)
     {
-        strcpy(srcfn, srcdir);
-        strcat(srcfn, "/");
-        strcat(srcfn, dp->d_name);
+        strncpy(srcfn, srcdir, sizeof(srcfn) - 1);
+        strncat(srcfn, "/", sizeof(srcfn) - strlen(srcfn) - 1);
+        strncat(srcfn, dp->d_name, sizeof(srcfn) - strlen(srcfn) - 1);
 
-        strcpy(dstfn, dstdir);
-        strcat(dstfn, "/");
-        strcat(dstfn, dp->d_name);
+        strncpy(dstfn, dstdir, sizeof(dstfn) - 1);
+        strncat(dstfn, "/", sizeof(dstfn) - strlen(dstfn) - 1);
+        strncat(dstfn, dp->d_name, sizeof(dstfn) - strlen(dstfn) - 1);
 
         if (isdir(srcfn))
         {
