@@ -20,7 +20,7 @@
 #include "elf.h"
 
 #ifndef offsetof
-#define offsetof(type, field) ((size_t) &((type *)0)->field)
+#define offsetof(type, field) ((size_t)&((type *)0)->field)
 #endif
 
 #ifndef countof
@@ -38,96 +38,97 @@ typedef unsigned short nwchar_t;
 #define PTR_SIZE 4
 
 // long double size and alignment, in bytes
-#define LDOUBLE_SIZE  12
+#define LDOUBLE_SIZE 12
 #define LDOUBLE_ALIGN 4
 
 // Maximum alignment (for aligned attribute support)
-#define MAX_ALIGN     8
+#define MAX_ALIGN 8
 
 // Capacity limits
-#define INCLUDE_STACK_SIZE          32
-#define IFDEF_STACK_SIZE            64
-#define VSTACK_SIZE                256
-#define STRING_MAX_SIZE           1024
-#define PACK_STACK_SIZE              8
-#define CACHED_INCLUDES_HASH_SIZE  512
-#define TOK_HASH_SIZE             8192  // must be a power of two
-#define TOK_ALLOC_INCR             512  // must be a power of two
-#define TOK_MAX_SIZE                 4  // Token max size in int unit when stored in string
-#define IO_BUF_SIZE               8192
+#define INCLUDE_STACK_SIZE 32
+#define IFDEF_STACK_SIZE 64
+#define VSTACK_SIZE 256
+#define STRING_MAX_SIZE 1024
+#define PACK_STACK_SIZE 8
+#define CACHED_INCLUDES_HASH_SIZE 512
+#define TOK_HASH_SIZE 8192 // must be a power of two
+#define TOK_ALLOC_INCR 512 // must be a power of two
+#define TOK_MAX_SIZE 4     // Token max size in int unit when stored in string
+#define IO_BUF_SIZE 8192
 
 // Token values
 
-#define TOK_EOF       (-1)         // End of file
-#define TOK_LINEFEED  10           // Line feed
+#define TOK_EOF (-1)    // End of file
+#define TOK_LINEFEED 10 // Line feed
 
 // All identifiers and strings have token above that
 #define TOK_IDENT 256
 
 // NB: The following compare tokens depend on i386 asm code
-#define TOK_ULT       0x92
-#define TOK_UGE       0x93
-#define TOK_EQ        0x94
-#define TOK_NE        0x95
-#define TOK_ULE       0x96
-#define TOK_UGT       0x97
-#define TOK_Nset      0x98
-#define TOK_Nclear    0x99
-#define TOK_LT        0x9c
-#define TOK_GE        0x9d
-#define TOK_LE        0x9e
-#define TOK_GT        0x9f
+#define TOK_ULT 0x92
+#define TOK_UGE 0x93
+#define TOK_EQ 0x94
+#define TOK_NE 0x95
+#define TOK_ULE 0x96
+#define TOK_UGT 0x97
+#define TOK_Nset 0x98
+#define TOK_Nclear 0x99
+#define TOK_LT 0x9c
+#define TOK_GE 0x9d
+#define TOK_LE 0x9e
+#define TOK_GT 0x9f
 
-#define TOK_LAND      0xa0
-#define TOK_LOR       0xa1
+#define TOK_LAND 0xa0
+#define TOK_LOR 0xa1
 
-#define TOK_DEC       0xa2
-#define TOK_MID       0xa3        // inc/dec, to void constant
-#define TOK_INC       0xa4
-#define TOK_UDIV      0xb0        // unsigned division
-#define TOK_UMOD      0xb1        // unsigned modulo
-#define TOK_PDIV      0xb2        // fast division with undefined rounding for pointers
-#define TOK_CINT      0xb3        // number in tokc
-#define TOK_CCHAR     0xb4        // char constant in tokc
-#define TOK_STR       0xb5        // pointer to string in tokc
-#define TOK_TWOSHARPS 0xb6        // ## preprocessing token
-#define TOK_LCHAR     0xb7
-#define TOK_LSTR      0xb8
-#define TOK_CFLOAT    0xb9        // float constant
-#define TOK_LINENUM   0xba        // line number info
-#define TOK_CDOUBLE   0xc0        // double constant
-#define TOK_CLDOUBLE  0xc1        // long double constant
-#define TOK_UMULL     0xc2        // unsigned 32x32 -> 64 mul
-#define TOK_ADDC1     0xc3        // add with carry generation
-#define TOK_ADDC2     0xc4        // add with carry use
-#define TOK_SUBC1     0xc5        // subtract with carry generation
-#define TOK_SUBC2     0xc6        // subtract with carry use
-#define TOK_CUINT     0xc8        // unsigned int constant
-#define TOK_CLLONG    0xc9        // long long constant
-#define TOK_CULLONG   0xca        // unsigned long long constant
-#define TOK_ARROW     0xcb
-#define TOK_DOTS      0xcc        // three dots
-#define TOK_SHR       0xcd        // unsigned shift right
-#define TOK_PPNUM     0xce        // preprocessor number
+#define TOK_DEC 0xa2
+#define TOK_MID 0xa3 // inc/dec, to void constant
+#define TOK_INC 0xa4
+#define TOK_UDIV 0xb0      // unsigned division
+#define TOK_UMOD 0xb1      // unsigned modulo
+#define TOK_PDIV 0xb2      // fast division with undefined rounding for pointers
+#define TOK_CINT 0xb3      // number in tokc
+#define TOK_CCHAR 0xb4     // char constant in tokc
+#define TOK_STR 0xb5       // pointer to string in tokc
+#define TOK_TWOSHARPS 0xb6 // ## preprocessing token
+#define TOK_LCHAR 0xb7
+#define TOK_LSTR 0xb8
+#define TOK_CFLOAT 0xb9   // float constant
+#define TOK_LINENUM 0xba  // line number info
+#define TOK_CDOUBLE 0xc0  // double constant
+#define TOK_CLDOUBLE 0xc1 // long double constant
+#define TOK_UMULL 0xc2    // unsigned 32x32 -> 64 mul
+#define TOK_ADDC1 0xc3    // add with carry generation
+#define TOK_ADDC2 0xc4    // add with carry use
+#define TOK_SUBC1 0xc5    // subtract with carry generation
+#define TOK_SUBC2 0xc6    // subtract with carry use
+#define TOK_CUINT 0xc8    // unsigned int constant
+#define TOK_CLLONG 0xc9   // long long constant
+#define TOK_CULLONG 0xca  // unsigned long long constant
+#define TOK_ARROW 0xcb
+#define TOK_DOTS 0xcc  // three dots
+#define TOK_SHR 0xcd   // unsigned shift right
+#define TOK_PPNUM 0xce // preprocessor number
 
-#define TOK_SHL       0x01        // shift left
-#define TOK_SAR       0x02        // signed shift right
+#define TOK_SHL 0x01 // shift left
+#define TOK_SAR 0x02 // signed shift right
 
 // Assignment operators: normal operator or 0x80
-#define TOK_A_MOD     0xa5
-#define TOK_A_AND     0xa6
-#define TOK_A_MUL     0xaa
-#define TOK_A_ADD     0xab
-#define TOK_A_SUB     0xad
-#define TOK_A_DIV     0xaf
-#define TOK_A_XOR     0xde
-#define TOK_A_OR      0xfc
-#define TOK_A_SHL     0x81
-#define TOK_A_SAR     0x82
+#define TOK_A_MOD 0xa5
+#define TOK_A_AND 0xa6
+#define TOK_A_MUL 0xaa
+#define TOK_A_ADD 0xab
+#define TOK_A_SUB 0xad
+#define TOK_A_DIV 0xaf
+#define TOK_A_XOR 0xde
+#define TOK_A_OR 0xfc
+#define TOK_A_SHL 0x81
+#define TOK_A_SAR 0x82
 
 #define TOK_ASM_int TOK_INT
 
-enum cc_token {
+enum cc_token
+{
     TOK_LAST = TOK_IDENT - 1,
 #define DEF(id, str) id,
 
@@ -139,77 +140,83 @@ enum cc_token {
 #define TOK_UIDENT TOK_DEFINE
 
 // Header magic value for a.out archives
-#define ARMAG  "!<arch>\012"
+#define ARMAG "!<arch>\012"
 
 // Dynamic string buffer
-typedef struct CString {
-    int size;                       // Size in bytes
-    void *data;                     // Either 'char *' or 'nwchar_t *'
+typedef struct CString
+{
+    int size;   // Size in bytes
+    void *data; // Either 'char *' or 'nwchar_t *'
     int size_allocated;
-    void *data_allocated;           // If non NULL, data has been malloced
+    void *data_allocated; // If non NULL, data has been malloced
 } CString;
 
 struct Sym;
 
 // Type definition
-typedef struct CType {
+typedef struct CType
+{
     int t;
     struct Sym *ref;
 } CType;
 
 // Symbol definition
-typedef struct Sym {
-    int v;                          // Symbol token
-    int r;                          // Associated register
-    int c;                          // Associated number
-    CType type;                     // Associated type
-    struct Sym *next;               // Next related symbol
-    struct Sym *prev;               // Prev symbol in stack
-    struct Sym *prev_tok;           // Previous symbol for this token
+typedef struct Sym
+{
+    int v;                // Symbol token
+    int r;                // Associated register
+    int c;                // Associated number
+    CType type;           // Associated type
+    struct Sym *next;     // Next related symbol
+    struct Sym *prev;     // Prev symbol in stack
+    struct Sym *prev_tok; // Previous symbol for this token
 } Sym;
 
 // Section definition
-typedef struct Section {
-    unsigned long data_offset;      // Current data offset
-    unsigned char *data;            // Section data
-    unsigned long data_allocated;   // Used for realloc() handling
-    int sh_name;                    // ELF section name (only used during output)
-    int sh_num;                     // ELF section number
-    int sh_type;                    // ELF section type
-    int sh_flags;                   // ELF section flags
-    int sh_info;                    // ELF section info
-    int sh_addralign;               // ELF section alignment
-    int sh_entsize;                 // ELF entry size
-    unsigned long sh_size;          // Section size (only used during output)
-    unsigned long sh_addr;          // Address at which the section is relocated
-    unsigned long sh_offset;        // File offset
-    int nb_hashed_syms;             // Used to resize the hash table
-    struct Section *link;           // Link to another section
-    struct Section *reloc;          // Corresponding section for relocation, if any
-    struct Section *hash;           // Hash table for symbols
-    struct Section *next;           // Used for linking merged sections
-    int unused;                     // Used for unused section elimination
-    char name[1];                   // Section name
+typedef struct Section
+{
+    unsigned long data_offset;    // Current data offset
+    unsigned char *data;          // Section data
+    unsigned long data_allocated; // Used for realloc() handling
+    int sh_name;                  // ELF section name (only used during output)
+    int sh_num;                   // ELF section number
+    int sh_type;                  // ELF section type
+    int sh_flags;                 // ELF section flags
+    int sh_info;                  // ELF section info
+    int sh_addralign;             // ELF section alignment
+    int sh_entsize;               // ELF entry size
+    unsigned long sh_size;        // Section size (only used during output)
+    unsigned long sh_addr;        // Address at which the section is relocated
+    unsigned long sh_offset;      // File offset
+    int nb_hashed_syms;           // Used to resize the hash table
+    struct Section *link;         // Link to another section
+    struct Section *reloc;        // Corresponding section for relocation, if any
+    struct Section *hash;         // Hash table for symbols
+    struct Section *next;         // Used for linking merged sections
+    int unused;                   // Used for unused section elimination
+    char name[1];                 // Section name
 } Section;
 
 // GNU stab debug codes
 
-typedef struct {
-    unsigned long n_strx;           // Index into string table of name
-    unsigned char n_type;           // Type of symbol
-    unsigned char n_other;          // Misc info (usually empty)
-    unsigned short n_desc;          // description field
-    unsigned long n_value;          // value of symbol
+typedef struct
+{
+    unsigned long n_strx;  // Index into string table of name
+    unsigned char n_type;  // Type of symbol
+    unsigned char n_other; // Misc info (usually empty)
+    unsigned short n_desc; // description field
+    unsigned long n_value; // value of symbol
 } Stab_Sym;
 
-#define STAB(name, code, str) name=code,
+#define STAB(name, code, str) name = code,
 
-enum stab_debug_code {
-    STAB(N_SO, 0x64, "SO")          // Name of main source file
-    STAB(N_BINCL, 0x82, "BINCL")    // Beginning of an include file
-    STAB(N_EINCL, 0xa2, "EINCL")    // End of an include file
-    STAB(N_SLINE, 0x44, "SLINE")    // Line number in text segment
-    STAB(N_FUN, 0x24, "FUN")        // Function name or text-segment variable for C
+enum stab_debug_code
+{
+    STAB(N_SO, 0x64, "SO")       // Name of main source file
+    STAB(N_BINCL, 0x82, "BINCL") // Beginning of an include file
+    STAB(N_EINCL, 0xa2, "EINCL") // End of an include file
+    STAB(N_SLINE, 0x44, "SLINE") // Line number in text segment
+    STAB(N_FUN, 0x24, "FUN")     // Function name or text-segment variable for C
 };
 
 #undef STAB
@@ -217,27 +224,30 @@ enum stab_debug_code {
 // Special flag to indicate that the section should not be linked to the other ones
 #define SHF_PRIVATE 0x80000000
 
-#define SECTION_ABS ((void *) 1)
+#define SECTION_ABS ((void *)1)
 
-typedef struct DLLReference {
+typedef struct DLLReference
+{
     int level;
     char name[1];
 } DLLReference;
 
 // Token symbol
-typedef struct TokenSym {
+typedef struct TokenSym
+{
     struct TokenSym *hash_next;
-    struct Sym *sym_define;         // Direct pointer to define
-    struct Sym *sym_label;          // Direct pointer to label
-    struct Sym *sym_struct;         // Direct pointer to structure
-    struct Sym *sym_identifier;     // Direct pointer to identifier
-    int tok;                        // Token number
+    struct Sym *sym_define;     // Direct pointer to define
+    struct Sym *sym_label;      // Direct pointer to label
+    struct Sym *sym_struct;     // Direct pointer to structure
+    struct Sym *sym_identifier; // Direct pointer to identifier
+    int tok;                    // Token number
     int len;
     char str[1];
 } TokenSym;
 
 // Constant value
-typedef union CValue {
+typedef union CValue
+{
     long double ld;
     double d;
     float f;
@@ -253,144 +263,148 @@ typedef union CValue {
 } CValue;
 
 // Stack value
-typedef struct SValue {
-    CType type;                     // Type
-    unsigned short r;               // Register + flags
-    unsigned short r2;              // Second register, used for 'long long' type. If not used, set to VT_CONST
-    CValue c;                       // constant, if VT_CONST
-    struct Sym *sym;                // Symbol, if (VT_SYM | VT_CONST)
+typedef struct SValue
+{
+    CType type;        // Type
+    unsigned short r;  // Register + flags
+    unsigned short r2; // Second register, used for 'long long' type. If not used, set to VT_CONST
+    CValue c;          // constant, if VT_CONST
+    struct Sym *sym;   // Symbol, if (VT_SYM | VT_CONST)
 } SValue;
 
-#define SYM_STRUCT     0x40000000 // struct/union/enum symbol space
-#define SYM_FIELD      0x20000000 // struct/union field symbol space
+#define SYM_STRUCT 0x40000000     // struct/union/enum symbol space
+#define SYM_FIELD 0x20000000      // struct/union field symbol space
 #define SYM_FIRST_ANOM 0x10000000 // First anonymous sym
 
 // Stored in 'Sym.c' field
-#define FUNC_NEW       1          // ANSI function prototype
-#define FUNC_OLD       2          // Old function prototype
-#define FUNC_ELLIPSIS  3          // ANSI function prototype with ...
+#define FUNC_NEW 1      // ANSI function prototype
+#define FUNC_OLD 2      // Old function prototype
+#define FUNC_ELLIPSIS 3 // ANSI function prototype with ...
 
 // Stored in 'Sym.r' field
-#define FUNC_CDECL     0          // Standard c call
-#define FUNC_STDCALL   1          // Pascal c call
-#define FUNC_FASTCALL1 2          // First param in %eax
-#define FUNC_FASTCALL2 3          // First parameters in %eax, %edx
-#define FUNC_FASTCALL3 4          // First parameter in %eax, %edx, %ecx
-#define FUNC_FASTCALLW 5          // First parameter in %ecx, %edx
+#define FUNC_CDECL 0     // Standard c call
+#define FUNC_STDCALL 1   // Pascal c call
+#define FUNC_FASTCALL1 2 // First param in %eax
+#define FUNC_FASTCALL2 3 // First parameters in %eax, %edx
+#define FUNC_FASTCALL3 4 // First parameter in %eax, %edx, %ecx
+#define FUNC_FASTCALLW 5 // First parameter in %ecx, %edx
 
 // Field 'Sym.type.t' for macros
-#define MACRO_OBJ      0          // Object-like macro
-#define MACRO_FUNC     1          // Function-like macro
+#define MACRO_OBJ 0  // Object-like macro
+#define MACRO_FUNC 1 // Function-like macro
 
 // Field 'Sym.r' for C labels
-#define LABEL_DEFINED  0          // Label is defined
-#define LABEL_FORWARD  1          // Label is forward defined
-#define LABEL_DECLARED 2          // label is declared but never used
+#define LABEL_DEFINED 0  // Label is defined
+#define LABEL_FORWARD 1  // Label is forward defined
+#define LABEL_DECLARED 2 // label is declared but never used
 
-#define VT_VALMASK       0x00ff
-#define VT_CONST         0x00f0   // constant in vc (must be first non register value)
-#define VT_LLOCAL        0x00f1   // lvalue, offset on stack
-#define VT_LOCAL         0x00f2   // offset on stack
-#define VT_CMP           0x00f3   // the value is stored in processor flags (in vc)
-#define VT_JMP           0x00f4   // value is the consequence of jmp true (even)
-#define VT_JMPI          0x00f5   // value is the consequence of jmp false (odd)
+#define VT_VALMASK 0x00ff
+#define VT_CONST 0x00f0  // constant in vc (must be first non register value)
+#define VT_LLOCAL 0x00f1 // lvalue, offset on stack
+#define VT_LOCAL 0x00f2  // offset on stack
+#define VT_CMP 0x00f3    // the value is stored in processor flags (in vc)
+#define VT_JMP 0x00f4    // value is the consequence of jmp true (even)
+#define VT_JMPI 0x00f5   // value is the consequence of jmp false (odd)
 
-#define VT_LVAL          0x0100   // var is an lvalue
-#define VT_SYM           0x0200   // a symbol value is added
-#define VT_MUSTCAST      0x0400   // value must be casted to be correct (used for char/short stored in integer registers)
+#define VT_LVAL 0x0100     // var is an lvalue
+#define VT_SYM 0x0200      // a symbol value is added
+#define VT_MUSTCAST 0x0400 // value must be casted to be correct (used for char/short stored in integer registers)
 
-#define VT_LVAL_BYTE     0x1000   // lvalue is a byte
-#define VT_LVAL_SHORT    0x2000   // lvalue is a short
-#define VT_LVAL_UNSIGNED 0x4000   // lvalue is unsigned
-#define VT_LVAL_TYPE     (VT_LVAL_BYTE | VT_LVAL_SHORT | VT_LVAL_UNSIGNED)
+#define VT_LVAL_BYTE 0x1000     // lvalue is a byte
+#define VT_LVAL_SHORT 0x2000    // lvalue is a short
+#define VT_LVAL_UNSIGNED 0x4000 // lvalue is unsigned
+#define VT_LVAL_TYPE (VT_LVAL_BYTE | VT_LVAL_SHORT | VT_LVAL_UNSIGNED)
 
 // Types
-#define VT_INT        0           // integer type
-#define VT_BYTE       1           // signed byte type
-#define VT_SHORT      2           // short type
-#define VT_VOID       3           // void type
-#define VT_PTR        4           // pointer
-#define VT_ENUM       5           // enum definition
-#define VT_FUNC       6           // function type
-#define VT_STRUCT     7           // struct/union definition
-#define VT_FLOAT      8           // IEEE float
-#define VT_DOUBLE     9           // IEEE double
-#define VT_LDOUBLE   10           // IEEE long double
-#define VT_BOOL      11           // ISOC99 boolean type
-#define VT_LLONG     12           // 64 bit integer
-#define VT_LONG      13           // long integer (NEVER USED as type, only during parsing)
-#define VT_LABEL     14           // asm label
+#define VT_INT 0      // integer type
+#define VT_BYTE 1     // signed byte type
+#define VT_SHORT 2    // short type
+#define VT_VOID 3     // void type
+#define VT_PTR 4      // pointer
+#define VT_ENUM 5     // enum definition
+#define VT_FUNC 6     // function type
+#define VT_STRUCT 7   // struct/union definition
+#define VT_FLOAT 8    // IEEE float
+#define VT_DOUBLE 9   // IEEE double
+#define VT_LDOUBLE 10 // IEEE long double
+#define VT_BOOL 11    // ISOC99 boolean type
+#define VT_LLONG 12   // 64 bit integer
+#define VT_LONG 13    // long integer (NEVER USED as type, only during parsing)
+#define VT_LABEL 14   // asm label
 
-#define VT_BTYPE      0x000f      // mask for basic type
-#define VT_UNSIGNED   0x0010      // unsigned type
-#define VT_ARRAY      0x0020      // array type (also has VT_PTR)
-#define VT_BITFIELD   0x0040      // bitfield modifier
-#define VT_CONSTANT   0x0800      // const modifier
-#define VT_VOLATILE   0x1000      // volatile modifier
-#define VT_SIGNED     0x2000      // signed type
+#define VT_BTYPE 0x000f    // mask for basic type
+#define VT_UNSIGNED 0x0010 // unsigned type
+#define VT_ARRAY 0x0020    // array type (also has VT_PTR)
+#define VT_BITFIELD 0x0040 // bitfield modifier
+#define VT_CONSTANT 0x0800 // const modifier
+#define VT_VOLATILE 0x1000 // volatile modifier
+#define VT_SIGNED 0x2000   // signed type
 
 // Storage
-#define VT_EXTERN  0x00000080     // extern definition
-#define VT_STATIC  0x00000100     // static variable
-#define VT_TYPEDEF 0x00000200     // typedef definition
-#define VT_INLINE  0x00000400     // inline definition
+#define VT_EXTERN 0x00000080  // extern definition
+#define VT_STATIC 0x00000100  // static variable
+#define VT_TYPEDEF 0x00000200 // typedef definition
+#define VT_INLINE 0x00000400  // inline definition
 
-#define VT_STRUCT_SHIFT 16        // shift for bitfield shift values
+#define VT_STRUCT_SHIFT 16 // shift for bitfield shift values
 
 // Type mask
 #define VT_STORAGE (VT_EXTERN | VT_STATIC | VT_TYPEDEF | VT_INLINE)
-#define VT_TYPE    (~(VT_STORAGE))
+#define VT_TYPE (~(VT_STORAGE))
 
 // Wrappers for casting sym->r for other purposes
-typedef struct {
+typedef struct
+{
     unsigned
-            func_call: 8,
-            func_args: 8,
-            func_export: 1,
-            func_naked: 1;
+        func_call : 8,
+        func_args : 8,
+        func_export : 1,
+        func_naked : 1;
 } func_attr_t;
 
-#define FUNC_CALL(r) (((func_attr_t*)&(r))->func_call)
-#define FUNC_EXPORT(r) (((func_attr_t*)&(r))->func_export)
-#define FUNC_NAKED(r) (((func_attr_t*)&(r))->func_naked)
-#define FUNC_ARGS(r) (((func_attr_t*)&(r))->func_args)
+#define FUNC_CALL(r) (((func_attr_t *)&(r))->func_call)
+#define FUNC_EXPORT(r) (((func_attr_t *)&(r))->func_export)
+#define FUNC_NAKED(r) (((func_attr_t *)&(r))->func_naked)
+#define FUNC_ARGS(r) (((func_attr_t *)&(r))->func_args)
 #define INLINE_DEF(r) (*(int **)&(r))
 
 // GNUC attribute definition
-typedef struct AttributeDef {
+typedef struct AttributeDef
+{
     int aligned;
     int packed;
     Section *section;
-    int func_attr;                  // Calling convention, exports, ...
+    int func_attr; // Calling convention, exports, ...
 } AttributeDef;
 
 // type_decl() types
-#define TYPE_ABSTRACT  1          // Type without variable
-#define TYPE_DIRECT    2          // Type with variable
+#define TYPE_ABSTRACT 1 // Type without variable
+#define TYPE_DIRECT 2   // Type with variable
 
 // Number of available registers
-#define NB_REGS        5          // Number of register used (between 5 and 8)
-#define NB_SAVED_REGS  3
-#define NB_ASM_REGS    8
-//#define USE_EBX                   // Use ebx register for pointers
+#define NB_REGS 5 // Number of register used (between 5 and 8)
+#define NB_SAVED_REGS 3
+#define NB_ASM_REGS 8
+// #define USE_EBX                   // Use ebx register for pointers
 
 // A register can belong to several classes. The classes must be
 // sorted from more general to more precise (see gv2() code which does
 // assumptions on it).
-#define RC_INT     0x0001         // Generic integer register
-#define RC_FLOAT   0x0002         // Generic float register
-#define RC_EAX     0x0004
-#define RC_ST0     0x0008
-#define RC_ECX     0x0010
-#define RC_EDX     0x0020
-#define RC_SAVE    0x0040         // Register is callee-saved
-#define RC_PTR     0x0080         // Prefered register for pointers
-#define RC_IRET    RC_EAX         // Function return: integer register
-#define RC_LRET    RC_EDX         // Function return: second integer register
-#define RC_FRET    RC_ST0         // Function return: float register
+#define RC_INT 0x0001   // Generic integer register
+#define RC_FLOAT 0x0002 // Generic float register
+#define RC_EAX 0x0004
+#define RC_ST0 0x0008
+#define RC_ECX 0x0010
+#define RC_EDX 0x0020
+#define RC_SAVE 0x0040 // Register is callee-saved
+#define RC_PTR 0x0080  // Prefered register for pointers
+#define RC_IRET RC_EAX // Function return: integer register
+#define RC_LRET RC_EDX // Function return: second integer register
+#define RC_FRET RC_ST0 // Function return: float register
 
 // Pretty names for the registers
-enum {
+enum
+{
     TREG_EAX = 0,
     TREG_ECX,
     TREG_EDX,
@@ -406,7 +420,8 @@ enum {
 extern int reg_classes[];
 
 // Code generation buffer
-enum {
+enum
+{
     CodeStart,
     CodeLabel,
     CodeJump,
@@ -418,7 +433,8 @@ enum {
     CodeEnd,
 };
 
-typedef struct {
+typedef struct
+{
     int type;
     int param;
     int ind;
@@ -427,7 +443,8 @@ typedef struct {
     Sym *sym;
 } Branch;
 
-typedef struct {
+typedef struct
+{
     unsigned char *code;
     int ind;
     Branch *branch;
@@ -435,7 +452,8 @@ typedef struct {
 } CodeBuffer;
 
 // Parsing state (used to save parser state to reparse part of the source several times)
-typedef struct ParseState {
+typedef struct ParseState
+{
     int *macro_ptr;
     int line_num;
     int tok;
@@ -443,72 +461,79 @@ typedef struct ParseState {
 } ParseState;
 
 // Used to record tokens
-typedef struct TokenString {
+typedef struct TokenString
+{
     int *str;
     int len;
     int allocated_len;
     int last_line_num;
 } TokenString;
 
-struct macro_level {
+struct macro_level
+{
     struct macro_level *prev;
     int *p;
 };
 
 // Additional informations about token (tok_flags)
-#define TOK_FLAG_BOL   0x0001     /* beginning of line before */
-#define TOK_FLAG_BOF   0x0002     /* beginning of file before */
-#define TOK_FLAG_ENDIF 0x0004     /* a endif was found matching starting #ifdef */
-#define TOK_FLAG_EOF   0x0008     /* end of file */
+#define TOK_FLAG_BOL 0x0001   /* beginning of line before */
+#define TOK_FLAG_BOF 0x0002   /* beginning of file before */
+#define TOK_FLAG_ENDIF 0x0004 /* a endif was found matching starting #ifdef */
+#define TOK_FLAG_EOF 0x0008   /* end of file */
 
-typedef struct ExprValue {
+typedef struct ExprValue
+{
     uint32_t v;
     Sym *sym;
 } ExprValue;
 
 #define MAX_ASM_OPERANDS 30
 
-typedef struct ASMOperand {
-    int id;                         // GCC 3 optional identifier (0 if number only supported
+typedef struct ASMOperand
+{
+    int id; // GCC 3 optional identifier (0 if number only supported
     char *constraint;
-    char asm_str[16];               // Computed asm string for operand
-    SValue *vt;                     // C value of the expression
-    int ref_index;                  // If >= 0, gives reference to a output constraint
-    int input_index;                // If >= 0, gives reference to an input constraint
-    int priority;                   // Priority, used to assign registers
-    int reg;                        // If >= 0, register number used for this operand
-    int is_llong;                   // True if double register value
-    int is_memory;                  // True if memory operand
-    int is_rw;                      // For '+' modifier
+    char asm_str[16]; // Computed asm string for operand
+    SValue *vt;       // C value of the expression
+    int ref_index;    // If >= 0, gives reference to a output constraint
+    int input_index;  // If >= 0, gives reference to an input constraint
+    int priority;     // Priority, used to assign registers
+    int reg;          // If >= 0, register number used for this operand
+    int is_llong;     // True if double register value
+    int is_memory;    // True if memory operand
+    int is_rw;        // For '+' modifier
 } ASMOperand;
 
-typedef struct BufferedFile {
+typedef struct BufferedFile
+{
     uint8_t *buf_ptr;
     uint8_t *buf_end;
     int fd;
-    int line_num;                   // Current line number
-    int ifndef_macro;               // #ifndef macro / #endif search
-    int ifndef_macro_saved;         // Saved ifndef_macro
-    int *ifdef_stack_ptr;           // ifdef_stack value at the start of the file
-    char inc_type;                  // Type of include
-    char inc_filename[512];         // Filename specified by the user
-    char filename[1024];            // Current filename
+    int line_num;                          // Current line number
+    int ifndef_macro;                      // #ifndef macro / #endif search
+    int ifndef_macro_saved;                // Saved ifndef_macro
+    int *ifdef_stack_ptr;                  // ifdef_stack value at the start of the file
+    char inc_type;                         // Type of include
+    char inc_filename[512];                // Filename specified by the user
+    char filename[1024];                   // Current filename
     unsigned char buffer[IO_BUF_SIZE + 1]; // Extra size for CH_EOB char
 } BufferedFile;
 
-#define CH_EOB   '\\'             // End of buffer or '\0' char in file
-#define CH_EOF   (-1)             // End of file
+#define CH_EOB '\\' // End of buffer or '\0' char in file
+#define CH_EOF (-1) // End of file
 
 // Include file cache, used to find files faster and also to eliminate
 // inclusion if the include file is protected by #ifndef ... #endif
-typedef struct CachedInclude {
+typedef struct CachedInclude
+{
     int ifndef_macro;
-    int hash_next;                  // -1 if none
-    char type;                      // '"' or '>' to give include type
-    char filename[1];               // Path specified in #include
+    int hash_next;    // -1 if none
+    char type;        // '"' or '>' to give include type
+    char filename[1]; // Path specified in #include
 } CachedInclude;
 
-typedef struct CCState {
+typedef struct CCState
+{
     int output_type;
 
     BufferedFile **include_stack_ptr;
@@ -641,26 +666,26 @@ typedef struct CCState {
 } CCState;
 
 // Output type
-#define CC_OUTPUT_EXE        1   // Executable file (default)
-#define CC_OUTPUT_DLL        2   // Dynamic library
-#define CC_OUTPUT_OBJ        3   // Object file
-#define CC_OUTPUT_PREPROCESS 4   // Preprocessed file (used internally)
+#define CC_OUTPUT_EXE 1        // Executable file (default)
+#define CC_OUTPUT_DLL 2        // Dynamic library
+#define CC_OUTPUT_OBJ 3        // Object file
+#define CC_OUTPUT_PREPROCESS 4 // Preprocessed file (used internally)
 
 // Output format
-#define CC_OUTPUT_FORMAT_ELF    0 // Default output format: ELF
+#define CC_OUTPUT_FORMAT_ELF 0    // Default output format: ELF
 #define CC_OUTPUT_FORMAT_BINARY 1 // Binary image output
 
 // Flags for cc_add_file_internal()
-#define AFF_PRINT_ERROR     0x0001 // Print error if file not found
-#define AFF_REFERENCED_DLL  0x0002 // Load a referenced DLL from another DLL
-#define AFF_PREPROCESS      0x0004 // Preprocess file
+#define AFF_PRINT_ERROR 0x0001    // Print error if file not found
+#define AFF_REFERENCED_DLL 0x0002 // Load a referenced DLL from another DLL
+#define AFF_PREPROCESS 0x0004     // Preprocess file
 
 // Parse flags
-#define PARSE_FLAG_PREPROCESS   0x0001 // Activate preprocessing
-#define PARSE_FLAG_TOK_NUM      0x0002 // Return numbers instead of TOK_PPNUM
-#define PARSE_FLAG_LINEFEED     0x0004 // Line feed is returned as a token (and at at eof)
+#define PARSE_FLAG_PREPROCESS 0x0001   // Activate preprocessing
+#define PARSE_FLAG_TOK_NUM 0x0002      // Return numbers instead of TOK_PPNUM
+#define PARSE_FLAG_LINEFEED 0x0004     // Line feed is returned as a token (and at at eof)
 #define PARSE_FLAG_ASM_COMMENTS 0x0008 // '#' can be used for line comment
-#define PARSE_FLAG_MASM         0x0010 // Use masm syntax for inline assembler
+#define PARSE_FLAG_MASM 0x0010         // Use masm syntax for inline assembler
 
 //
 // Globals
@@ -668,17 +693,17 @@ typedef struct CCState {
 
 extern CType char_pointer_type, func_old_type, int_type;
 
-extern int rsym;                  // return symbol
-extern int anon_sym;              // anonymous symbol index
-extern int ind;                   // output code index
-extern int loc;                   // local variable index
-extern int func_naked;            // no generation of function prolog
+extern int rsym;       // return symbol
+extern int anon_sym;   // anonymous symbol index
+extern int ind;        // output code index
+extern int loc;        // local variable index
+extern int func_naked; // no generation of function prolog
 
 // Expression generation modifiers
-extern int const_wanted;          // true if constant wanted
-extern int nocode_wanted;         // true if no code generation wanted for an expression
-extern int global_expr;           // true if compound literals must be allocated globally (used during initializers parsing)
-extern CType func_vt;             // current function return type (used by return instruction)
+extern int const_wanted;  // true if constant wanted
+extern int nocode_wanted; // true if no code generation wanted for an expression
+extern int global_expr;   // true if compound literals must be allocated globally (used during initializers parsing)
+extern CType func_vt;     // current function return type (used by return instruction)
 
 extern int func_vc;
 extern int last_line_num, last_ind, func_ind; // debug last line number and pc
@@ -704,7 +729,7 @@ extern BufferedFile *file;
 extern int ch;
 extern int tok;
 extern CValue tokc;
-extern CString tokcstr;           // Current parsed string, if any
+extern CString tokcstr; // Current parsed string, if any
 extern int tok_flags;
 extern int parse_flags;
 extern int *macro_ptr;
@@ -719,8 +744,8 @@ extern Section *symtab_section, *strtab_section;
 
 // Text section
 extern Section *text_section, *data_section, *bss_section; // Predefined sections
-extern Section *cur_text_section; // Current section where function code is generated
-extern Section *last_text_section; // to handle .previous asm directive
+extern Section *cur_text_section;                          // Current section where function code is generated
+extern Section *last_text_section;                         // to handle .previous asm directive
 
 // Debug sections
 extern Section *stab_section, *stabstr_section;

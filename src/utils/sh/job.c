@@ -4,9 +4,12 @@
 #include "sh.h"
 
 static char *aliases[] = {
-        "[", "test",
-        "cd", "chdir",
-        NULL, NULL,
+    "[",
+    "test",
+    "cd",
+    "chdir",
+    NULL,
+    NULL,
 };
 
 void run_atexit_handlers();
@@ -15,13 +18,16 @@ struct crtbase *init_crtbase();
 
 void term_crtbase();
 
-static int hash(char *str) {
+static int hash(char *str)
+{
     int h = 0;
-    while (*str) h = 5 * h + *str++;
+    while (*str)
+        h = 5 * h + *str++;
     return h;
 }
 
-static void copy_vars(struct job *job) {
+static void copy_vars(struct job *job)
+{
     struct var **vptr;
     struct var *var;
 
@@ -31,8 +37,9 @@ static void copy_vars(struct job *job) {
     // Initialize variables from parent scope
     vptr = &job->vars;
     var = scope->vars;
-    while (var) {
-        struct var *v = (struct var *) malloc(sizeof(struct var));
+    while (var)
+    {
+        struct var *v = (struct var *)malloc(sizeof(struct var));
         v->name = strdup(var->name);
         v->value = strdup(var->value);
         v->hash = var->hash;
@@ -44,15 +51,18 @@ static void copy_vars(struct job *job) {
     job->flags &= ~J_DEFERRED_VARS;
 }
 
-static void assign_var(struct var **vars, char *name, char *value) {
+static void assign_var(struct var **vars, char *name, char *value)
+{
     int h = hash(name);
     struct var **vptr = vars;
     struct var *v = *vptr;
 
-    while (v) {
-        if (v->hash == h && strcmp(v->name, name) == 0) {
+    while (v)
+    {
+        if (v->hash == h && strcmp(v->name, name) == 0)
+        {
             int len = strlen(value);
-            v->value = (char *) realloc(v->value, len + 1);
+            v->value = (char *)realloc(v->value, len + 1);
             memcpy(v->value, value, len);
             v->value[len] = 0;
             return;
@@ -61,20 +71,23 @@ static void assign_var(struct var **vars, char *name, char *value) {
         v = *vptr;
     }
 
-    v = *vptr = (struct var *) malloc(sizeof(struct var));
+    v = *vptr = (struct var *)malloc(sizeof(struct var));
     v->name = strdup(name);
     v->value = strdup(value);
     v->hash = h;
     v->next = NULL;
 }
 
-static void remove_var(struct var **vars, char *name) {
+static void remove_var(struct var **vars, char *name)
+{
     int h = hash(name);
     struct var **vptr = vars;
     struct var *v = *vptr;
 
-    while (v) {
-        if (v->hash == h && strcmp(v->name, name) == 0) {
+    while (v)
+    {
+        if (v->hash == h && strcmp(v->name, name) == 0)
+        {
             *vptr = v->next;
             free(v->name);
             free(v->value);
@@ -86,36 +99,48 @@ static void remove_var(struct var **vars, char *name) {
     }
 }
 
-struct job *get_var_scope(struct job *job, int defer) {
-    while (job && !(job->flags & J_VAR_SCOPE)) job = job->parent;
-    if (defer) {
-        while (job && (job->flags & J_DEFERRED_VARS)) job = job->parent;
+struct job *get_var_scope(struct job *job, int defer)
+{
+    while (job && !(job->flags & J_VAR_SCOPE))
+        job = job->parent;
+    if (defer)
+    {
+        while (job && (job->flags & J_DEFERRED_VARS))
+            job = job->parent;
     }
     return job;
 }
 
-struct job *get_arg_scope(struct job *job) {
-    while (job && !(job->flags & J_ARG_SCOPE)) job = job->parent;
+struct job *get_arg_scope(struct job *job)
+{
+    while (job && !(job->flags & J_ARG_SCOPE))
+        job = job->parent;
     return job;
 }
 
-void set_var(struct job *job, char *name, char *value) {
+void set_var(struct job *job, char *name, char *value)
+{
     // Get variable scope
     struct job *scope = get_var_scope(job, 0);
 
     // Performed defered initialization of variables
-    if (scope->flags & J_DEFERRED_VARS) copy_vars(scope);
+    if (scope->flags & J_DEFERRED_VARS)
+        copy_vars(scope);
 
-    if (value) {
+    if (value)
+    {
         // Assign new value to variable.
         assign_var(&scope->vars, name, value);
-    } else {
+    }
+    else
+    {
         // Remove variable
         remove_var(&scope->vars, name);
     }
 }
 
-char *get_var(struct job *job, char *name) {
+char *get_var(struct job *job, char *name)
+{
     int h;
     struct var *var;
 
@@ -125,16 +150,20 @@ char *get_var(struct job *job, char *name) {
     // Find variable in scope
     h = hash(name);
     var = scope->vars;
-    while (var) {
-        if (var->hash == h && strcmp(var->name, name) == 0) return var->value;
+    while (var)
+    {
+        if (var->hash == h && strcmp(var->name, name) == 0)
+            return var->value;
         var = var->next;
     }
     return NULL;
 }
 
-static void delete_vars(struct job *job) {
+static void delete_vars(struct job *job)
+{
     struct var *var = job->vars;
-    while (var) {
+    while (var)
+    {
         struct var *next = var->next;
         free(var->name);
         free(var->value);
@@ -144,14 +173,17 @@ static void delete_vars(struct job *job) {
     job->vars = NULL;
 }
 
-void init_args(struct args *args) {
+void init_args(struct args *args)
+{
     args->first = args->last = NULL;
     args->num = 0;
 }
 
-void delete_args(struct args *args) {
+void delete_args(struct args *args)
+{
     struct arg *arg = args->first;
-    while (arg) {
+    while (arg)
+    {
         struct arg *next = arg->next;
         free(arg->value);
         free(arg);
@@ -161,18 +193,22 @@ void delete_args(struct args *args) {
     args->num = 0;
 }
 
-struct arg *add_arg(struct args *args, char *value) {
-    struct arg *arg = (struct arg *) malloc(sizeof(struct arg));
+struct arg *add_arg(struct args *args, char *value)
+{
+    struct arg *arg = (struct arg *)malloc(sizeof(struct arg));
     arg->value = strdup(value ? value : "");
     arg->next = NULL;
-    if (args->last) args->last->next = arg;
-    if (!args->first) args->first = arg;
+    if (args->last)
+        args->last->next = arg;
+    if (!args->first)
+        args->first = arg;
     args->last = arg;
     args->num++;
     return arg;
 }
 
-char *get_command_line(struct args *args) {
+char *get_command_line(struct args *args)
+{
     struct arg *arg;
     char *cmdline;
     char *cmd;
@@ -181,23 +217,31 @@ char *get_command_line(struct args *args) {
     // Compute command line size
     arg = args->first;
     cmdlen = args->num;
-    while (arg) {
+    while (arg)
+    {
         int escape = 0;
         char *p = arg->value;
-        if (!*p) {
+        if (!*p)
+        {
             escape = 1;
-        } else {
-            while (*p) {
+        }
+        else
+        {
+            while (*p)
+            {
                 cmdlen++;
-                if (*p == ' ') escape = 1;
-                if (*p == '"') {
+                if (*p == ' ')
+                    escape = 1;
+                if (*p == '"')
+                {
                     cmdlen++;
                     escape = 1;
                 }
                 p++;
             }
         }
-        if (escape) cmdlen += 2;
+        if (escape)
+            cmdlen += 2;
         arg = arg->next;
     }
 
@@ -205,25 +249,36 @@ char *get_command_line(struct args *args) {
     cmdline = malloc(cmdlen);
     cmd = cmdline;
     arg = args->first;
-    while (arg) {
+    while (arg)
+    {
         int escape = 0;
         char *p = arg->value;
-        if (!*p) {
+        if (!*p)
+        {
             escape = 1;
-        } else {
-            while (*p) {
-                if (*p == ' ' || *p == '"') escape = 1;
+        }
+        else
+        {
+            while (*p)
+            {
+                if (*p == ' ' || *p == '"')
+                    escape = 1;
                 p++;
             }
         }
-        if (arg != args->first) *cmd++ = ' ';
-        if (escape) *cmd++ = '"';
+        if (arg != args->first)
+            *cmd++ = ' ';
+        if (escape)
+            *cmd++ = '"';
         p = arg->value;
-        while (*p) {
-            if (*p == '"') *cmd++ = '"';
+        while (*p)
+        {
+            if (*p == '"')
+                *cmd++ = '"';
             *cmd++ = *p++;
         }
-        if (escape) *cmd++ = '"';
+        if (escape)
+            *cmd++ = '"';
 
         arg = arg->next;
     }
@@ -232,12 +287,13 @@ char *get_command_line(struct args *args) {
     return cmdline;
 }
 
-struct job *create_job(struct job *parent, int flags) {
+struct job *create_job(struct job *parent, int flags)
+{
     struct job *job;
     int i;
 
     // Allocate job
-    job = (struct job *) malloc(sizeof(struct job));
+    job = (struct job *)malloc(sizeof(struct job));
     memset(job, 0, sizeof(struct job));
     job->flags = flags | J_DEFERRED_VARS;
     job->parent = parent;
@@ -245,35 +301,45 @@ struct job *create_job(struct job *parent, int flags) {
     job->handle = -1;
 
     // Insert job in job list for shell
-    if (job->shell->jobs) {
+    if (job->shell->jobs)
+    {
         struct job *prev = job->shell->jobs;
-        while (prev->next != NULL) prev = prev->next;
+        while (prev->next != NULL)
+            prev = prev->next;
         prev->next = job;
-    } else {
+    }
+    else
+    {
         job->shell->jobs = job;
     }
 
     // Defer initialization of I/O handles.
-    for (i = 0; i < STD_HANDLES; i++) job->fd[i] = -1;
+    for (i = 0; i < STD_HANDLES; i++)
+        job->fd[i] = -1;
 
     return job;
 }
 
-void detach_job(struct job *job) {
+void detach_job(struct job *job)
+{
     int i;
 
     // Check if job has already been detached
-    if (!job->parent) return;
+    if (!job->parent)
+        return;
 
     // Detach variables
-    if ((job->flags & J_VAR_SCOPE) && (job->flags & J_DEFERRED_VARS)) {
+    if ((job->flags & J_VAR_SCOPE) && (job->flags & J_DEFERRED_VARS))
+    {
         copy_vars(job);
     }
     job->flags &= ~J_DEFERRED_VARS;
 
     // Detach I/O handles
-    for (i = 0; i < STD_HANDLES; i++) {
-        if (job->fd[i] != -1) {
+    for (i = 0; i < STD_HANDLES; i++)
+    {
+        if (job->fd[i] != -1)
+        {
             close(job->fd[i]);
             job->fd[i] = -1;
         }
@@ -283,7 +349,8 @@ void detach_job(struct job *job) {
     job->parent = NULL;
 }
 
-void remove_job(struct job *job) {
+void remove_job(struct job *job)
+{
     int i;
 
     // Delete arguments
@@ -293,43 +360,53 @@ void remove_job(struct job *job) {
     delete_vars(job);
 
     // Close I/O handles
-    for (i = 0; i < STD_HANDLES; i++) {
-        if (job->fd[i] != -1) close(job->fd[i]);
+    for (i = 0; i < STD_HANDLES; i++)
+    {
+        if (job->fd[i] != -1)
+            close(job->fd[i]);
     }
 
     // Close process handle
-    if (job->handle != -1) close(job->handle);
+    if (job->handle != -1)
+        close(job->handle);
 
     // Remove job from joblist
-    if (job->shell->jobs == job) {
+    if (job->shell->jobs == job)
+    {
         job->shell->jobs = job->next;
-    } else {
+    }
+    else
+    {
         struct job *j = job->shell->jobs;
         struct job *prev = NULL;
-        while (j != job) {
+        while (j != job)
+        {
             prev = j;
             j = j->next;
         }
-        if (j == job) prev->next = j->next;
+        if (j == job)
+            prev->next = j->next;
     }
 
     // Deallocate job
     free(job);
 }
 
-void init_shell(struct shell *shell, int argc, char *argv[], char *env[]) {
+void init_shell(struct shell *shell, int argc, char *argv[], char *env[])
+{
     int i;
     char *name;
     char *value;
     struct job *top;
 
     // Create top job
-    top = (struct job *) malloc(sizeof(struct job));
+    top = (struct job *)malloc(sizeof(struct job));
     memset(top, 0, sizeof(struct job));
     top->flags = J_VAR_SCOPE | J_ARG_SCOPE;
     top->shell = shell;
     top->handle = -1;
-    for (i = 0; i < STD_HANDLES; i++) top->fd[i] = -1;
+    for (i = 0; i < STD_HANDLES; i++)
+        top->fd[i] = -1;
 
     // Initialize shell
     shell->top = shell->jobs = top;
@@ -339,17 +416,22 @@ void init_shell(struct shell *shell, int argc, char *argv[], char *env[]) {
     shell->term = gettib()->proc->term;
 
     // Setup command line parameters
-    for (i = 0; i < argc; i++) {
+    for (i = 0; i < argc; i++)
+    {
         add_arg(&top->args, argv[i]);
     }
 
     // Copy environment variables
-    for (i = 0; env[i]; i++) {
+    for (i = 0; env[i]; i++)
+    {
         name = strdup(env[i]);
         value = strchr(name, '=');
-        if (*value == '=') {
+        if (*value == '=')
+        {
             *value++ = 0;
-        } else {
+        }
+        else
+        {
             value = "";
         }
         assign_var(&top->vars, name, value);
@@ -362,12 +444,15 @@ void init_shell(struct shell *shell, int argc, char *argv[], char *env[]) {
     shell->fd[2] = fderr;
 }
 
-void clear_shell(struct shell *shell) {
+void clear_shell(struct shell *shell)
+{
     // Remove all jobs
-    while (shell->jobs) remove_job(shell->jobs);
+    while (shell->jobs)
+        remove_job(shell->jobs);
 
     // Delete function definitions
-    while (shell->funcs) {
+    while (shell->funcs)
+    {
         struct function *f = shell->funcs;
         shell->funcs = f->next;
         popstkmark(&f->mark);
@@ -378,21 +463,27 @@ void clear_shell(struct shell *shell) {
     shell->jobs = shell->top = NULL;
 }
 
-int get_fd(struct job *job, int h, int own) {
+int get_fd(struct job *job, int h, int own)
+{
     // Try to get I/O handle from job
     struct shell *shell = job->shell;
     int fd = job->fd[h];
-    if (fd != -1) {
-        if (own) job->fd[h] = -1;
+    if (fd != -1)
+    {
+        if (own)
+            job->fd[h] = -1;
         return fd;
     }
 
     // Try to get I/O handle from ancestors
     job = job->parent;
-    while (job) {
+    while (job)
+    {
         fd = job->fd[h];
-        if (fd != -1) {
-            if (own) fd = dup(fd);
+        if (fd != -1)
+        {
+            if (own)
+                fd = dup(fd);
             return fd;
         }
         job = job->parent;
@@ -400,16 +491,20 @@ int get_fd(struct job *job, int h, int own) {
 
     // Return shell-level I/O handle
     fd = shell->fd[h];
-    if (own) fd = dup(fd);
+    if (own)
+        fd = dup(fd);
     return fd;
 }
 
-void set_fd(struct job *job, int h, int fd) {
-    if (job->fd[h] != -1) close(job->fd[h]);
+void set_fd(struct job *job, int h, int fd)
+{
+    if (job->fd[h] != -1)
+        close(job->fd[h]);
     job->fd[h] = fd;
 }
 
-static char **get_env(struct job *job) {
+static char **get_env(struct job *job)
+{
     struct var *v;
     char **env;
     int n;
@@ -418,17 +513,22 @@ static char **get_env(struct job *job) {
     struct job *scope = get_var_scope(job, 1);
 
     // Build environment string for scope
-    if (!scope->vars) return NULL;
-    for (n = 0, v = scope->vars; v; n++, v = v->next);
-    env = (char **) malloc((n + 1) * sizeof(char *));
-    if (!env) return NULL;
+    if (!scope->vars)
+        return NULL;
+    for (n = 0, v = scope->vars; v; n++, v = v->next)
+        ;
+    env = (char **)malloc((n + 1) * sizeof(char *));
+    if (!env)
+        return NULL;
     env[n] = NULL;
-    for (n = 0, v = scope->vars; v; n++, v = v->next) {
+    for (n = 0, v = scope->vars; v; n++, v = v->next)
+    {
         int nlen = strlen(v->name);
         int vlen = strlen(v->value);
         int len = nlen + vlen + 1;
-        char *buf = env[n] = (char *) malloc(len + 1);
-        if (buf) {
+        char *buf = env[n] = (char *)malloc(len + 1);
+        if (buf)
+        {
             memcpy(buf, v->name, nlen);
             buf[nlen] = '=';
             memcpy(buf + nlen + 1, v->value, vlen);
@@ -438,26 +538,34 @@ static char **get_env(struct job *job) {
     return env;
 }
 
-static void free_env(char **env) {
+static void free_env(char **env)
+{
     int n;
 
-    if (!env) return;
-    for (n = 0; env[n]; n++) free(env[n]);
+    if (!env)
+        return;
+    for (n = 0; env[n]; n++)
+        free(env[n]);
     free(env);
 }
 
-int wait_for_job(struct job *job) {
-    if (job->handle != -1) {
-        while (1) {
+int wait_for_job(struct job *job)
+{
+    if (job->handle != -1)
+    {
+        while (1)
+        {
             job->exitcode = waitone(job->handle, INFINITE);
-            if (job->exitcode >= 0 || errno != EINTR) break;
+            if (job->exitcode >= 0 || errno != EINTR)
+                break;
         }
         job->shell->lastrc = job->exitcode;
     }
     return 0;
 }
 
-static int run_external_command(struct job *job) {
+static int run_external_command(struct job *job)
+{
     char *cmdline;
     char **env;
     int i;
@@ -474,7 +582,8 @@ static int run_external_command(struct job *job) {
     job->handle = spawn(P_SUSPEND | P_DETACH, NULL, cmdline, env, &tib);
     free(cmdline);
     free_env(env);
-    if (job->handle < 0) {
+    if (job->handle < 0)
+    {
         perror("error");
         return 1;
     }
@@ -483,37 +592,44 @@ static int run_external_command(struct job *job) {
 
     // Setup standard I/O for program
     proc = tib->proc;
-    for (i = 0; i < 3; i++) proc->iob[i] = get_fd(job, i, 1);
+    for (i = 0; i < 3; i++)
+        proc->iob[i] = get_fd(job, i, 1);
 
     return 0;
 }
 
-static main_t lookup_internal(char *name) {
+static main_t lookup_internal(char *name)
+{
     char procname[MAX_COMMAND_LEN + 5];
 
-    if (strlen(name) > MAX_COMMAND_LEN) return NULL;
+    if (strlen(name) > MAX_COMMAND_LEN)
+        return NULL;
     strcpy(procname, "cmd_");
     strcat(procname, name);
-    return (main_t) dlsym(getmodule(NULL), procname);
+    return (main_t)dlsym(getmodule(NULL), procname);
 }
 
-static void exit_internal(int status, int fast) {
+static void exit_internal(int status, int fast)
+{
     struct process *proc = gettib()->proc;
-    struct crtbase *crtbase = (struct crtbase *) proc->crtbase;
+    struct crtbase *crtbase = (struct crtbase *)proc->crtbase;
 
-    if (!fast) run_atexit_handlers();
+    if (!fast)
+        run_atexit_handlers();
     term_crtbase(crtbase);
 }
 
-static void __stdcall enter_internal(void *args) {
+static void __stdcall enter_internal(void *args)
+{
     // Run internal command
-    struct job *job = (struct job *) args;
+    struct job *job = (struct job *)args;
     struct crtbase *crtbase = init_crtbase();
     gettib()->proc->atexit = exit_internal;
     exit(job->main(crtbase->argc, crtbase->argv));
 }
 
-static int run_internal_command(struct job *job) {
+static int run_internal_command(struct job *job)
+{
     int i;
     struct tib *tib;
     struct process *proc;
@@ -522,61 +638,74 @@ static int run_internal_command(struct job *job) {
     char *name = job->args.first->value;
     job->handle = beginthread(enter_internal, 0, job,
                               CREATE_SUSPENDED | CREATE_NEW_PROCESS | CREATE_NO_ENV | CREATE_DETACHED, name, &tib);
-    if (job->handle < 0) return 1;
+    if (job->handle < 0)
+        return 1;
     proc = tib->proc;
     proc->cmdline = get_command_line(&job->args);
     proc->env = get_env(job);
     proc->ident = strdup(name);
     proc->term = job->shell->term;
-    for (i = 0; i < 3; i++) proc->iob[i] = get_fd(job, i, 1);
+    for (i = 0; i < 3; i++)
+        proc->iob[i] = get_fd(job, i, 1);
     job->shell->lastpid = tib->pid;
 
     return 0;
 }
 
-static builtin_t lookup_builtin(char *name) {
+static builtin_t lookup_builtin(char *name)
+{
     char procname[MAX_COMMAND_LEN + 9];
 
-    if (strlen(name) > MAX_COMMAND_LEN) return NULL;
+    if (strlen(name) > MAX_COMMAND_LEN)
+        return NULL;
     strcpy(procname, "builtin_");
     strcat(procname, name);
-    return (builtin_t) dlsym(getmodule(NULL), procname);
+    return (builtin_t)dlsym(getmodule(NULL), procname);
 }
 
-static char *lookup_alias(char *name) {
+static char *lookup_alias(char *name)
+{
     char **a = aliases;
-    while (*a) {
+    while (*a)
+    {
         char *cmd = *a++;
         char *alias = *a++;
-        if (strcmp(cmd, name) == 0) return alias;
+        if (strcmp(cmd, name) == 0)
+            return alias;
     }
     return name;
 }
 
-struct function *lookup_func(struct shell *shell, char *name) {
+struct function *lookup_func(struct shell *shell, char *name)
+{
     struct function *func = shell->funcs;
-    while (func) {
-        if (strcmp(func->def->nfunc.name, name) == 0) return func;
+    while (func)
+    {
+        if (strcmp(func->def->nfunc.name, name) == 0)
+            return func;
         func = func->next;
     }
     return NULL;
 }
 
-int execute_job(struct job *job) {
+int execute_job(struct job *job)
+{
     char *argv0;
     builtin_t cmd;
     struct function *func;
     int rc;
 
     // Ignore empty commands
-    if (job->args.num == 0) return 0;
+    if (job->args.num == 0)
+        return 0;
 
     // Get command name
     argv0 = lookup_alias(job->args.first->value);
 
     // Run builtin command
     cmd = lookup_builtin(argv0);
-    if (cmd != NULL) {
+    if (cmd != NULL)
+    {
         rc = cmd(job);
         job->exitcode = rc;
         job->shell->lastrc = rc;
@@ -585,7 +714,8 @@ int execute_job(struct job *job) {
 
     // Run script function
     func = lookup_func(job->shell, argv0);
-    if (func != NULL) {
+    if (func != NULL)
+    {
         job->flags |= J_FUNCTION | J_ARG_SCOPE;
         rc = interp(job, func->def->nfunc.cmds);
         job->exitcode = rc;
@@ -595,9 +725,12 @@ int execute_job(struct job *job) {
 
     // Launch program
     job->main = lookup_internal(argv0);
-    if (job->main != NULL) {
+    if (job->main != NULL)
+    {
         rc = run_internal_command(job);
-    } else {
+    }
+    else
+    {
         rc = run_external_command(job);
     }
 

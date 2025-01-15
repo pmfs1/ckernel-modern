@@ -21,66 +21,66 @@
  * @@, so @@local is a TASM compatible local label. Note that we only
  * check for the first @ symbol, although TASM requires both.
  */
-#define islocal(l)                                                      \
-        (tasm_compatible_mode ?                                         \
-                (((l)[0] == '.' || (l)[0] == '@') && (l)[1] != '.') :   \
-                ((l)[0] == '.' && (l)[1] != '.'))
-#define islocalchar(c)                                                  \
-        (tasm_compatible_mode ?                                         \
-                ((c) == '.' || (c) == '@') :                            \
-                ((c) == '.'))
+#define islocal(l) \
+    (tasm_compatible_mode ? (((l)[0] == '.' || (l)[0] == '@') && (l)[1] != '.') : ((l)[0] == '.' && (l)[1] != '.'))
+#define islocalchar(c) \
+    (tasm_compatible_mode ? ((c) == '.' || (c) == '@') : ((c) == '.'))
 
-#define LABEL_BLOCK     128     /* no. of labels/block */
-#define LBLK_SIZE       (LABEL_BLOCK * sizeof(union label))
+#define LABEL_BLOCK 128 /* no. of labels/block */
+#define LBLK_SIZE (LABEL_BLOCK * sizeof(union label))
 
-#define END_LIST        -3      /* don't clash with NO_SEG! */
-#define END_BLOCK       -2
-#define BOGUS_VALUE     -4
+#define END_LIST -3 /* don't clash with NO_SEG! */
+#define END_BLOCK -2
+#define BOGUS_VALUE -4
 
-#define PERMTS_SIZE     16384   /* size of text blocks */
+#define PERMTS_SIZE 16384 /* size of text blocks */
 #if (PERMTS_SIZE < IDLEN_MAX)
 #error "IPERMTS_SIZE must be greater than or equal to IDLEN_MAX"
 #endif
 
 /* values for label.defn.is_global */
-#define DEFINED_BIT     1
-#define GLOBAL_BIT      2
-#define EXTERN_BIT      4
-#define COMMON_BIT      8
+#define DEFINED_BIT 1
+#define GLOBAL_BIT 2
+#define EXTERN_BIT 4
+#define COMMON_BIT 8
 
-#define NOT_DEFINED_YET         0
-#define TYPE_MASK               3
-#define LOCAL_SYMBOL            (DEFINED_BIT)
-#define GLOBAL_PLACEHOLDER      (GLOBAL_BIT)
-#define GLOBAL_SYMBOL           (DEFINED_BIT | GLOBAL_BIT)
+#define NOT_DEFINED_YET 0
+#define TYPE_MASK 3
+#define LOCAL_SYMBOL (DEFINED_BIT)
+#define GLOBAL_PLACEHOLDER (GLOBAL_BIT)
+#define GLOBAL_SYMBOL (DEFINED_BIT | GLOBAL_BIT)
 
-union label {                   /* actual label structures */
-    struct {
+union label
+{ /* actual label structures */
+    struct
+    {
         int32_t segment;
         int64_t offset;
         char *label, *special;
         int is_global, is_norm;
     } defn;
-    struct {
+    struct
+    {
         int32_t movingon;
         int64_t dummy;
         union label *next;
     } admin;
 };
 
-struct permts {                 /* permanent text storage */
-    struct permts *next;        /* for the linked list */
-    int size, usage;            /* size and used space in ... */
-    char data[PERMTS_SIZE];     /* ... the data block itself */
+struct permts
+{                           /* permanent text storage */
+    struct permts *next;    /* for the linked list */
+    int size, usage;        /* size and used space in ... */
+    char data[PERMTS_SIZE]; /* ... the data block itself */
 };
 
-extern int64_t global_offset_changed;   /* defined in as.c */
+extern int64_t global_offset_changed; /* defined in as.c */
 
-static struct hash_table ltab;          /* labels hash table */
-static union label *ldata;              /* all label data blocks */
-static union label *lfree;              /* labels free block */
-static struct permts *perm_head;        /* start of perm. text storage */
-static struct permts *perm_tail;        /* end of perm. text storage */
+static struct hash_table ltab;   /* labels hash table */
+static union label *ldata;       /* all label data blocks */
+static union label *lfree;       /* labels free block */
+static struct permts *perm_head; /* start of perm. text storage */
+static struct permts *perm_tail; /* end of perm. text storage */
 
 static void init_block(union label *blk);
 
@@ -98,18 +98,21 @@ char lpostfix[PREFIX_MAX] = {0};
  * given label name. Creates a new one, if it isn't found, and if
  * `create' is true.
  */
-static union label *find_label(char *label, int create) {
+static union label *find_label(char *label, int create)
+{
     char *prev;
     int prevlen, len;
     union label *lptr, **lpp;
     char label_str[IDLEN_MAX];
     struct hash_insert ip;
 
-    if (islocal(label)) {
+    if (islocal(label))
+    {
         prev = prevlabel;
         prevlen = strlen(prev);
         len = strlen(label);
-        if (prevlen + len >= IDLEN_MAX) {
+        if (prevlen + len >= IDLEN_MAX)
+        {
             as_error(ERR_NONFATAL, "identifier length exceed %i bytes",
                      IDLEN_MAX);
             return NULL;
@@ -117,23 +120,26 @@ static union label *find_label(char *label, int create) {
         memcpy(label_str, prev, prevlen);
         memcpy(label_str + prevlen, label, len + 1);
         label = label_str;
-    } else {
+    }
+    else
+    {
         prev = "";
         prevlen = 0;
     }
 
-    lpp = (union label **) hash_find(&ltab, label, &ip);
+    lpp = (union label **)hash_find(&ltab, label, &ip);
     lptr = lpp ? *lpp : NULL;
 
     if (lptr || !create)
         return lptr;
 
     /* Create a new label... */
-    if (lfree->admin.movingon == END_BLOCK) {
+    if (lfree->admin.movingon == END_BLOCK)
+    {
         /*
          * must allocate a new block
          */
-        lfree->admin.next = (union label *) as_malloc(LBLK_SIZE);
+        lfree->admin.next = (union label *)as_malloc(LBLK_SIZE);
         lfree = lfree->admin.next;
         init_block(lfree);
     }
@@ -147,14 +153,16 @@ static union label *find_label(char *label, int create) {
     return lfree++;
 }
 
-bool lookup_label(char *label, int32_t *segment, int64_t *offset) {
+bool lookup_label(char *label, int32_t *segment, int64_t *offset)
+{
     union label *lptr;
 
     if (!initialized)
         return false;
 
     lptr = find_label(label, 0);
-    if (lptr && (lptr->defn.is_global & DEFINED_BIT)) {
+    if (lptr && (lptr->defn.is_global & DEFINED_BIT))
+    {
         *segment = lptr->defn.segment;
         *offset = lptr->defn.offset;
         return true;
@@ -163,7 +171,8 @@ bool lookup_label(char *label, int32_t *segment, int64_t *offset) {
     return false;
 }
 
-bool is_extern(char *label) {
+bool is_extern(char *label)
+{
     union label *lptr;
 
     if (!initialized)
@@ -174,7 +183,8 @@ bool is_extern(char *label) {
 }
 
 void redefine_label(char *label, int32_t segment, int64_t offset, char *special,
-                    bool is_norm, bool isextrn) {
+                    bool is_norm, bool isextrn)
+{
     union label *lptr;
     int exi;
 
@@ -183,23 +193,24 @@ void redefine_label(char *label, int32_t segment, int64_t offset, char *special,
      * are even possible, nor whether they are checked somewhere else
      */
 
-    (void) special;              /* Don't warn that this parameter is unused */
-    (void) is_norm;              /* Don't warn that this parameter is unused */
-    (void) isextrn;              /* Don't warn that this parameter is unused */
+    (void)special; /* Don't warn that this parameter is unused */
+    (void)is_norm; /* Don't warn that this parameter is unused */
+    (void)isextrn; /* Don't warn that this parameter is unused */
 
 #ifdef DEBUG
 #if DEBUG < 3
     if (!strncmp(label, "debugdump", 9))
 #endif
-        as_error(ERR_DEBUG, "redefine_label (%s, %"PRIx32", %"PRIx64", %s, %d, %d)",
-              label, segment, offset, special, is_norm, isextrn);
+        as_error(ERR_DEBUG, "redefine_label (%s, %" PRIx32 ", %" PRIx64 ", %s, %d, %d)",
+                 label, segment, offset, special, is_norm, isextrn);
 #endif
 
     lptr = find_label(label, 1);
     if (!lptr)
         as_error(ERR_PANIC, "can't find label `%s' on pass two", label);
 
-    if (!islocal(label)) {
+    if (!islocal(label))
+    {
         if (!islocalchar(*label) && lptr->defn.is_norm)
             prevlabel = lptr->defn.label;
     }
@@ -210,15 +221,17 @@ void redefine_label(char *label, int32_t segment, int64_t offset, char *special,
     lptr->defn.offset = offset;
     lptr->defn.segment = segment;
 
-    if (pass0 == 1) {
+    if (pass0 == 1)
+    {
         exi = lptr->defn.is_global & GLOBAL_BIT;
-        if (exi) {
+        if (exi)
+        {
             char *xsymbol;
             int slen;
             slen = strlen(lprefix);
             slen += strlen(lptr->defn.label);
             slen += strlen(lpostfix);
-            slen++;             /* room for that null char */
+            slen++; /* room for that null char */
             xsymbol = as_malloc(slen);
             snprintf(xsymbol, slen, "%s%s%s", lprefix, lptr->defn.label,
                      lpostfix);
@@ -227,34 +240,39 @@ void redefine_label(char *label, int32_t segment, int64_t offset, char *special,
                          special ? special : lptr->defn.special);
             ofmt->current_dfmt->debug_deflabel(xsymbol, segment, offset, exi,
                                                special ? special : lptr->defn.special);
-/**	as_free(xsymbol);  ! outobj.c stores the pointer; ouch!!! **/
-        } else {
-            if ((lptr->defn.is_global & (GLOBAL_BIT | EXTERN_BIT)) != EXTERN_BIT) {
+            /**	as_free(xsymbol);  ! outobj.c stores the pointer; ouch!!! **/
+        }
+        else
+        {
+            if ((lptr->defn.is_global & (GLOBAL_BIT | EXTERN_BIT)) != EXTERN_BIT)
+            {
                 ofmt->symdef(lptr->defn.label, segment, offset, exi,
                              special ? special : lptr->defn.special);
                 ofmt->current_dfmt->debug_deflabel(label, segment, offset, exi,
                                                    special ? special : lptr->defn.special);
             }
         }
-    }   /* if (pass0 == 1) */
+    } /* if (pass0 == 1) */
 }
 
 void define_label(char *label, int32_t segment, int64_t offset, char *special,
-                  bool is_norm, bool isextrn) {
+                  bool is_norm, bool isextrn)
+{
     union label *lptr;
     int exi;
 
 #ifdef DEBUG
-#if DEBUG<3
+#if DEBUG < 3
     if (!strncmp(label, "debugdump", 9))
 #endif
-        as_error(ERR_DEBUG, "define_label (%s, %"PRIx32", %"PRIx64", %s, %d, %d)",
-              label, segment, offset, special, is_norm, isextrn);
+        as_error(ERR_DEBUG, "define_label (%s, %" PRIx32 ", %" PRIx64 ", %s, %d, %d)",
+                 label, segment, offset, special, is_norm, isextrn);
 #endif
     lptr = find_label(label, 1);
     if (!lptr)
         return;
-    if (lptr->defn.is_global & DEFINED_BIT) {
+    if (lptr->defn.is_global & DEFINED_BIT)
+    {
         as_error(ERR_NONFATAL, "symbol `%s' redefined", label);
         return;
     }
@@ -262,10 +280,13 @@ void define_label(char *label, int32_t segment, int64_t offset, char *special,
     if (isextrn)
         lptr->defn.is_global |= EXTERN_BIT;
 
-    if (!islocalchar(label[0]) && is_norm) {
+    if (!islocalchar(label[0]) && is_norm)
+    {
         /* not local, but not special either */
         prevlabel = lptr->defn.label;
-    } else if (islocal(label) && !*prevlabel) {
+    }
+    else if (islocal(label) && !*prevlabel)
+    {
         as_error(ERR_NONFATAL, "attempt to define a local label before any"
                                " non-local labels");
     }
@@ -274,15 +295,17 @@ void define_label(char *label, int32_t segment, int64_t offset, char *special,
     lptr->defn.offset = offset;
     lptr->defn.is_norm = (!islocalchar(label[0]) && is_norm);
 
-    if (pass0 == 1 || (!is_norm && !isextrn && (segment > 0) && (segment & 1))) {
+    if (pass0 == 1 || (!is_norm && !isextrn && (segment > 0) && (segment & 1)))
+    {
         exi = lptr->defn.is_global & GLOBAL_BIT;
-        if (exi) {
+        if (exi)
+        {
             char *xsymbol;
             int slen;
             slen = strlen(lprefix);
             slen += strlen(lptr->defn.label);
             slen += strlen(lpostfix);
-            slen++;             /* room for that null char */
+            slen++; /* room for that null char */
             xsymbol = as_malloc(slen);
             snprintf(xsymbol, slen, "%s%s%s", lprefix, lptr->defn.label,
                      lpostfix);
@@ -291,34 +314,42 @@ void define_label(char *label, int32_t segment, int64_t offset, char *special,
                          special ? special : lptr->defn.special);
             ofmt->current_dfmt->debug_deflabel(xsymbol, segment, offset, exi,
                                                special ? special : lptr->defn.special);
-/**	as_free(xsymbol);  ! outobj.c stores the pointer; ouch!!! **/
-        } else {
-            if ((lptr->defn.is_global & (GLOBAL_BIT | EXTERN_BIT)) != EXTERN_BIT) {
+            /**	as_free(xsymbol);  ! outobj.c stores the pointer; ouch!!! **/
+        }
+        else
+        {
+            if ((lptr->defn.is_global & (GLOBAL_BIT | EXTERN_BIT)) != EXTERN_BIT)
+            {
                 ofmt->symdef(lptr->defn.label, segment, offset, exi,
                              special ? special : lptr->defn.special);
                 ofmt->current_dfmt->debug_deflabel(label, segment, offset, exi,
                                                    special ? special : lptr->defn.special);
             }
         }
-    }   /* if (pass0 == 1) */
+    } /* if (pass0 == 1) */
 }
 
-void define_common(char *label, int32_t segment, int32_t size, char *special) {
+void define_common(char *label, int32_t segment, int32_t size, char *special)
+{
     union label *lptr;
 
     lptr = find_label(label, 1);
     if (!lptr)
         return;
     if ((lptr->defn.is_global & DEFINED_BIT) &&
-        (passn == 1 || !(lptr->defn.is_global & COMMON_BIT))) {
+        (passn == 1 || !(lptr->defn.is_global & COMMON_BIT)))
+    {
         as_error(ERR_NONFATAL, "symbol `%s' redefined", label);
         return;
     }
     lptr->defn.is_global |= DEFINED_BIT | COMMON_BIT;
 
-    if (!islocalchar(label[0])) {
+    if (!islocalchar(label[0]))
+    {
         prevlabel = lptr->defn.label;
-    } else {
+    }
+    else
+    {
         as_error(ERR_NONFATAL, "attempt to define a local label as a "
                                "common variable");
         return;
@@ -336,43 +367,50 @@ void define_common(char *label, int32_t segment, int32_t size, char *special) {
                                        special ? special : lptr->defn.special);
 }
 
-void declare_as_global(char *label, char *special) {
+void declare_as_global(char *label, char *special)
+{
     union label *lptr;
 
-    if (islocal(label)) {
+    if (islocal(label))
+    {
         as_error(ERR_NONFATAL, "attempt to declare local symbol `%s' as"
-                               " global", label);
+                               " global",
+                 label);
         return;
     }
     lptr = find_label(label, 1);
     if (!lptr)
         return;
-    switch (lptr->defn.is_global & TYPE_MASK) {
-        case NOT_DEFINED_YET:
-            lptr->defn.is_global = GLOBAL_PLACEHOLDER;
-            lptr->defn.special = special ? perm_copy(special) : NULL;
-            break;
-        case GLOBAL_PLACEHOLDER:   /* already done: silently ignore */
-        case GLOBAL_SYMBOL:
-            break;
-        case LOCAL_SYMBOL:
-            if (!(lptr->defn.is_global & EXTERN_BIT)) {
-                as_error(ERR_WARNING, "symbol `%s': GLOBAL directive "
-                                      "after symbol definition is an experimental feature", label);
-                lptr->defn.is_global = GLOBAL_SYMBOL;
-            }
-            break;
+    switch (lptr->defn.is_global & TYPE_MASK)
+    {
+    case NOT_DEFINED_YET:
+        lptr->defn.is_global = GLOBAL_PLACEHOLDER;
+        lptr->defn.special = special ? perm_copy(special) : NULL;
+        break;
+    case GLOBAL_PLACEHOLDER: /* already done: silently ignore */
+    case GLOBAL_SYMBOL:
+        break;
+    case LOCAL_SYMBOL:
+        if (!(lptr->defn.is_global & EXTERN_BIT))
+        {
+            as_error(ERR_WARNING, "symbol `%s': GLOBAL directive "
+                                  "after symbol definition is an experimental feature",
+                     label);
+            lptr->defn.is_global = GLOBAL_SYMBOL;
+        }
+        break;
     }
 }
 
-int init_labels(void) {
+int init_labels(void)
+{
     hash_init(&ltab, HASH_LARGE);
 
-    ldata = lfree = (union label *) as_malloc(LBLK_SIZE);
+    ldata = lfree = (union label *)as_malloc(LBLK_SIZE);
     init_block(lfree);
 
     perm_head = perm_tail =
-            (struct permts *) as_malloc(sizeof(struct permts));
+        (struct permts *)as_malloc(sizeof(struct permts));
 
     perm_head->next = NULL;
     perm_head->size = PERMTS_SIZE;
@@ -385,7 +423,8 @@ int init_labels(void) {
     return 0;
 }
 
-void cleanup_labels(void) {
+void cleanup_labels(void)
+{
     union label *lptr, *lhold;
 
     initialized = false;
@@ -393,21 +432,24 @@ void cleanup_labels(void) {
     hash_free(&ltab);
 
     lptr = lhold = ldata;
-    while (lptr) {
+    while (lptr)
+    {
         lptr = &lptr[LABEL_BLOCK - 1];
         lptr = lptr->admin.next;
         as_free(lhold);
         lhold = lptr;
     }
 
-    while (perm_head) {
+    while (perm_head)
+    {
         perm_tail = perm_head;
         perm_head = perm_head->next;
         as_free(perm_tail);
     }
 }
 
-static void init_block(union label *blk) {
+static void init_block(union label *blk)
+{
     int j;
 
     for (j = 0; j < LABEL_BLOCK - 1; j++)
@@ -416,15 +458,17 @@ static void init_block(union label *blk) {
     blk[LABEL_BLOCK - 1].admin.next = NULL;
 }
 
-static char *perm_copy(const char *string) {
+static char *perm_copy(const char *string)
+{
     char *p;
     int len = strlen(string) + 1;
 
     as_assert(len <= PERMTS_SIZE);
 
-    if (perm_tail->size - perm_tail->usage < len) {
+    if (perm_tail->size - perm_tail->usage < len)
+    {
         perm_tail->next =
-                (struct permts *) as_malloc(sizeof(struct permts));
+            (struct permts *)as_malloc(sizeof(struct permts));
         perm_tail = perm_tail->next;
         perm_tail->next = NULL;
         perm_tail->size = PERMTS_SIZE;
@@ -437,7 +481,8 @@ static char *perm_copy(const char *string) {
     return p;
 }
 
-char *local_scope(char *label) {
+char *local_scope(char *label)
+{
     return islocal(label) ? prevlabel : "";
 }
 

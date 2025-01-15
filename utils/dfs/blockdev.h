@@ -5,7 +5,8 @@
 
 struct blockdevice;
 
-struct blockdriver {
+struct blockdriver
+{
     const char *format_name;
     int instance_size;
 
@@ -26,7 +27,8 @@ struct blockdriver {
     int (*bdrv_set_key)(struct blockdevice *bs, const char *key);
 };
 
-struct blockdevice {
+struct blockdevice
+{
     int64_t total_sectors;
     struct blockdriver *drv;
     void *opaque;

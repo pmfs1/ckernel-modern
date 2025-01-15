@@ -1,4 +1,4 @@
-/* 
+/*
  * stdscan.h	header file for stdscan.c
  */
 

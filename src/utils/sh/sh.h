@@ -26,7 +26,7 @@
 #include "interp.h"
 
 #define MAX_COMMAND_LEN 8
-#define MAX_INTSTR      12
+#define MAX_INTSTR 12
 
 typedef int (*builtin_t)(struct job *job);
 
@@ -36,7 +36,8 @@ typedef int (*builtin_t)(struct job *job);
 // Function definition
 //
 
-struct function {
+struct function
+{
     union node *def;
     struct stkmark mark;
     struct function *next;
@@ -46,7 +47,8 @@ struct function {
 // Shell
 //
 
-struct shell {
+struct shell
+{
     struct job *top;
     struct job *jobs;
     struct function *funcs;

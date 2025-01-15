@@ -3,130 +3,130 @@
 //
 
 DEF(TOK_INT,
-"int")
+    "int")
 DEF(TOK_VOID,
-"void")
+    "void")
 DEF(TOK_CHAR,
-"char")
+    "char")
 DEF(TOK_IF,
-"if")
+    "if")
 DEF(TOK_ELSE,
-"else")
+    "else")
 DEF(TOK_WHILE,
-"while")
+    "while")
 DEF(TOK_BREAK,
-"break")
+    "break")
 DEF(TOK_RETURN,
-"return")
+    "return")
 DEF(TOK_FOR,
-"for")
+    "for")
 DEF(TOK_EXTERN,
-"extern")
+    "extern")
 DEF(TOK_STATIC,
-"static")
+    "static")
 DEF(TOK_UNSIGNED,
-"unsigned")
+    "unsigned")
 DEF(TOK_GOTO,
-"goto")
+    "goto")
 DEF(TOK_DO,
-"do")
+    "do")
 DEF(TOK_CONTINUE,
-"continue")
+    "continue")
 DEF(TOK_SWITCH,
-"switch")
+    "switch")
 DEF(TOK_CASE,
-"case")
+    "case")
 
 DEF(TOK_CONST1,
-"const")
+    "const")
 DEF(TOK_CONST2,
-"__const") // gcc keyword
+    "__const") // gcc keyword
 DEF(TOK_CONST3,
-"__const__") // gcc keyword
+    "__const__") // gcc keyword
 DEF(TOK_VOLATILE1,
-"volatile")
+    "volatile")
 DEF(TOK_VOLATILE2,
-"__volatile") // gcc keyword
+    "__volatile") // gcc keyword
 DEF(TOK_VOLATILE3,
-"__volatile__") // gcc keyword
+    "__volatile__") // gcc keyword
 DEF(TOK_LONG,
-"long")
+    "long")
 DEF(TOK_REGISTER,
-"register")
+    "register")
 DEF(TOK_SIGNED1,
-"signed")
+    "signed")
 DEF(TOK_SIGNED2,
-"__signed") // gcc keyword
+    "__signed") // gcc keyword
 DEF(TOK_SIGNED3,
-"__signed__") // gcc keyword
+    "__signed__") // gcc keyword
 DEF(TOK_AUTO,
-"auto")
+    "auto")
 DEF(TOK_INLINE1,
-"inline")
+    "inline")
 DEF(TOK_INLINE2,
-"__inline") // gcc keyword
+    "__inline") // gcc keyword
 DEF(TOK_INLINE3,
-"__inline__") // gcc keyword
+    "__inline__") // gcc keyword
 DEF(TOK_RESTRICT1,
-"restrict")
+    "restrict")
 DEF(TOK_RESTRICT2,
-"__restrict")
+    "__restrict")
 DEF(TOK_RESTRICT3,
-"__restrict__")
+    "__restrict__")
 DEF(TOK_EXTENSION,
-"__extension__") // gcc keyword
+    "__extension__") // gcc keyword
 
 DEF(TOK_FLOAT,
-"float")
+    "float")
 DEF(TOK_DOUBLE,
-"double")
+    "double")
 DEF(TOK_BOOL,
-"_Bool")
+    "_Bool")
 DEF(TOK_SHORT,
-"short")
+    "short")
 DEF(TOK_STRUCT,
-"struct")
+    "struct")
 DEF(TOK_UNION,
-"union")
+    "union")
 DEF(TOK_TYPEDEF,
-"typedef")
+    "typedef")
 DEF(TOK_DEFAULT,
-"default")
+    "default")
 DEF(TOK_ENUM,
-"enum")
+    "enum")
 DEF(TOK_SIZEOF,
-"sizeof")
+    "sizeof")
 DEF(TOK_ATTRIBUTE1,
-"__attribute")
+    "__attribute")
 DEF(TOK_ATTRIBUTE2,
-"__attribute__")
+    "__attribute__")
 DEF(TOK_ALIGNOF1,
-"__alignof")
+    "__alignof")
 DEF(TOK_ALIGNOF2,
-"__alignof__")
+    "__alignof__")
 DEF(TOK_TYPEOF1,
-"typeof")
+    "typeof")
 DEF(TOK_TYPEOF2,
-"__typeof")
+    "__typeof")
 DEF(TOK_TYPEOF3,
-"__typeof__")
+    "__typeof__")
 DEF(TOK_LABEL,
-"__label__")
+    "__label__")
 DEF(TOK_ASM1,
-"asm")
+    "asm")
 DEF(TOK_ASM2,
-"__asm")
+    "__asm")
 DEF(TOK_ASM3,
-"__asm__")
+    "__asm__")
 
 DEF(TOK_INT64,
-"__int64")
+    "__int64")
 DEF(TOK_DECLSPEC,
-"__declspec")
+    "__declspec")
 DEF(TOK_DLLIMPORT,
-"dllimport")
+    "dllimport")
 DEF(TOK_NAKED,
-"naked")
+    "naked")
 
 //
 // The following are not keywords. They are included to ease parsing
@@ -134,50 +134,50 @@ DEF(TOK_NAKED,
 //
 
 DEF(TOK_DEFINE,
-"define")
+    "define")
 DEF(TOK_INCLUDE,
-"include")
+    "include")
 DEF(TOK_INCLUDE_NEXT,
-"include_next")
+    "include_next")
 DEF(TOK_IFDEF,
-"ifdef")
+    "ifdef")
 DEF(TOK_IFNDEF,
-"ifndef")
+    "ifndef")
 DEF(TOK_ELIF,
-"elif")
+    "elif")
 DEF(TOK_ENDIF,
-"endif")
+    "endif")
 DEF(TOK_DEFINED,
-"defined")
+    "defined")
 DEF(TOK_UNDEF,
-"undef")
+    "undef")
 DEF(TOK_ERROR,
-"error")
+    "error")
 DEF(TOK_WARNING,
-"warning")
+    "warning")
 DEF(TOK_LINE,
-"line")
+    "line")
 DEF(TOK_PRAGMA,
-"pragma")
+    "pragma")
 DEF(TOK___LINE__,
-"__LINE__")
+    "__LINE__")
 DEF(TOK___FILE__,
-"__FILE__")
+    "__FILE__")
 DEF(TOK___DATE__,
-"__DATE__")
+    "__DATE__")
 DEF(TOK___TIME__,
-"__TIME__")
+    "__TIME__")
 DEF(TOK___FUNCTION__,
-"__FUNCTION__")
+    "__FUNCTION__")
 DEF(TOK___VA_ARGS__,
-"__VA_ARGS__")
+    "__VA_ARGS__")
 
 //
 // Special identifiers
 //
 
 DEF(TOK___FUNC__,
-"__func__")
+    "__func__")
 
 //
 // Attribute identifiers
@@ -185,161 +185,161 @@ DEF(TOK___FUNC__,
 //
 
 DEF(TOK_SECTION1,
-"section")
+    "section")
 DEF(TOK_SECTION2,
-"__section__")
+    "__section__")
 DEF(TOK_ALIGNED1,
-"aligned")
+    "aligned")
 DEF(TOK_ALIGNED2,
-"__aligned__")
+    "__aligned__")
 DEF(TOK_PACKED1,
-"packed")
+    "packed")
 DEF(TOK_PACKED2,
-"__packed__")
+    "__packed__")
 DEF(TOK_UNUSED1,
-"unused")
+    "unused")
 DEF(TOK_UNUSED2,
-"__unused__")
+    "__unused__")
 DEF(TOK_CDECL1,
-"cdecl")
+    "cdecl")
 DEF(TOK_CDECL2,
-"__cdecl")
+    "__cdecl")
 DEF(TOK_CDECL3,
-"__cdecl__")
+    "__cdecl__")
 DEF(TOK_STDCALL1,
-"stdcall")
+    "stdcall")
 DEF(TOK_STDCALL2,
-"__stdcall")
+    "__stdcall")
 DEF(TOK_STDCALL3,
-"__stdcall__")
+    "__stdcall__")
 DEF(TOK_FASTCALL1,
-"fastcall")
+    "fastcall")
 DEF(TOK_FASTCALL2,
-"__fastcall")
+    "__fastcall")
 DEF(TOK_FASTCALL3,
-"__fastcall__")
+    "__fastcall__")
 DEF(TOK_DLLEXPORT,
-"dllexport")
+    "dllexport")
 DEF(TOK_NORETURN1,
-"noreturn")
+    "noreturn")
 DEF(TOK_NORETURN2,
-"__noreturn__")
+    "__noreturn__")
 DEF(TOK_builtin_types_compatible_p,
-"__builtin_types_compatible_p")
+    "__builtin_types_compatible_p")
 DEF(TOK_builtin_constant_p,
-"__builtin_constant_p")
+    "__builtin_constant_p")
 DEF(TOK_REGPARM1,
-"regparm")
+    "regparm")
 DEF(TOK_REGPARM2,
-"__regparm__")
+    "__regparm__")
 
 //
 // Pragma
 //
 
 DEF(TOK_pack,
-"pack")
+    "pack")
 
 //
 // Builtin functions or variables
 //
 
 DEF(TOK_memcpy,
-"memcpy")
+    "memcpy")
 DEF(TOK_memset,
-"memset")
+    "memset")
 DEF(TOK___divdi3,
-"__divdi3")
+    "__divdi3")
 DEF(TOK___moddi3,
-"__moddi3")
+    "__moddi3")
 DEF(TOK___udivdi3,
-"__udivdi3")
+    "__udivdi3")
 DEF(TOK___umoddi3,
-"__umoddi3")
+    "__umoddi3")
 DEF(TOK___sardi3,
-"__sardi3")
+    "__sardi3")
 DEF(TOK___shrdi3,
-"__shrdi3")
+    "__shrdi3")
 DEF(TOK___shldi3,
-"__shldi3")
+    "__shldi3")
 DEF(TOK___cc_int_fpu_control,
-"__cc_int_fpu_control")
+    "__cc_int_fpu_control")
 DEF(TOK___cc_fpu_control,
-"__cc_fpu_control")
+    "__cc_fpu_control")
 DEF(TOK___ulltof,
-"__ulltof")
+    "__ulltof")
 DEF(TOK___ulltod,
-"__ulltod")
+    "__ulltod")
 DEF(TOK___ulltold,
-"__ulltold")
+    "__ulltold")
 DEF(TOK___fixunssfdi,
-"__fixunssfdi")
+    "__fixunssfdi")
 DEF(TOK___fixunsdfdi,
-"__fixunsdfdi")
+    "__fixunsdfdi")
 DEF(TOK___fixunsxfdi,
-"__fixunsxfdi")
+    "__fixunsxfdi")
 DEF(TOK___chkstk,
-"__chkstk")
+    "__chkstk")
 
 //
 // Tiny Assembler
 //
 
-#define DEF_ASM(x) DEF(TOK_ASM_ ## x, #x)
+#define DEF_ASM(x) DEF(TOK_ASM_##x, #x)
 
-#define DEF_BWL(x) \
- DEF(TOK_ASM_ ## x ## b, #x "b") \
- DEF(TOK_ASM_ ## x ## w, #x "w") \
- DEF(TOK_ASM_ ## x ## l, #x "l") \
- DEF(TOK_ASM_ ## x, #x)
+#define DEF_BWL(x)              \
+    DEF(TOK_ASM_##x##b, #x "b") \
+    DEF(TOK_ASM_##x##w, #x "w") \
+    DEF(TOK_ASM_##x##l, #x "l") \
+    DEF(TOK_ASM_##x, #x)
 
-#define DEF_WL(x) \
- DEF(TOK_ASM_ ## x ## w, #x "w") \
- DEF(TOK_ASM_ ## x ## l, #x "l") \
- DEF(TOK_ASM_ ## x, #x)
+#define DEF_WL(x)               \
+    DEF(TOK_ASM_##x##w, #x "w") \
+    DEF(TOK_ASM_##x##l, #x "l") \
+    DEF(TOK_ASM_##x, #x)
 
-#define DEF_FP1(x) \
- DEF(TOK_ASM_ ## f ## x ## s, "f" #x "s") \
- DEF(TOK_ASM_ ## fi ## x ## l, "fi" #x "l") \
- DEF(TOK_ASM_ ## f ## x ## l, "f" #x "l") \
- DEF(TOK_ASM_ ## fi ## x ## s, "fi" #x "s")
+#define DEF_FP1(x)                       \
+    DEF(TOK_ASM_##f##x##s, "f" #x "s")   \
+    DEF(TOK_ASM_##fi##x##l, "fi" #x "l") \
+    DEF(TOK_ASM_##f##x##l, "f" #x "l")   \
+    DEF(TOK_ASM_##fi##x##s, "fi" #x "s")
 
-#define DEF_FP(x) \
- DEF(TOK_ASM_ ## f ## x, "f" #x ) \
- DEF(TOK_ASM_ ## f ## x ## p, "f" #x "p") \
- DEF_FP1(x)
+#define DEF_FP(x)                      \
+    DEF(TOK_ASM_##f##x, "f" #x)        \
+    DEF(TOK_ASM_##f##x##p, "f" #x "p") \
+    DEF_FP1(x)
 
 #define DEF_ASMTEST(x) \
- DEF_ASM(x ## o) \
- DEF_ASM(x ## no) \
- DEF_ASM(x ## b) \
- DEF_ASM(x ## c) \
- DEF_ASM(x ## nae) \
- DEF_ASM(x ## nb) \
- DEF_ASM(x ## nc) \
- DEF_ASM(x ## ae) \
- DEF_ASM(x ## e) \
- DEF_ASM(x ## z) \
- DEF_ASM(x ## ne) \
- DEF_ASM(x ## nz) \
- DEF_ASM(x ## be) \
- DEF_ASM(x ## na) \
- DEF_ASM(x ## nbe) \
- DEF_ASM(x ## a) \
- DEF_ASM(x ## s) \
- DEF_ASM(x ## ns) \
- DEF_ASM(x ## p) \
- DEF_ASM(x ## pe) \
- DEF_ASM(x ## np) \
- DEF_ASM(x ## po) \
- DEF_ASM(x ## l) \
- DEF_ASM(x ## nge) \
- DEF_ASM(x ## nl) \
- DEF_ASM(x ## ge) \
- DEF_ASM(x ## le) \
- DEF_ASM(x ## ng) \
- DEF_ASM(x ## nle) \
- DEF_ASM(x ## g)
+    DEF_ASM(x##o)      \
+    DEF_ASM(x##no)     \
+    DEF_ASM(x##b)      \
+    DEF_ASM(x##c)      \
+    DEF_ASM(x##nae)    \
+    DEF_ASM(x##nb)     \
+    DEF_ASM(x##nc)     \
+    DEF_ASM(x##ae)     \
+    DEF_ASM(x##e)      \
+    DEF_ASM(x##z)      \
+    DEF_ASM(x##ne)     \
+    DEF_ASM(x##nz)     \
+    DEF_ASM(x##be)     \
+    DEF_ASM(x##na)     \
+    DEF_ASM(x##nbe)    \
+    DEF_ASM(x##a)      \
+    DEF_ASM(x##s)      \
+    DEF_ASM(x##ns)     \
+    DEF_ASM(x##p)      \
+    DEF_ASM(x##pe)     \
+    DEF_ASM(x##np)     \
+    DEF_ASM(x##po)     \
+    DEF_ASM(x##l)      \
+    DEF_ASM(x##nge)    \
+    DEF_ASM(x##nl)     \
+    DEF_ASM(x##ge)     \
+    DEF_ASM(x##le)     \
+    DEF_ASM(x##ng)     \
+    DEF_ASM(x##nle)    \
+    DEF_ASM(x##g)
 
 DEF_ASM(byte)
 DEF_ASM(align)

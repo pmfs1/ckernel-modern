@@ -3,13 +3,12 @@
 //
 // Build bootable OS image
 //
-
 #include <stdio.h>
 #include <sys/stat.h>
 
-#define PAGESIZE        4096
-#define SECTORSIZE      512
-#define TRAILINGPAGES   16
+#define PAGESIZE 4096
+#define SECTORSIZE 512
+#define TRAILINGPAGES 16
 
 unsigned char buffer[PAGESIZE];
 int len;
@@ -24,11 +23,13 @@ char *bootfn;
 char *imagefn;
 char *krnlfn;
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     int i;
 
     // check arguments
-    if (argc < 4) {
+    if (argc < 4)
+    {
         fprintf(stderr, "usage: buildimg <boot> <image> <kernel modules>\n");
         return 1;
     }
@@ -39,13 +40,15 @@ int main(int argc, char **argv) {
     printf("Boot sector %s\n", bootfn);
     // read boot sector
     boot = fopen(bootfn, "rb");
-    if (!boot) {
+    if (!boot)
+    {
         perror(bootfn);
         return 1;
     }
 
     len = fread(buffer, 1, SECTORSIZE, boot);
-    if (len != 512) {
+    if (len != 512)
+    {
         fprintf(stderr, "Error: boot sector %d bytes (%d bytes expected)\n", len, SECTORSIZE);
         return 1;
     }
@@ -54,10 +57,12 @@ int main(int argc, char **argv) {
 
     // get total size of image
     krnlsize = 0;
-    for (i = 3; i < argc; i++) {
+    for (i = 3; i < argc; i++)
+    {
         krnlfn = argv[i];
 
-        if (stat(krnlfn, &st) < 0) {
+        if (stat(krnlfn, &st) < 0)
+        {
             perror(krnlfn);
             return 1;
         }
@@ -71,7 +76,8 @@ int main(int argc, char **argv) {
 
     // create image file
     image = fopen(imagefn, "wb");
-    if (!image) {
+    if (!image)
+    {
         perror(imagefn);
         return 1;
     }
@@ -80,16 +86,19 @@ int main(int argc, char **argv) {
     fwrite(buffer, 1, SECTORSIZE, image);
 
     // write each kernel module
-    for (i = 3; i < argc; i++) {
+    for (i = 3; i < argc; i++)
+    {
         krnlfn = argv[i];
 
         krnl = fopen(krnlfn, "rb");
-        if (!krnl) {
+        if (!krnl)
+        {
             perror(krnlfn);
             return 1;
         }
 
-        while (len = fread(buffer, 1, PAGESIZE, krnl)) {
+        while (len = fread(buffer, 1, PAGESIZE, krnl))
+        {
             fwrite(buffer, 1, len, image);
         }
 
@@ -97,7 +106,8 @@ int main(int argc, char **argv) {
     }
 
     memset(buffer, 0, PAGESIZE);
-    for (i = 0; i < TRAILINGPAGES; i++) fwrite(buffer, 1, PAGESIZE, image);
+    for (i = 0; i < TRAILINGPAGES; i++)
+        fwrite(buffer, 1, PAGESIZE, image);
 
     fclose(boot);
     fclose(image);

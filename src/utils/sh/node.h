@@ -8,104 +8,105 @@
 // Node types
 //
 
-#define N_SIMPLECMD   0
-#define N_PIPELINE    1
-#define N_AND         2
-#define N_OR          3
-#define N_NOT         4
-#define N_SUBSHELL    5
-#define N_CMDLIST     6
-#define N_FOR         7
-#define N_CASE        8
-#define N_CASENODE    9
-#define N_IF         10
-#define N_WHILE      11
-#define N_UNTIL      12
-#define N_FUNCTION   13
-#define N_ARG        14
-#define N_REDIR      15
-#define N_ARGSTR     16
-#define N_ARGCMD     17
-#define N_ARGPARAM   18
-#define N_ARGARITH   19
+#define N_SIMPLECMD 0
+#define N_PIPELINE 1
+#define N_AND 2
+#define N_OR 3
+#define N_NOT 4
+#define N_SUBSHELL 5
+#define N_CMDLIST 6
+#define N_FOR 7
+#define N_CASE 8
+#define N_CASENODE 9
+#define N_IF 10
+#define N_WHILE 11
+#define N_UNTIL 12
+#define N_FUNCTION 13
+#define N_ARG 14
+#define N_REDIR 15
+#define N_ARGSTR 16
+#define N_ARGCMD 17
+#define N_ARGPARAM 18
+#define N_ARGARITH 19
 
 //
 // Redirection types
 //
 
-#define R_DIR     0x003 // Direction of redirection, either R_IN or R_OUT
-#define R_IN      0x001
-#define R_OUT     0x002
+#define R_DIR 0x003 // Direction of redirection, either R_IN or R_OUT
+#define R_IN 0x001
+#define R_OUT 0x002
 
-#define R_ACT     0x01c // Type of redirection, R_OPEN, R_DUP or R_HERE.
-#define R_OPEN    0x004
-#define R_DUP     0x008
-#define R_HERE    0x010
+#define R_ACT 0x01c // Type of redirection, R_OPEN, R_DUP or R_HERE.
+#define R_OPEN 0x004
+#define R_DUP 0x008
+#define R_HERE 0x010
 
-#define R_STRIP   0x020 // Stripped here-document
-#define R_APPEND  0x040 // Append mode for output redirections
+#define R_STRIP 0x020   // Stripped here-document
+#define R_APPEND 0x040  // Append mode for output redirections
 #define R_CLOBBER 0x080 // Clobbering for output redirections
-#define R_NOW     0x100 // Immediately open
+#define R_NOW 0x100     // Immediately open
 
 #define IFS_DEFAULT "�\t\n"
 
 // Parameter quoting
-#define S_TABLE      0x0003
+#define S_TABLE 0x0003
 #define S_UNQUOTED (0 << 0)
-#define S_DQUOTED  (1 << 0)
-#define S_SQUOTED  (2 << 0)
-#define S_ARITH    (3 << 0)
+#define S_DQUOTED (1 << 0)
+#define S_SQUOTED (2 << 0)
+#define S_ARITH (3 << 0)
 
-#define S_BQUOTE   (1 << 2)
+#define S_BQUOTE (1 << 2)
 
 // Substitution types
-#define S_SPECIAL    0x00f8
-#define S_ARGC     (1 << 3)  // $#
-#define S_ARGV     (2 << 3)  // $*
-#define S_ARGVS    (3 << 3)  // $@
-#define S_EXITCODE (4 << 3)  // $?
-#define S_FLAGS    (5 << 3)  // $-
-#define S_BGEXCODE (6 << 3)  // $!
-#define S_ARG      (7 << 3)  // $[0-9]
-#define S_PID      (8 << 3)  // $$
+#define S_SPECIAL 0x00f8
+#define S_ARGC (1 << 3)     // $#
+#define S_ARGV (2 << 3)     // $*
+#define S_ARGVS (3 << 3)    // $@
+#define S_EXITCODE (4 << 3) // $?
+#define S_FLAGS (5 << 3)    // $-
+#define S_BGEXCODE (6 << 3) // $!
+#define S_ARG (7 << 3)      // $[0-9]
+#define S_PID (8 << 3)      // $$
 
-#define S_VAR        0x0f00
-#define S_DEFAULT  (1 << 8)  // ${parameter:-word}
-#define S_ASGNDEF  (2 << 8)  // ${parameter:=word}
-#define S_ERRNULL  (3 << 8)  // ${parameter:?[word]}
-#define S_ALTERNAT (4 << 8)  // ${parameter:+word}
-#define S_RSSFX    (5 << 8)  // ${parameter%word}
-#define S_RLSFX    (6 << 8)  // ${parameter%%word}
-#define S_RSPFX    (7 << 8)  // ${parameter#word}
-#define S_RLPFX    (8 << 8)  // ${parameter##word}
+#define S_VAR 0x0f00
+#define S_DEFAULT (1 << 8)  // ${parameter:-word}
+#define S_ASGNDEF (2 << 8)  // ${parameter:=word}
+#define S_ERRNULL (3 << 8)  // ${parameter:?[word]}
+#define S_ALTERNAT (4 << 8) // ${parameter:+word}
+#define S_RSSFX (5 << 8)    // ${parameter%word}
+#define S_RLSFX (6 << 8)    // ${parameter%%word}
+#define S_RSPFX (7 << 8)    // ${parameter#word}
+#define S_RLPFX (8 << 8)    // ${parameter##word}
 
-#define S_STRLEN    0x01000
-#define S_NULL      0x02000  // Treat set but null as unset (:)
-#define S_NOSPLIT   0x04000
-#define S_ESCAPED   0x08000  // A char within here-doc delim is escaped
-#define S_GLOB      0x10000
-#define S_DELIM     0x20000  // Delimiter for here-dodument should be ignored
-#define S_BGND      0x40000  // Background execution
+#define S_STRLEN 0x01000
+#define S_NULL 0x02000 // Treat set but null as unset (:)
+#define S_NOSPLIT 0x04000
+#define S_ESCAPED 0x08000 // A char within here-doc delim is escaped
+#define S_GLOB 0x10000
+#define S_DELIM 0x20000 // Delimiter for here-dodument should be ignored
+#define S_BGND 0x40000  // Background execution
 
 //
 // Arithmetic expressions
 //
 
-#define A_VAR       0x101  // Variable identifier
-#define A_NUM       0x102  // Number
-#define A_SHL       0x103  // Shift left (<<)
-#define A_SHR       0x104  // Shift right (>>)
-#define A_GE        0x105  // Greater than or equal (>=)
-#define A_LE        0x106  // Less than or equal (<=)
-#define A_EQ        0x107  // Equal (==)
-#define A_NE        0x108  // Not equal (!=)
-#define A_AND       0x109  // And (&&)
-#define A_OR        0x10A  // Or (||)
+#define A_VAR 0x101 // Variable identifier
+#define A_NUM 0x102 // Number
+#define A_SHL 0x103 // Shift left (<<)
+#define A_SHR 0x104 // Shift right (>>)
+#define A_GE 0x105  // Greater than or equal (>=)
+#define A_LE 0x106  // Less than or equal (<=)
+#define A_EQ 0x107  // Equal (==)
+#define A_NE 0x108  // Not equal (!=)
+#define A_AND 0x109 // And (&&)
+#define A_OR 0x10A  // Or (||)
 
-#define A_ASSIGN    0x200  // Assignment operator flag
-#define A_NONE      0x400  // Invalid operator
+#define A_ASSIGN 0x200 // Assignment operator flag
+#define A_NONE 0x400   // Invalid operator
 
-struct expr {
+struct expr
+{
     int op;
     char *var;
     int num;
@@ -117,7 +118,8 @@ struct expr {
 // All node types starts with type, flags, and a next pointer for building lists
 //
 
-struct list {
+struct list
+{
     int type;
     int flags;
     union node *next;
@@ -131,7 +133,8 @@ struct list {
 // background
 //
 
-struct ncmd {
+struct ncmd
+{
     int type;
     int flags;
     union node *next;
@@ -144,7 +147,8 @@ struct ncmd {
 // 3.9.2 - Pipeline
 //
 
-struct npipe {
+struct npipe
+{
     int type;
     int flags;
     union node *next;
@@ -160,7 +164,8 @@ struct npipe {
 
 // AND-OR list
 
-struct nandor {
+struct nandor
+{
     int type;
     int flags;
     union node *next;
@@ -170,7 +175,8 @@ struct nandor {
 
 // List
 
-struct nlist {
+struct nlist
+{
     int type;
     int flags;
     union node *next;
@@ -181,7 +187,8 @@ struct nlist {
 // 3.9.4.1 - Grouping compound
 //
 
-struct ngrp {
+struct ngrp
+{
     int type;
     int flags;
     union node *next;
@@ -193,7 +200,8 @@ struct ngrp {
 // 3.9.4.2 - for loop
 //
 
-struct nfor {
+struct nfor
+{
     int type;
     int flags;
     union node *next;
@@ -204,10 +212,11 @@ struct nfor {
 };
 
 //
-// 3.9.4.3 - case conditional 
+// 3.9.4.3 - case conditional
 //
 
-struct ncase {
+struct ncase
+{
     int type;
     int flags;
     union node *next;
@@ -216,7 +225,8 @@ struct ncase {
     union node *word;
 };
 
-struct ncasenode {
+struct ncasenode
+{
     int type;
     int flags;
     union node *next;
@@ -228,7 +238,8 @@ struct ncasenode {
 // 3.9.4.4 - if conditional
 //
 
-struct nif {
+struct nif
+{
     int type;
     int flags;
     union node *next;
@@ -243,7 +254,8 @@ struct nif {
 // 3.9.4.6 - until loop
 //
 
-struct nloop {
+struct nloop
+{
     int type;
     int flags;
     union node *next;
@@ -253,10 +265,11 @@ struct nloop {
 };
 
 //
-// 3.9.5 - Function definition 
+// 3.9.5 - Function definition
 //
 
-struct nfunc {
+struct nfunc
+{
     int type;
     int flags;
     union node *next;
@@ -269,9 +282,10 @@ struct nfunc {
 //
 // A word is either a redirection, an argument, or an assignment.
 // The members nredir.file and nassign.args are themselves a narg.
-// 
+//
 
-struct narg {
+struct narg
+{
     int type;
     int flags;
     union node *next;
@@ -281,7 +295,8 @@ struct narg {
 
 // [fd]<operator><file>
 
-struct nredir {
+struct nredir
+{
     int type;
     int flags;
     union node *next;
@@ -294,14 +309,16 @@ struct nredir {
 // Argument (word) subnodes
 //
 
-struct nargstr {
+struct nargstr
+{
     int type;
     int flags;
     union node *next;
     char *text;
 };
 
-struct nargparam {
+struct nargparam
+{
     int type;
     int flags;
     union node *next;
@@ -310,14 +327,16 @@ struct nargparam {
     int num;
 };
 
-struct nargcmd {
+struct nargcmd
+{
     int type;
     int flags;
     union node *next;
     union node *list;
 };
 
-struct nargarith {
+struct nargarith
+{
     int type;
     int flags;
     union node *next;
@@ -328,7 +347,8 @@ struct nargarith {
 // Nodes
 //
 
-union node {
+union node
+{
     int type;
     struct list list;
     struct ncmd ncmd;

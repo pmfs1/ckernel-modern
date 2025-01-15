@@ -9,8 +9,8 @@
 
 #include "compiler.h"
 #include <inttypes.h>
-#include "insnsi.h"        /* For enum opcode */
-#include "opflags.h"        /* For opflags_t */
+#include "insnsi.h"  /* For enum opcode */
+#include "opflags.h" /* For opflags_t */
 
 /* --- From standard.mac via macros.pl: --- */
 

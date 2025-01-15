@@ -79,79 +79,82 @@
  * next operation.
  */
 
-#define RECORD_MAX (1024-3)     /* maximal size of any record except type+reclen */
-#define OBJ_PARMS  3            /* maximum .parm used by any .ori routine */
+#define RECORD_MAX (1024 - 3) /* maximal size of any record except type+reclen */
+#define OBJ_PARMS 3           /* maximum .parm used by any .ori routine */
 
-#define FIX_08_LOW      0x8000  /* location type for various fixup subrecords */
-#define FIX_16_OFFSET   0x8400
+#define FIX_08_LOW 0x8000 /* location type for various fixup subrecords */
+#define FIX_16_OFFSET 0x8400
 #define FIX_16_SELECTOR 0x8800
-#define FIX_32_POINTER  0x8C00
-#define FIX_08_HIGH     0x9000
-#define FIX_32_OFFSET   0xA400
-#define FIX_48_POINTER  0xAC00
+#define FIX_32_POINTER 0x8C00
+#define FIX_08_HIGH 0x9000
+#define FIX_32_OFFSET 0xA400
+#define FIX_48_POINTER 0xAC00
 
-enum RecordID {                 /* record ID codes */
+enum RecordID
+{ /* record ID codes */
 
-    THEADR = 0x80,              /* module header */
-    COMENT = 0x88,              /* comment record */
+  THEADR = 0x80, /* module header */
+  COMENT = 0x88, /* comment record */
 
-    LINNUM = 0x94,              /* line number record */
-    LNAMES = 0x96,              /* list of names */
+  LINNUM = 0x94, /* line number record */
+  LNAMES = 0x96, /* list of names */
 
-    SEGDEF = 0x98,              /* segment definition */
-    GRPDEF = 0x9A,              /* group definition */
-    EXTDEF = 0x8C,              /* external definition */
-    PUBDEF = 0x90,              /* public definition */
-    COMDEF = 0xB0,              /* common definition */
+  SEGDEF = 0x98, /* segment definition */
+  GRPDEF = 0x9A, /* group definition */
+  EXTDEF = 0x8C, /* external definition */
+  PUBDEF = 0x90, /* public definition */
+  COMDEF = 0xB0, /* common definition */
 
-    LEDATA = 0xA0,              /* logical enumerated data */
-    FIXUPP = 0x9C,              /* fixups (relocations) */
-    FIXU32 = 0x9D,              /* 32-bit fixups (relocations) */
+  LEDATA = 0xA0, /* logical enumerated data */
+  FIXUPP = 0x9C, /* fixups (relocations) */
+  FIXU32 = 0x9D, /* 32-bit fixups (relocations) */
 
-    MODEND = 0x8A,              /* module end */
-    MODE32 = 0x8B               /* module end for 32-bit objects */
+  MODEND = 0x8A, /* module end */
+  MODE32 = 0x8B  /* module end for 32-bit objects */
 };
 
-enum ComentID {                 /* ID codes for comment records */
+enum ComentID
+{ /* ID codes for comment records */
 
-    dEXTENDED = 0xA1,           /* tells that we are using translator-specific extensions */
-    dLINKPASS = 0xA2,           /* link pass 2 marker */
-    dTYPEDEF = 0xE3,            /* define a type */
-    dSYM = 0xE6,                /* symbol debug record */
-    dFILNAME = 0xE8,            /* file name record */
-    dCOMPDEF = 0xEA             /* compiler type info */
+  dEXTENDED = 0xA1, /* tells that we are using translator-specific extensions */
+  dLINKPASS = 0xA2, /* link pass 2 marker */
+  dTYPEDEF = 0xE3,  /* define a type */
+  dSYM = 0xE6,      /* symbol debug record */
+  dFILNAME = 0xE8,  /* file name record */
+  dCOMPDEF = 0xEA   /* compiler type info */
 };
 
 typedef struct ObjRecord ObjRecord;
-typedef void ORI(ObjRecord * orp);
+typedef void ORI(ObjRecord *orp);
 
-struct ObjRecord {
-    ORI *ori;                   /* Initialization routine           */
-    int used;                   /* Current data size                */
-    int committed;              /* Data size at last boundary       */
-    int x_size;                 /* (see obj_x)                      */
-    unsigned int type;          /* Record type                      */
-    ObjRecord *child;           /* Associated record below this one */
-    ObjRecord **up;             /* Master pointer to this ObjRecord */
-    ObjRecord *back;            /* Previous part of this record     */
-    uint32_t parm[OBJ_PARMS];      /* Parameters for ori routine       */
+struct ObjRecord
+{
+    ORI *ori;                 /* Initialization routine           */
+    int used;                 /* Current data size                */
+    int committed;            /* Data size at last boundary       */
+    int x_size;               /* (see obj_x)                      */
+    unsigned int type;        /* Record type                      */
+    ObjRecord *child;         /* Associated record below this one */
+    ObjRecord **up;           /* Master pointer to this ObjRecord */
+    ObjRecord *back;          /* Previous part of this record     */
+    uint32_t parm[OBJ_PARMS]; /* Parameters for ori routine       */
     uint8_t buf[RECORD_MAX + 3];
 };
 
-static void obj_fwrite(ObjRecord * orp);
-static void ori_ledata(ObjRecord * orp);
-static void ori_pubdef(ObjRecord * orp);
-static void ori_null(ObjRecord * orp);
-static ObjRecord *obj_commit(ObjRecord * orp);
+static void obj_fwrite(ObjRecord *orp);
+static void ori_ledata(ObjRecord *orp);
+static void ori_pubdef(ObjRecord *orp);
+static void ori_null(ObjRecord *orp);
+static ObjRecord *obj_commit(ObjRecord *orp);
 
-static bool obj_uppercase;       /* Flag: all names in uppercase */
-static bool obj_use32;           /* Flag: at least one segment is 32-bit */
+static bool obj_uppercase; /* Flag: all names in uppercase */
+static bool obj_use32;     /* Flag: at least one segment is 32-bit */
 
 /*
  * Clear an ObjRecord structure.  (Never reallocates).
  * To simplify reuse of ObjRecord's, .type, .ori and .parm are not cleared.
  */
-static ObjRecord *obj_clear(ObjRecord * orp)
+static ObjRecord *obj_clear(ObjRecord *orp)
 {
     orp->used = 0;
     orp->committed = 0;
@@ -169,9 +172,10 @@ static ObjRecord *obj_clear(ObjRecord * orp)
  * The previous part and the child are freed.  The main ObjRecord is cleared,
  * not freed.
  */
-static ObjRecord *obj_emit(ObjRecord * orp)
+static ObjRecord *obj_emit(ObjRecord *orp)
 {
-    if (orp->back) {
+    if (orp->back)
+    {
         obj_emit(orp->back);
         as_free(orp->back);
     }
@@ -179,7 +183,8 @@ static ObjRecord *obj_emit(ObjRecord * orp)
     if (orp->committed)
         obj_fwrite(orp);
 
-    if (orp->child) {
+    if (orp->child)
+    {
         obj_emit(orp->child);
         as_free(orp->child);
     }
@@ -190,7 +195,7 @@ static ObjRecord *obj_emit(ObjRecord * orp)
 /*
  * Commit and Emit a record.  (Never reallocates).
  */
-static ObjRecord *obj_emit2(ObjRecord * orp)
+static ObjRecord *obj_emit2(ObjRecord *orp)
 {
     obj_commit(orp);
     return (obj_emit(orp));
@@ -213,24 +218,27 @@ static ObjRecord *obj_new(void)
  * is incompatible.
  * Any uncommited data is moved into the next record.
  */
-static ObjRecord *obj_bump(ObjRecord * orp)
+static ObjRecord *obj_bump(ObjRecord *orp)
 {
     ObjRecord *nxt;
     int used = orp->used;
     int committed = orp->committed;
 
-    if (orp->up) {
+    if (orp->up)
+    {
         *orp->up = nxt = obj_new();
         nxt->ori = orp->ori;
         nxt->type = orp->type;
         nxt->up = orp->up;
         nxt->back = orp;
         memcpy(nxt->parm, orp->parm, sizeof(orp->parm));
-    } else
+    }
+    else
         nxt = obj_emit(orp);
 
     used -= committed;
-    if (used) {
+    if (used)
+    {
         nxt->committed = 1;
         nxt->ori(nxt);
         nxt->committed = nxt->used;
@@ -244,12 +252,13 @@ static ObjRecord *obj_bump(ObjRecord * orp)
 /*
  * Advance to the next record if necessary to allow the next field to fit.
  */
-static ObjRecord *obj_check(ObjRecord * orp, int size)
+static ObjRecord *obj_check(ObjRecord *orp, int size)
 {
     if (orp->used + size > RECORD_MAX)
         orp = obj_bump(orp);
 
-    if (!orp->committed) {
+    if (!orp->committed)
+    {
         orp->committed = 1;
         orp->ori(orp);
         orp->committed = orp->used;
@@ -262,7 +271,7 @@ static ObjRecord *obj_check(ObjRecord * orp, int size)
  * All data written so far is commited to the current record (won't be moved to
  * the next record in case of continuation).
  */
-static ObjRecord *obj_commit(ObjRecord * orp)
+static ObjRecord *obj_commit(ObjRecord *orp)
 {
     orp->committed = orp->used;
     return (orp);
@@ -271,7 +280,7 @@ static ObjRecord *obj_commit(ObjRecord * orp)
 /*
  * Write a byte
  */
-static ObjRecord *obj_byte(ObjRecord * orp, uint8_t val)
+static ObjRecord *obj_byte(ObjRecord *orp, uint8_t val)
 {
     orp = obj_check(orp, 1);
     orp->buf[orp->used] = val;
@@ -282,7 +291,7 @@ static ObjRecord *obj_byte(ObjRecord * orp, uint8_t val)
 /*
  * Write a word
  */
-static ObjRecord *obj_word(ObjRecord * orp, unsigned int val)
+static ObjRecord *obj_word(ObjRecord *orp, unsigned int val)
 {
     orp = obj_check(orp, 2);
     orp->buf[orp->used] = val;
@@ -294,7 +303,7 @@ static ObjRecord *obj_word(ObjRecord * orp, unsigned int val)
 /*
  * Write a reversed word
  */
-static ObjRecord *obj_rword(ObjRecord * orp, unsigned int val)
+static ObjRecord *obj_rword(ObjRecord *orp, unsigned int val)
 {
     orp = obj_check(orp, 2);
     orp->buf[orp->used] = val >> 8;
@@ -306,7 +315,7 @@ static ObjRecord *obj_rword(ObjRecord * orp, unsigned int val)
 /*
  * Write a dword
  */
-static ObjRecord *obj_dword(ObjRecord * orp, uint32_t val)
+static ObjRecord *obj_dword(ObjRecord *orp, uint32_t val)
 {
     orp = obj_check(orp, 4);
     orp->buf[orp->used] = val;
@@ -327,7 +336,7 @@ static ObjRecord *obj_dword(ObjRecord * orp, uint32_t val)
  * linkers that have bugs in their processing of the size bit.
  */
 
-static ObjRecord *obj_force(ObjRecord * orp, int x)
+static ObjRecord *obj_force(ObjRecord *orp, int x)
 {
     if (orp->x_size == (x ^ 48))
         orp = obj_bump(orp);
@@ -339,16 +348,17 @@ static ObjRecord *obj_force(ObjRecord * orp, int x)
  * This routine writes a field of size x.  The caller does not need to worry at
  * all about whether 16-bits or 32-bits are required.
  */
-static ObjRecord *obj_x(ObjRecord * orp, uint32_t val)
+static ObjRecord *obj_x(ObjRecord *orp, uint32_t val)
 {
     if (orp->type & 1)
         orp->x_size = 32;
     if (val > 0xFFFF)
         orp = obj_force(orp, 32);
-    if (orp->x_size == 32) {
-    ObjRecord *nxt = obj_dword(orp, val);
-    nxt->x_size = 32;	/* x_size is cleared when a record overflows */
-    return nxt;
+    if (orp->x_size == 32)
+    {
+        ObjRecord *nxt = obj_dword(orp, val);
+        nxt->x_size = 32; /* x_size is cleared when a record overflows */
+        return nxt;
     }
     orp->x_size = 16;
     return (obj_word(orp, val));
@@ -357,7 +367,7 @@ static ObjRecord *obj_x(ObjRecord * orp, uint32_t val)
 /*
  * Writes an index
  */
-static ObjRecord *obj_index(ObjRecord * orp, unsigned int val)
+static ObjRecord *obj_index(ObjRecord *orp, unsigned int val)
 {
     if (val < 128)
         return (obj_byte(orp, val));
@@ -367,11 +377,12 @@ static ObjRecord *obj_index(ObjRecord * orp, unsigned int val)
 /*
  * Writes a variable length value
  */
-static ObjRecord *obj_value(ObjRecord * orp, uint32_t val)
+static ObjRecord *obj_value(ObjRecord *orp, uint32_t val)
 {
     if (val <= 128)
         return (obj_byte(orp, val));
-    if (val <= 0xFFFF) {
+    if (val <= 0xFFFF)
+    {
         orp = obj_byte(orp, 129);
         return (obj_word(orp, val));
     }
@@ -384,7 +395,7 @@ static ObjRecord *obj_value(ObjRecord * orp, uint32_t val)
 /*
  * Writes a counted string
  */
-static ObjRecord *obj_name(ObjRecord * orp, const char *name)
+static ObjRecord *obj_name(ObjRecord *orp, const char *name)
 {
     int len = strlen(name);
     uint8_t *ptr;
@@ -394,10 +405,12 @@ static ObjRecord *obj_name(ObjRecord * orp, const char *name)
     *ptr++ = len;
     orp->used += len + 1;
     if (obj_uppercase)
-        while (--len >= 0) {
+        while (--len >= 0)
+        {
             *ptr++ = toupper(*name);
             name++;
-    } else
+        }
+    else
         memcpy(ptr, name, len);
     return (orp);
 }
@@ -411,7 +424,7 @@ static ObjRecord *obj_name(ObjRecord * orp, const char *name)
  * last commit point.
  * parm[2] is a copy of parm[0] as it was when the current record was initted.
  */
-static void ori_ledata(ObjRecord * orp)
+static void ori_ledata(ObjRecord *orp)
 {
     obj_index(orp, orp->parm[1]);
     orp->parm[2] = orp->parm[0];
@@ -424,7 +437,7 @@ static void ori_ledata(ObjRecord * orp)
  * parm[1] = segment index
  * parm[2] = frame (only used when both indexes are zero)
  */
-static void ori_pubdef(ObjRecord * orp)
+static void ori_pubdef(ObjRecord *orp)
 {
     obj_index(orp, orp->parm[0]);
     obj_index(orp, orp->parm[1]);
@@ -437,7 +450,7 @@ static void ori_pubdef(ObjRecord * orp)
  * parm[0] = group index
  * parm[1] = segment index
  */
-static void ori_linnum(ObjRecord * orp)
+static void ori_linnum(ObjRecord *orp)
 {
     obj_index(orp, orp->parm[0]);
     obj_index(orp, orp->parm[1]);
@@ -446,7 +459,7 @@ static void ori_linnum(ObjRecord * orp)
 /*
  * Initializer for a local vars record.
  */
-static void ori_local(ObjRecord * orp)
+static void ori_local(ObjRecord *orp)
 {
     obj_byte(orp, 0x40);
     obj_byte(orp, dSYM);
@@ -455,9 +468,9 @@ static void ori_local(ObjRecord * orp)
 /*
  * Null initializer for records that continue without any header info
  */
-static void ori_null(ObjRecord * orp)
+static void ori_null(ObjRecord *orp)
 {
-    (void)orp;                  /* Do nothing */
+    (void)orp; /* Do nothing */
 }
 
 /*
@@ -471,104 +484,117 @@ static bool any_segs;
 static int passtwo;
 static int arrindex;
 
-#define GROUP_MAX 256           /* we won't _realistically_ have more
-                                 * than this many segs in a group */
-#define EXT_BLKSIZ 256          /* block size for externals list */
+#define GROUP_MAX 256  /* we won't _realistically_ have more \
+                        * than this many segs in a group */
+#define EXT_BLKSIZ 256 /* block size for externals list */
 
-struct Segment;                 /* need to know these structs exist */
+struct Segment; /* need to know these structs exist */
 struct Group;
 
-struct LineNumber {
+struct LineNumber
+{
     struct LineNumber *next;
     struct Segment *segment;
     int32_t offset;
     int32_t lineno;
 };
 
-static struct FileName {
+static struct FileName
+{
     struct FileName *next;
     char *name;
     struct LineNumber *lnhead, **lntail;
     int index;
 } *fnhead, **fntail;
 
-static struct Array {
+static struct Array
+{
     struct Array *next;
     unsigned size;
     int basetype;
 } *arrhead, **arrtail;
 
-#define ARRAYBOT 31             /* magic number  for first array index */
+#define ARRAYBOT 31 /* magic number  for first array index */
 
-static struct Public {
+static struct Public
+{
     struct Public *next;
     char *name;
     int32_t offset;
-    int32_t segment;               /* only if it's far-absolute */
-    int type;                   /* only for local debug syms */
+    int32_t segment; /* only if it's far-absolute */
+    int type;        /* only for local debug syms */
 } *fpubhead, **fpubtail, *last_defined;
 
-static struct External {
+static struct External
+{
     struct External *next;
     char *name;
     int32_t commonsize;
-    int32_t commonelem;            /* element size if FAR, else zero */
-    int index;                  /* OBJ-file external index */
-    enum {
-        DEFWRT_NONE,            /* no unusual default-WRT */
-        DEFWRT_STRING,          /* a string we don't yet understand */
-        DEFWRT_SEGMENT,         /* a segment */
-        DEFWRT_GROUP            /* a group */
+    int32_t commonelem; /* element size if FAR, else zero */
+    int index;          /* OBJ-file external index */
+    enum
+    {
+        DEFWRT_NONE,    /* no unusual default-WRT */
+        DEFWRT_STRING,  /* a string we don't yet understand */
+        DEFWRT_SEGMENT, /* a segment */
+        DEFWRT_GROUP    /* a group */
     } defwrt_type;
-    union {
+    union
+    {
         char *string;
         struct Segment *seg;
         struct Group *grp;
     } defwrt_ptr;
-    struct External *next_dws;  /* next with DEFWRT_STRING */
+    struct External *next_dws; /* next with DEFWRT_STRING */
 } *exthead, **exttail, *dws;
 
 static int externals;
 
-static struct ExtBack {
+static struct ExtBack
+{
     struct ExtBack *next;
     struct External *exts[EXT_BLKSIZ];
 } *ebhead, **ebtail;
 
-static struct Segment {
+static struct Segment
+{
     struct Segment *next;
-    int32_t index;                 /* the AS segment id */
-    int32_t obj_index;             /* the OBJ-file segment index */
-    struct Group *grp;          /* the group it beint32_ts to */
+    int32_t index;     /* the AS segment id */
+    int32_t obj_index; /* the OBJ-file segment index */
+    struct Group *grp; /* the group it beint32_ts to */
     uint32_t currentpos;
-    int32_t align;                 /* can be SEG_ABS + absolute addr */
-    enum {
+    int32_t align; /* can be SEG_ABS + absolute addr */
+    enum
+    {
         CMB_PRIVATE = 0,
         CMB_PUBLIC = 2,
         CMB_STACK = 5,
         CMB_COMMON = 6
     } combine;
-    bool use32;                 /* is this segment 32-bit? */
+    bool use32; /* is this segment 32-bit? */
     struct Public *pubhead, **pubtail, *lochead, **loctail;
     char *name;
-    char *segclass, *overlay;   /* `class' is a C++ keyword :-) */
+    char *segclass, *overlay; /* `class' is a C++ keyword :-) */
     ObjRecord *orp;
 } *seghead, **segtail, *obj_seg_needs_update;
 
-static struct Group {
+static struct Group
+{
     struct Group *next;
     char *name;
-    int32_t index;                 /* AS segment id */
-    int32_t obj_index;             /* OBJ-file group index */
-    int32_t nentries;              /* number of elements... */
-    int32_t nindices;              /* ...and number of index elts... */
-    union {
+    int32_t index;     /* AS segment id */
+    int32_t obj_index; /* OBJ-file group index */
+    int32_t nentries;  /* number of elements... */
+    int32_t nindices;  /* ...and number of index elts... */
+    union
+    {
         int32_t index;
         char *name;
-    } segs[GROUP_MAX];          /* ...in this */
+    } segs[GROUP_MAX]; /* ...in this */
 } *grphead, **grptail, *obj_grp_needs_update;
 
-static struct ImpDef {
+static struct ImpDef
+{
     struct ImpDef *next;
     char *extname;
     char *libname;
@@ -576,7 +602,8 @@ static struct ImpDef {
     char *impname;
 } *imphead, **imptail;
 
-static struct ExpDef {
+static struct ExpDef
+{
     struct ExpDef *next;
     char *intname;
     char *extname;
@@ -584,10 +611,10 @@ static struct ExpDef {
     int flags;
 } *exphead, **exptail;
 
-#define EXPDEF_FLAG_ORDINAL  0x80
+#define EXPDEF_FLAG_ORDINAL 0x80
 #define EXPDEF_FLAG_RESIDENT 0x40
-#define EXPDEF_FLAG_NODATA   0x20
-#define EXPDEF_MASK_PARMCNT  0x1F
+#define EXPDEF_FLAG_NODATA 0x20
+#define EXPDEF_MASK_PARMCNT 0x1F
 
 static int32_t obj_entry_seg, obj_entry_ofs;
 
@@ -638,10 +665,12 @@ static void obj_cleanup(int debuginfo)
 {
     obj_write_file(debuginfo);
     of_obj.current_dfmt->cleanup();
-    while (seghead) {
+    while (seghead)
+    {
         struct Segment *segtmp = seghead;
         seghead = seghead->next;
-        while (segtmp->pubhead) {
+        while (segtmp->pubhead)
+        {
             struct Public *pubtmp = segtmp->pubhead;
             segtmp->pubhead = pubtmp->next;
             as_free(pubtmp->name);
@@ -651,38 +680,44 @@ static void obj_cleanup(int debuginfo)
         as_free(segtmp->overlay);
         as_free(segtmp);
     }
-    while (fpubhead) {
+    while (fpubhead)
+    {
         struct Public *pubtmp = fpubhead;
         fpubhead = fpubhead->next;
         as_free(pubtmp->name);
         as_free(pubtmp);
     }
-    while (exthead) {
+    while (exthead)
+    {
         struct External *exttmp = exthead;
         exthead = exthead->next;
         as_free(exttmp);
     }
-    while (imphead) {
+    while (imphead)
+    {
         struct ImpDef *imptmp = imphead;
         imphead = imphead->next;
         as_free(imptmp->extname);
         as_free(imptmp->libname);
-        as_free(imptmp->impname);     /* as_free won't mind if it's NULL */
+        as_free(imptmp->impname); /* as_free won't mind if it's NULL */
         as_free(imptmp);
     }
-    while (exphead) {
+    while (exphead)
+    {
         struct ExpDef *exptmp = exphead;
         exphead = exphead->next;
         as_free(exptmp->extname);
         as_free(exptmp->intname);
         as_free(exptmp);
     }
-    while (ebhead) {
+    while (ebhead)
+    {
         struct ExtBack *ebtmp = ebhead;
         ebhead = ebhead->next;
         as_free(ebtmp);
     }
-    while (grphead) {
+    while (grphead)
+    {
         struct Group *grptmp = grphead;
         grphead = grphead->next;
         as_free(grptmp);
@@ -695,7 +730,8 @@ static void obj_ext_set_defwrt(struct External *ext, char *id)
     struct Group *grp;
 
     for (seg = seghead; seg; seg = seg->next)
-        if (!strcmp(seg->name, id)) {
+        if (!strcmp(seg->name, id))
+        {
             ext->defwrt_type = DEFWRT_SEGMENT;
             ext->defwrt_ptr.seg = seg;
             as_free(id);
@@ -703,7 +739,8 @@ static void obj_ext_set_defwrt(struct External *ext, char *id)
         }
 
     for (grp = grphead; grp; grp = grp->next)
-        if (!strcmp(grp->name, id)) {
+        if (!strcmp(grp->name, id))
+        {
             ext->defwrt_type = DEFWRT_GROUP;
             ext->defwrt_ptr.grp = grp;
             as_free(id);
@@ -739,12 +776,12 @@ static void obj_deflabel(char *name, int32_t segment,
     struct ExtBack *eb;
     struct Segment *seg;
     int i;
-    bool used_special = false;   /* have we used the special text? */
+    bool used_special = false; /* have we used the special text? */
 
-#if defined(DEBUG) && DEBUG>2
+#if defined(DEBUG) && DEBUG > 2
     as_error(ERR_DEBUG,
-            " obj_deflabel: %s, seg=%"PRIx32", off=%"PRIx64", is_global=%d, %s\n",
-            name, segment, offset, is_global, special);
+             " obj_deflabel: %s, seg=%" PRIx32 ", off=%" PRIx64 ", is_global=%d, %s\n",
+             name, segment, offset, is_global, special);
 #endif
 
     /*
@@ -757,8 +794,10 @@ static void obj_deflabel(char *name, int32_t segment,
      * First check for the double-period, signifying something
      * unusual.
      */
-    if (name[0] == '.' && name[1] == '.' && name[2] != '@') {
-        if (!strcmp(name, "..start")) {
+    if (name[0] == '.' && name[1] == '.' && name[2] != '@')
+    {
+        if (!strcmp(name, "..start"))
+        {
             obj_entry_seg = segment;
             obj_entry_ofs = offset;
             return;
@@ -769,21 +808,26 @@ static void obj_deflabel(char *name, int32_t segment,
     /*
      * Case (i):
      */
-    if (obj_seg_needs_update) {
+    if (obj_seg_needs_update)
+    {
         obj_seg_needs_update->name = name;
         return;
-    } else if (obj_grp_needs_update) {
+    }
+    else if (obj_grp_needs_update)
+    {
         obj_grp_needs_update->name = name;
         return;
     }
     if (segment < SEG_ABS && segment != NO_SEG && segment % 2)
         return;
 
-    if (segment >= SEG_ABS || segment == NO_SEG) {
+    if (segment >= SEG_ABS || segment == NO_SEG)
+    {
         /*
          * SEG_ABS subcase of (ii).
          */
-        if (is_global) {
+        if (is_global)
+        {
             struct Public *pub;
 
             pub = *fpubtail = as_malloc(sizeof(*pub));
@@ -795,7 +839,7 @@ static void obj_deflabel(char *name, int32_t segment,
         }
         if (special)
             as_error(ERR_NONFATAL, "OBJ supports no special symbol features"
-                  " for this symbol type");
+                                   " for this symbol type");
         return;
     }
 
@@ -804,14 +848,16 @@ static void obj_deflabel(char *name, int32_t segment,
      * default segment, if they're trying to declare a label in
      * `first_seg'.
      */
-    if (!any_segs && segment == first_seg) {
-        int tempint;            /* ignored */
+    if (!any_segs && segment == first_seg)
+    {
+        int tempint; /* ignored */
         if (segment != obj_segment("__ASDEFSEG", 2, &tempint))
             as_error(ERR_PANIC, "strange segment conditions in OBJ driver");
     }
 
     for (seg = seghead; seg && is_global; seg = seg->next)
-        if (seg->index == segment) {
+        if (seg->index == segment)
+        {
             struct Public *loc = as_malloc(sizeof(*loc));
             /*
              * Case (ii). Maybe MODPUB someday?
@@ -824,15 +870,16 @@ static void obj_deflabel(char *name, int32_t segment,
 
             if (special)
                 as_error(ERR_NONFATAL,
-                      "OBJ supports no special symbol features"
-                      " for this symbol type");
+                         "OBJ supports no special symbol features"
+                         " for this symbol type");
             return;
         }
 
     /*
      * Case (iii).
      */
-    if (is_global) {
+    if (is_global)
+    {
         ext = *exttail = as_malloc(sizeof(*ext));
         ext->next = NULL;
         exttail = &ext->next;
@@ -851,23 +898,30 @@ static void obj_deflabel(char *name, int32_t segment,
 #if 0
         if (current_seg) {
 #else
-        if (current_seg && current_seg->use32) {
-            if (current_seg->grp) {
+        if (current_seg && current_seg->use32)
+        {
+            if (current_seg->grp)
+            {
                 ext->defwrt_type = DEFWRT_GROUP;
                 ext->defwrt_ptr.grp = current_seg->grp;
-            } else {
+            }
+            else
+            {
                 ext->defwrt_type = DEFWRT_SEGMENT;
                 ext->defwrt_ptr.seg = current_seg;
             }
         }
 #endif
 
-        if (is_global == 2) {
+        if (is_global == 2)
+        {
             ext->commonsize = offset;
-            ext->commonelem = 1;        /* default FAR */
-        } else
+            ext->commonelem = 1; /* default FAR */
+        }
+        else
             ext->commonsize = 0;
-    } else
+    }
+    else
         return;
 
     /*
@@ -875,13 +929,15 @@ static void obj_deflabel(char *name, int32_t segment,
      * specifications and common-variable element-size and near/far
      * specifications.
      */
-    while (special && *special) {
+    while (special && *special)
+    {
         used_special = true;
 
         /*
          * We might have a default-WRT specification.
          */
-        if (!as_strnicmp(special, "wrt", 3)) {
+        if (!as_strnicmp(special, "wrt", 3))
+        {
             char *p;
             int len;
             special += 3;
@@ -891,7 +947,8 @@ static void obj_deflabel(char *name, int32_t segment,
             special += len;
             if (*special && *special != ':')
                 as_error(ERR_NONFATAL, "`:' expected in special symbol"
-                      " text for `%s'", ext->name);
+                                       " text for `%s'",
+                         ext->name);
             else if (*special == ':')
                 special++;
         }
@@ -900,22 +957,27 @@ static void obj_deflabel(char *name, int32_t segment,
          * The NEAR or FAR keywords specify nearness or
          * farness. FAR gives default element size 1.
          */
-        if (!as_strnicmp(special, "far", 3)) {
+        if (!as_strnicmp(special, "far", 3))
+        {
             if (ext->commonsize)
                 ext->commonelem = 1;
             else
                 as_error(ERR_NONFATAL,
-                      "`%s': `far' keyword may only be applied"
-                      " to common variables\n", ext->name);
+                         "`%s': `far' keyword may only be applied"
+                         " to common variables\n",
+                         ext->name);
             special += 3;
             special += strspn(special, " \t");
-        } else if (!as_strnicmp(special, "near", 4)) {
+        }
+        else if (!as_strnicmp(special, "near", 4))
+        {
             if (ext->commonsize)
                 ext->commonelem = 0;
             else
                 as_error(ERR_NONFATAL,
-                      "`%s': `far' keyword may only be applied"
-                      " to common variables\n", ext->name);
+                         "`%s': `far' keyword may only be applied"
+                         " to common variables\n",
+                         ext->name);
             special += 4;
             special += strspn(special, " \t");
         }
@@ -928,8 +990,10 @@ static void obj_deflabel(char *name, int32_t segment,
          */
         if (*special == ':')
             special++;
-        else if (*special) {
-            if (ext->commonsize) {
+        else if (*special)
+        {
+            if (ext->commonsize)
+            {
                 expr *e;
                 struct tokenval tokval;
 
@@ -937,18 +1001,22 @@ static void obj_deflabel(char *name, int32_t segment,
                 stdscan_set(special);
                 tokval.t_type = TOKEN_INVALID;
                 e = evaluate(stdscan, NULL, &tokval, NULL, 1, as_error, NULL);
-                if (e) {
+                if (e)
+                {
                     if (!is_simple(e))
                         as_error(ERR_NONFATAL, "cannot use relocatable"
-                              " expression as common-variable element size");
+                                               " expression as common-variable element size");
                     else
                         ext->commonelem = reloc_value(e);
                 }
                 special = stdscan_get();
-            } else {
+            }
+            else
+            {
                 as_error(ERR_NONFATAL,
-                      "`%s': element-size specifications only"
-                      " apply to common variables", ext->name);
+                         "`%s': element-size specifications only"
+                         " apply to common variables",
+                         ext->name);
                 while (*special && *special != ':')
                     special++;
                 if (*special == ':')
@@ -959,15 +1027,18 @@ static void obj_deflabel(char *name, int32_t segment,
 
     i = segment / 2;
     eb = ebhead;
-    if (!eb) {
+    if (!eb)
+    {
         eb = *ebtail = as_zalloc(sizeof(*eb));
         eb->next = NULL;
         ebtail = &eb->next;
     }
-    while (i >= EXT_BLKSIZ) {
+    while (i >= EXT_BLKSIZ)
+    {
         if (eb && eb->next)
             eb = eb->next;
-        else {
+        else
+        {
             eb = *ebtail = as_zalloc(sizeof(*eb));
             eb->next = NULL;
             ebtail = &eb->next;
@@ -979,16 +1050,16 @@ static void obj_deflabel(char *name, int32_t segment,
 
     if (special && !used_special)
         as_error(ERR_NONFATAL, "OBJ supports no special symbol features"
-              " for this symbol type");
+                               " for this symbol type");
 }
 
 /* forward declaration */
-static void obj_write_fixup(ObjRecord * orp, int bytes,
+static void obj_write_fixup(ObjRecord *orp, int bytes,
                             int segrel, int32_t seg, int32_t wrt,
                             struct Segment *segto);
 
 static void obj_out(int32_t segto, const void *data,
-            enum out_type type, uint64_t size,
+                    enum out_type type, uint64_t size,
                     int32_t segment, int32_t wrt)
 {
     const uint8_t *ucdata;
@@ -999,10 +1070,11 @@ static void obj_out(int32_t segto, const void *data,
     /*
      * handle absolute-assembly (structure definitions)
      */
-    if (segto == NO_SEG) {
+    if (segto == NO_SEG)
+    {
         if (type != OUT_RESERVE)
             as_error(ERR_NONFATAL, "attempt to assemble code in [ABSOLUTE]"
-                  " space");
+                                   " space");
         return;
     }
 
@@ -1010,8 +1082,9 @@ static void obj_out(int32_t segto, const void *data,
      * If `any_segs' is still false, we must define a default
      * segment.
      */
-    if (!any_segs) {
-        int tempint;            /* ignored */
+    if (!any_segs)
+    {
+        int tempint; /* ignored */
         if (segto != obj_segment("__ASDEFSEG", 2, &tempint))
             as_error(ERR_PANIC, "strange segment conditions in OBJ driver");
     }
@@ -1028,10 +1101,12 @@ static void obj_out(int32_t segto, const void *data,
     orp = seg->orp;
     orp->parm[0] = seg->currentpos;
 
-    switch (type) {
+    switch (type)
+    {
     case OUT_RAWDATA:
         ucdata = data;
-        while (size > 0) {
+        while (size > 0)
+        {
             unsigned int len;
             orp = obj_check(seg->orp, 1);
             len = RECORD_MAX - orp->used;
@@ -1043,7 +1118,7 @@ static void obj_out(int32_t segto, const void *data,
             ucdata += len;
             size -= len;
         }
-    break;
+        break;
 
     case OUT_ADDRESS:
     case OUT_REL1ADR:
@@ -1055,38 +1130,41 @@ static void obj_out(int32_t segto, const void *data,
 
         if (segment == NO_SEG && type != OUT_ADDRESS)
             as_error(ERR_NONFATAL, "relative call to absolute address not"
-                  " supported by OBJ format");
+                                   " supported by OBJ format");
         if (segment >= SEG_ABS)
             as_error(ERR_NONFATAL, "far-absolute relocations not supported"
-                  " by OBJ format");
+                                   " by OBJ format");
 
         ldata = *(int64_t *)data;
-        if (type != OUT_ADDRESS) {
+        if (type != OUT_ADDRESS)
+        {
             ldata += size;
-        size = realsize(type, size);
-        ldata -= size;
+            size = realsize(type, size);
+            ldata -= size;
         }
 
-    if (size > UINT_MAX)
-        size = 0;
+        if (size > UINT_MAX)
+            size = 0;
 
-    switch ((unsigned int)size) {
-    default:
-        as_error(ERR_NONFATAL, "OBJ format can only handle 16- or "
-               "32-byte relocations");
-        segment = NO_SEG;	/* Don't actually generate a relocation */
-        break;
-    case 2:
+        switch ((unsigned int)size)
+        {
+        default:
+            as_error(ERR_NONFATAL, "OBJ format can only handle 16- or "
+                                   "32-byte relocations");
+            segment = NO_SEG; /* Don't actually generate a relocation */
+            break;
+        case 2:
             orp = obj_word(orp, ldata);
-        break;
-    case 4:
+            break;
+        case 4:
             orp = obj_dword(orp, ldata);
-        break;
-    }
+            break;
+        }
 
         rsize = size;
         if (segment < SEG_ABS && (segment != NO_SEG && segment % 2) &&
-            size == 4) {
+            size == 4)
+        {
             /*
              * This is a 4-byte segment-base relocation such as
              * `MOV EAX,SEG foo'. OBJ format can't actually handle
@@ -1097,31 +1175,31 @@ static void obj_out(int32_t segto, const void *data,
             rsize = 2;
             if (ldata & 0xFFFF)
                 as_error(ERR_NONFATAL, "OBJ format cannot handle complex"
-                      " dword-size segment base references");
+                                       " dword-size segment base references");
         }
         if (segment != NO_SEG)
             obj_write_fixup(orp, rsize,
                             (type == OUT_ADDRESS ? 0x4000 : 0),
                             segment, wrt, seg);
         seg->currentpos += size;
-    break;
+        break;
     }
 
     default:
-    as_error(ERR_NONFATAL,
-           "Relocation type not supported by output format");
-    /* fall through */
+        as_error(ERR_NONFATAL,
+                 "Relocation type not supported by output format");
+        /* fall through */
 
     case OUT_RESERVE:
         if (orp->committed)
             orp = obj_bump(orp);
         seg->currentpos += size;
-    break;
+        break;
     }
     obj_commit(orp);
 }
 
-static void obj_write_fixup(ObjRecord * orp, int bytes,
+static void obj_write_fixup(ObjRecord *orp, int bytes,
                             int segrel, int32_t seg, int32_t wrt,
                             struct Segment *segto)
 {
@@ -1134,14 +1212,17 @@ static void obj_write_fixup(ObjRecord * orp, int bytes,
     struct External *e = NULL;
     ObjRecord *forp;
 
-    if (bytes != 2 && bytes != 4) {
+    if (bytes != 2 && bytes != 4)
+    {
         as_error(ERR_NONFATAL, "`obj' output driver does not support"
-           " %d-bit relocations", bytes << 3);
+                               " %d-bit relocations",
+                 bytes << 3);
         return;
     }
 
     forp = orp->child;
-    if (forp == NULL) {
+    if (forp == NULL)
+    {
         orp->child = forp = obj_new();
         forp->up = &(orp->child);
         /* We should choose between FIXUPP and FIXU32 record type */
@@ -1152,14 +1233,17 @@ static void obj_write_fixup(ObjRecord * orp, int bytes,
             forp->type = FIXUPP;
     }
 
-    if (seg % 2) {
+    if (seg % 2)
+    {
         base = true;
         locat = FIX_16_SELECTOR;
         seg--;
         if (bytes != 2)
             as_error(ERR_PANIC, "OBJ: 4-byte segment base fixup got"
-                  " through sanity check");
-    } else {
+                                " through sanity check");
+    }
+    else
+    {
         base = false;
         locat = (bytes == 2) ? FIX_16_OFFSET : FIX_32_OFFSET;
         if (!segrel)
@@ -1173,7 +1257,7 @@ static void obj_write_fixup(ObjRecord * orp, int bytes,
 
     forp = obj_rword(forp, locat | segrel | (orp->parm[0] - orp->parm[2]));
 
-    tidx = fidx = -1, method = 0;       /* placate optimisers */
+    tidx = fidx = -1, method = 0; /* placate optimisers */
 
     /*
      * See if we can find the segment ID in our segment list. If
@@ -1184,16 +1268,19 @@ static void obj_write_fixup(ObjRecord * orp, int bytes,
             break;
     if (s)
         method = 4, tidx = s->obj_index;
-    else {
+    else
+    {
         for (g = grphead; g; g = g->next)
             if (g->index == seg)
                 break;
         if (g)
             method = 5, tidx = g->obj_index;
-        else {
+        else
+        {
             int32_t i = seg / 2;
             struct ExtBack *eb = ebhead;
-            while (i >= EXT_BLKSIZ) {
+            while (i >= EXT_BLKSIZ)
+            {
                 if (eb)
                     eb = eb->next;
                 else
@@ -1204,7 +1291,7 @@ static void obj_write_fixup(ObjRecord * orp, int bytes,
                 method = 6, e = eb->exts[i], tidx = e->index;
             else
                 as_error(ERR_PANIC,
-                      "unrecognised segment value in obj_write_fixup");
+                         "unrecognised segment value in obj_write_fixup");
         }
     }
 
@@ -1218,22 +1305,29 @@ static void obj_write_fixup(ObjRecord * orp, int bytes,
      * - we are doing an OFFSET fixup for an external with a
      *   default WRT, in which case we must honour the default WRT.
      */
-    if (wrt == NO_SEG) {
+    if (wrt == NO_SEG)
+    {
         if (!base && s && s->grp)
             method |= 0x10, fidx = s->grp->obj_index;
-        else if (!base && e && e->defwrt_type != DEFWRT_NONE) {
+        else if (!base && e && e->defwrt_type != DEFWRT_NONE)
+        {
             if (e->defwrt_type == DEFWRT_SEGMENT)
                 method |= 0x00, fidx = e->defwrt_ptr.seg->obj_index;
             else if (e->defwrt_type == DEFWRT_GROUP)
                 method |= 0x10, fidx = e->defwrt_ptr.grp->obj_index;
-            else {
+            else
+            {
                 as_error(ERR_NONFATAL, "default WRT specification for"
-                      " external `%s' unresolved", e->name);
-                method |= 0x50, fidx = -1;      /* got to do _something_ */
+                                       " external `%s' unresolved",
+                         e->name);
+                method |= 0x50, fidx = -1; /* got to do _something_ */
             }
-        } else
+        }
+        else
             method |= 0x50, fidx = -1;
-    } else {
+    }
+    else
+    {
         /*
          * See if we can find the WRT-segment ID in our segment
          * list. If so, we have a F0 (LSEG) frame.
@@ -1243,16 +1337,19 @@ static void obj_write_fixup(ObjRecord * orp, int bytes,
                 break;
         if (s)
             method |= 0x00, fidx = s->obj_index;
-        else {
+        else
+        {
             for (g = grphead; g; g = g->next)
                 if (g->index == wrt - 1)
                     break;
             if (g)
                 method |= 0x10, fidx = g->obj_index;
-            else {
+            else
+            {
                 int32_t i = wrt / 2;
                 struct ExtBack *eb = ebhead;
-                while (i >= EXT_BLKSIZ) {
+                while (i >= EXT_BLKSIZ)
+                {
                     if (eb)
                         eb = eb->next;
                     else
@@ -1263,7 +1360,7 @@ static void obj_write_fixup(ObjRecord * orp, int bytes,
                     method |= 0x20, fidx = eb->exts[i]->index;
                 else
                     as_error(ERR_PANIC,
-                          "unrecognised WRT value in obj_write_fixup");
+                             "unrecognised WRT value in obj_write_fixup");
             }
         }
     }
@@ -1284,20 +1381,23 @@ static int32_t obj_segment(char *name, int pass, int *bits)
      * using the pointer it gets passed. That way we save memory,
      * by sponging off the label manager.
      */
-#if defined(DEBUG) && DEBUG>=3
+#if defined(DEBUG) && DEBUG >= 3
     as_error(ERR_DEBUG, " obj_segment: < %s >, pass=%d, *bits=%d\n",
-            name, pass, *bits);
+             name, pass, *bits);
 #endif
-    if (!name) {
+    if (!name)
+    {
         *bits = 16;
         current_seg = NULL;
         return first_seg;
-    } else {
+    }
+    else
+    {
         struct Segment *seg;
         struct Group *grp;
         struct External **extp;
         int obj_idx, i, attrs;
-    bool rn_error;
+        bool rn_error;
         char *p;
 
         /*
@@ -1305,19 +1405,22 @@ static int32_t obj_segment(char *name, int pass, int *bits)
          */
         attrs = 0;
         while (*name == '.')
-            name++;             /* hack, but a documented one */
+            name++; /* hack, but a documented one */
         p = name;
         while (*p && !as_isspace(*p))
             p++;
-        if (*p) {
+        if (*p)
+        {
             *p++ = '\0';
             while (*p && as_isspace(*p))
                 *p++ = '\0';
         }
-        while (*p) {
+        while (*p)
+        {
             while (*p && !as_isspace(*p))
                 p++;
-            if (*p) {
+            if (*p)
+            {
                 *p++ = '\0';
                 while (*p && as_isspace(*p))
                     *p++ = '\0';
@@ -1327,12 +1430,14 @@ static int32_t obj_segment(char *name, int pass, int *bits)
         }
 
         obj_idx = 1;
-        for (seg = seghead; seg; seg = seg->next) {
+        for (seg = seghead; seg; seg = seg->next)
+        {
             obj_idx++;
-            if (!strcmp(seg->name, name)) {
+            if (!strcmp(seg->name, name))
+            {
                 if (attrs > 0 && pass == 1)
                     as_error(ERR_WARNING, "segment attributes specified on"
-                          " redeclaration of segment: ignoring");
+                                          " redeclaration of segment: ignoring");
                 if (seg->use32)
                     *bits = 32;
                 else
@@ -1351,9 +1456,9 @@ static int32_t obj_segment(char *name, int pass, int *bits)
         any_segs = true;
         seg->name = NULL;
         seg->currentpos = 0;
-        seg->align = 1;         /* default */
-        seg->use32 = false;     /* default */
-        seg->combine = CMB_PUBLIC;      /* default */
+        seg->align = 1;            /* default */
+        seg->use32 = false;        /* default */
+        seg->combine = CMB_PUBLIC; /* default */
         seg->segclass = seg->overlay = NULL;
         seg->pubhead = NULL;
         seg->pubtail = &seg->pubhead;
@@ -1369,7 +1474,8 @@ static int32_t obj_segment(char *name, int pass, int *bits)
          * Process the segment attributes.
          */
         p = name;
-        while (attrs--) {
+        while (attrs--)
+        {
             p += strlen(p);
             while (!*p)
                 p++;
@@ -1389,7 +1495,8 @@ static int32_t obj_segment(char *name, int pass, int *bits)
                 seg->use32 = false;
             else if (!as_stricmp(p, "use32"))
                 seg->use32 = true;
-            else if (!as_stricmp(p, "flat")) {
+            else if (!as_stricmp(p, "flat"))
+            {
                 /*
                  * This segment is an OS/2 FLAT segment. That means
                  * that its default group is group FLAT, even if
@@ -1405,7 +1512,8 @@ static int32_t obj_segment(char *name, int pass, int *bits)
                 for (grp = grphead; grp; grp = grp->next)
                     if (!strcmp(grp->name, "FLAT"))
                         break;
-                if (!grp) {
+                if (!grp)
+                {
                     obj_directive(D_GROUP, "FLAT", 1);
                     for (grp = grphead; grp; grp = grp->next)
                         if (!strcmp(grp->name, "FLAT"))
@@ -1414,58 +1522,66 @@ static int32_t obj_segment(char *name, int pass, int *bits)
                         as_error(ERR_PANIC, "failure to define FLAT?!");
                 }
                 seg->grp = grp;
-            } else if (!as_strnicmp(p, "class=", 6))
+            }
+            else if (!as_strnicmp(p, "class=", 6))
                 seg->segclass = as_strdup(p + 6);
             else if (!as_strnicmp(p, "overlay=", 8))
                 seg->overlay = as_strdup(p + 8);
-            else if (!as_strnicmp(p, "align=", 6)) {
+            else if (!as_strnicmp(p, "align=", 6))
+            {
                 seg->align = readnum(p + 6, &rn_error);
-                if (rn_error) {
+                if (rn_error)
+                {
                     seg->align = 1;
                     as_error(ERR_NONFATAL, "segment alignment should be"
-                          " numeric");
+                                           " numeric");
                 }
-                switch ((int)seg->align) {
-                case 1:        /* BYTE */
-                case 2:        /* WORD */
-                case 4:        /* DWORD */
-                case 16:       /* PARA */
-                case 256:      /* PAGE */
-                case 4096:     /* PharLap extension */
+                switch ((int)seg->align)
+                {
+                case 1:    /* BYTE */
+                case 2:    /* WORD */
+                case 4:    /* DWORD */
+                case 16:   /* PARA */
+                case 256:  /* PAGE */
+                case 4096: /* PharLap extension */
                     break;
                 case 8:
                     as_error(ERR_WARNING,
-                          "OBJ format does not support alignment"
-                          " of 8: rounding up to 16");
+                             "OBJ format does not support alignment"
+                             " of 8: rounding up to 16");
                     seg->align = 16;
                     break;
                 case 32:
                 case 64:
                 case 128:
                     as_error(ERR_WARNING,
-                          "OBJ format does not support alignment"
-                          " of %d: rounding up to 256", seg->align);
+                             "OBJ format does not support alignment"
+                             " of %d: rounding up to 256",
+                             seg->align);
                     seg->align = 256;
                     break;
                 case 512:
                 case 1024:
                 case 2048:
                     as_error(ERR_WARNING,
-                          "OBJ format does not support alignment"
-                          " of %d: rounding up to 4096", seg->align);
+                             "OBJ format does not support alignment"
+                             " of %d: rounding up to 4096",
+                             seg->align);
                     seg->align = 4096;
                     break;
                 default:
                     as_error(ERR_NONFATAL, "invalid alignment value %d",
-                          seg->align);
+                             seg->align);
                     seg->align = 1;
                     break;
                 }
-            } else if (!as_strnicmp(p, "absolute=", 9)) {
+            }
+            else if (!as_strnicmp(p, "absolute=", 9))
+            {
                 seg->align = SEG_ABS + readnum(p + 9, &rn_error);
                 if (rn_error)
                     as_error(ERR_NONFATAL, "argument to `absolute' segment"
-                          " attribute should be numeric");
+                                           " attribute should be numeric");
             }
         }
 
@@ -1475,26 +1591,29 @@ static int32_t obj_segment(char *name, int pass, int *bits)
         obj_seg_needs_update = seg;
         if (seg->align >= SEG_ABS)
             define_label(name, NO_SEG, seg->align - SEG_ABS,
-             NULL, false, false);
+                         NULL, false, false);
         else
             define_label(name, seg->index + 1, 0L,
-             NULL, false, false);
+                         NULL, false, false);
         obj_seg_needs_update = NULL;
 
         /*
          * See if this segment is defined in any groups.
          */
-        for (grp = grphead; grp; grp = grp->next) {
-            for (i = grp->nindices; i < grp->nentries; i++) {
-                if (!strcmp(grp->segs[i].name, seg->name)) {
+        for (grp = grphead; grp; grp = grp->next)
+        {
+            for (i = grp->nindices; i < grp->nentries; i++)
+            {
+                if (!strcmp(grp->segs[i].name, seg->name))
+                {
                     as_free(grp->segs[i].name);
                     grp->segs[i] = grp->segs[grp->nindices];
                     grp->segs[grp->nindices++].index = seg->obj_index;
                     if (seg->grp)
                         as_error(ERR_WARNING,
-                   "segment `%s' is already part of"
-                   " a group: first one takes precedence",
-                   seg->name);
+                                 "segment `%s' is already part of"
+                                 " a group: first one takes precedence",
+                                 seg->name);
                     else
                         seg->grp = grp;
                 }
@@ -1507,14 +1626,17 @@ static int32_t obj_segment(char *name, int pass, int *bits)
          * segment.
          */
         extp = &dws;
-        while (*extp) {
+        while (*extp)
+        {
             if ((*extp)->defwrt_type == DEFWRT_STRING &&
-                !strcmp((*extp)->defwrt_ptr.string, seg->name)) {
+                !strcmp((*extp)->defwrt_ptr.string, seg->name))
+            {
                 as_free((*extp)->defwrt_ptr.string);
                 (*extp)->defwrt_type = DEFWRT_SEGMENT;
                 (*extp)->defwrt_ptr.seg = seg;
                 *extp = (*extp)->next_dws;
-            } else
+            }
+            else
                 extp = &(*extp)->next_dws;
         }
 
@@ -1529,11 +1651,13 @@ static int32_t obj_segment(char *name, int pass, int *bits)
 
 static int obj_directive(enum directives directive, char *value, int pass)
 {
-    switch (directive) {
+    switch (directive)
+    {
     case D_GROUP:
     {
         char *p, *q, *v;
-        if (pass == 1) {
+        if (pass == 1)
+        {
             struct Group *grp;
             struct Segment *seg;
             struct External **extp;
@@ -1541,11 +1665,12 @@ static int obj_directive(enum directives directive, char *value, int pass)
 
             q = value;
             while (*q == '.')
-                q++;            /* hack, but a documented one */
+                q++; /* hack, but a documented one */
             v = q;
             while (*q && !as_isspace(*q))
                 q++;
-            if (as_isspace(*q)) {
+            if (as_isspace(*q))
+            {
                 *q++ = '\0';
                 while (*q && as_isspace(*q))
                     q++;
@@ -1563,9 +1688,11 @@ static int obj_directive(enum directives directive, char *value, int pass)
              */
 
             obj_idx = 1;
-            for (grp = grphead; grp; grp = grp->next) {
+            for (grp = grphead; grp; grp = grp->next)
+            {
                 obj_idx++;
-                if (!strcmp(grp->name, v)) {
+                if (!strcmp(grp->name, v))
+                {
                     as_error(ERR_NONFATAL, "group `%s' defined twice", v);
                     return 1;
                 }
@@ -1583,11 +1710,13 @@ static int obj_directive(enum directives directive, char *value, int pass)
             define_label(v, grp->index + 1, 0L, NULL, false, false);
             obj_grp_needs_update = NULL;
 
-            while (*q) {
+            while (*q)
+            {
                 p = q;
                 while (*q && !as_isspace(*q))
                     q++;
-                if (as_isspace(*q)) {
+                if (as_isspace(*q))
+                {
                     *q++ = '\0';
                     while (*q && as_isspace(*q))
                         q++;
@@ -1598,7 +1727,8 @@ static int obj_directive(enum directives directive, char *value, int pass)
                 for (seg = seghead; seg; seg = seg->next)
                     if (!strcmp(seg->name, p))
                         break;
-                if (seg) {
+                if (seg)
+                {
                     /*
                      * We have a segment index. Shift a name entry
                      * to the end of the array to make room.
@@ -1607,12 +1737,14 @@ static int obj_directive(enum directives directive, char *value, int pass)
                     grp->segs[grp->nindices++].index = seg->obj_index;
                     if (seg->grp)
                         as_error(ERR_WARNING,
-                              "segment `%s' is already part of"
-                              " a group: first one takes precedence",
-                              seg->name);
+                                 "segment `%s' is already part of"
+                                 " a group: first one takes precedence",
+                                 seg->name);
                     else
                         seg->grp = grp;
-                } else {
+                }
+                else
+                {
                     /*
                      * We have an as-yet undefined segment.
                      * Remember its name, for later.
@@ -1627,14 +1759,17 @@ static int obj_directive(enum directives directive, char *value, int pass)
              * this group.
              */
             extp = &dws;
-            while (*extp) {
+            while (*extp)
+            {
                 if ((*extp)->defwrt_type == DEFWRT_STRING &&
-                    !strcmp((*extp)->defwrt_ptr.string, grp->name)) {
+                    !strcmp((*extp)->defwrt_ptr.string, grp->name))
+                {
                     as_free((*extp)->defwrt_ptr.string);
                     (*extp)->defwrt_type = DEFWRT_GROUP;
                     (*extp)->defwrt_ptr.grp = grp;
                     *extp = (*extp)->next_dws;
-                } else
+                }
+                else
                     extp = &(*extp)->next_dws;
             }
         }
@@ -1649,11 +1784,12 @@ static int obj_directive(enum directives directive, char *value, int pass)
         char *q, *extname, *libname, *impname;
 
         if (pass == 2)
-            return 1;           /* ignore in pass two */
+            return 1; /* ignore in pass two */
         extname = q = value;
         while (*q && !as_isspace(*q))
             q++;
-        if (as_isspace(*q)) {
+        if (as_isspace(*q))
+        {
             *q++ = '\0';
             while (*q && as_isspace(*q))
                 q++;
@@ -1662,7 +1798,8 @@ static int obj_directive(enum directives directive, char *value, int pass)
         libname = q;
         while (*q && !as_isspace(*q))
             q++;
-        if (as_isspace(*q)) {
+        if (as_isspace(*q))
+        {
             *q++ = '\0';
             while (*q && as_isspace(*q))
                 q++;
@@ -1672,8 +1809,9 @@ static int obj_directive(enum directives directive, char *value, int pass)
 
         if (!*extname || !*libname)
             as_error(ERR_NONFATAL, "`import' directive requires symbol name"
-                  " and library name");
-        else {
+                                   " and library name");
+        else
+        {
             struct ImpDef *imp;
             bool err = false;
 
@@ -1699,11 +1837,12 @@ static int obj_directive(enum directives directive, char *value, int pass)
         unsigned int ordinal = 0;
 
         if (pass == 2)
-            return 1;           /* ignore in pass two */
+            return 1; /* ignore in pass two */
         intname = q = value;
         while (*q && !as_isspace(*q))
             q++;
-        if (as_isspace(*q)) {
+        if (as_isspace(*q))
+        {
             *q++ = '\0';
             while (*q && as_isspace(*q))
                 q++;
@@ -1712,25 +1851,30 @@ static int obj_directive(enum directives directive, char *value, int pass)
         extname = q;
         while (*q && !as_isspace(*q))
             q++;
-        if (as_isspace(*q)) {
+        if (as_isspace(*q))
+        {
             *q++ = '\0';
             while (*q && as_isspace(*q))
                 q++;
         }
 
-        if (!*intname) {
+        if (!*intname)
+        {
             as_error(ERR_NONFATAL, "`export' directive requires export name");
             return 1;
         }
-        if (!*extname) {
+        if (!*extname)
+        {
             extname = intname;
             intname = "";
         }
-        while (*q) {
+        while (*q)
+        {
             v = q;
             while (*q && !as_isspace(*q))
                 q++;
-            if (as_isspace(*q)) {
+            if (as_isspace(*q))
+            {
                 *q++ = '\0';
                 while (*q && as_isspace(*q))
                     q++;
@@ -1739,20 +1883,25 @@ static int obj_directive(enum directives directive, char *value, int pass)
                 flags |= EXPDEF_FLAG_RESIDENT;
             else if (!as_stricmp(v, "nodata"))
                 flags |= EXPDEF_FLAG_NODATA;
-            else if (!as_strnicmp(v, "parm=", 5)) {
+            else if (!as_strnicmp(v, "parm=", 5))
+            {
                 bool err = false;
                 flags |= EXPDEF_MASK_PARMCNT & readnum(v + 5, &err);
-                if (err) {
+                if (err)
+                {
                     as_error(ERR_NONFATAL,
-                          "value `%s' for `parm' is non-numeric", v + 5);
+                             "value `%s' for `parm' is non-numeric", v + 5);
                     return 1;
                 }
-            } else {
+            }
+            else
+            {
                 bool err = false;
                 ordinal = readnum(v, &err);
-                if (err) {
+                if (err)
+                {
                     as_error(ERR_NONFATAL,
-                          "unrecognised export qualifier `%s'", v);
+                             "unrecognised export qualifier `%s'", v);
                     return 1;
                 }
                 flags |= EXPDEF_FLAG_ORDINAL;
@@ -1770,7 +1919,7 @@ static int obj_directive(enum directives directive, char *value, int pass)
         return 1;
     }
     default:
-    return 0;
+        return 0;
     }
 }
 
@@ -1778,7 +1927,8 @@ static void obj_sectalign(int32_t seg, unsigned int value)
 {
     struct Segment *s;
 
-    list_for_each(s, seghead) {
+    list_for_each(s, seghead)
+    {
         if (s->index == seg)
             break;
     }
@@ -1797,7 +1947,8 @@ static void obj_sectalign(int32_t seg, unsigned int value)
      * mapping since section handler has
      * to do the same
      */
-    switch (value) {
+    switch (value)
+    {
     case 8:
         value = 16;
         break;
@@ -1828,7 +1979,8 @@ static int32_t obj_segbase(int32_t segment)
         if (seg->index == segment - 1)
             break;
 
-    if (!seg) {
+    if (!seg)
+    {
         /*
          * Might be an external with a default WRT.
          */
@@ -1836,42 +1988,46 @@ static int32_t obj_segbase(int32_t segment)
         struct ExtBack *eb = ebhead;
         struct External *e;
 
-        while (i >= EXT_BLKSIZ) {
+        while (i >= EXT_BLKSIZ)
+        {
             if (eb)
                 eb = eb->next;
             else
                 break;
             i -= EXT_BLKSIZ;
         }
-        if (eb) {
+        if (eb)
+        {
             e = eb->exts[i];
-        if (!e) {
-        as_assert(pass0 == 0);
-        /* Not available - can happen during optimization */
-        return NO_SEG;
-        }
+            if (!e)
+            {
+                as_assert(pass0 == 0);
+                /* Not available - can happen during optimization */
+                return NO_SEG;
+            }
 
-        switch (e->defwrt_type) {
-        case DEFWRT_NONE:
+            switch (e->defwrt_type)
+            {
+            case DEFWRT_NONE:
                 return segment; /* fine */
-        case DEFWRT_SEGMENT:
+            case DEFWRT_SEGMENT:
                 return e->defwrt_ptr.seg->index + 1;
-        case DEFWRT_GROUP:
+            case DEFWRT_GROUP:
                 return e->defwrt_ptr.grp->index + 1;
-        default:
-                return NO_SEG;  /* can't tell what it is */
-        }
+            default:
+                return NO_SEG; /* can't tell what it is */
+            }
         }
 
-        return segment;         /* not one of ours - leave it alone */
+        return segment; /* not one of ours - leave it alone */
     }
 
     if (seg->align >= SEG_ABS)
-        return seg->align;      /* absolute segment */
+        return seg->align; /* absolute segment */
     if (seg->grp)
-        return seg->grp->index + 1;     /* grouped segment */
+        return seg->grp->index + 1; /* grouped segment */
 
-    return segment;             /* no special treatment */
+    return segment; /* no special treatment */
 }
 
 static void obj_filename(char *inname, char *outname)
@@ -1905,7 +2061,7 @@ static void obj_write_file(int debuginfo)
      * Write the AS boast comment.
      */
     orp->type = COMENT;
-    obj_rword(orp, 0);          /* comment type zero */
+    obj_rword(orp, 0); /* comment type zero */
     obj_name(orp, as_comment);
     obj_emit2(orp);
 
@@ -1913,13 +2069,14 @@ static void obj_write_file(int debuginfo)
     /*
      * Write the IMPDEF records, if any.
      */
-    for (imp = imphead; imp; imp = imp->next) {
-        obj_rword(orp, 0xA0);   /* comment class A0 */
-        obj_byte(orp, 1);       /* subfunction 1: IMPDEF */
+    for (imp = imphead; imp; imp = imp->next)
+    {
+        obj_rword(orp, 0xA0); /* comment class A0 */
+        obj_byte(orp, 1);     /* subfunction 1: IMPDEF */
         if (imp->impname)
-            obj_byte(orp, 0);   /* import by name */
+            obj_byte(orp, 0); /* import by name */
         else
-            obj_byte(orp, 1);   /* import by ordinal */
+            obj_byte(orp, 1); /* import by ordinal */
         obj_name(orp, imp->extname);
         obj_name(orp, imp->libname);
         if (imp->impname)
@@ -1932,9 +2089,10 @@ static void obj_write_file(int debuginfo)
     /*
      * Write the EXPDEF records, if any.
      */
-    for (export = exphead; export; export = export->next) {
-        obj_rword(orp, 0xA0);   /* comment class A0 */
-        obj_byte(orp, 2);       /* subfunction 2: EXPDEF */
+    for (export = exphead; export; export = export->next)
+    {
+        obj_rword(orp, 0xA0); /* comment class A0 */
+        obj_byte(orp, 2);     /* subfunction 2: EXPDEF */
         obj_byte(orp, export->flags);
         obj_name(orp, export->extname);
         obj_name(orp, export->intname);
@@ -1944,7 +2102,8 @@ static void obj_write_file(int debuginfo)
     }
 
     /* we're using extended OMF if we put in debug info */
-    if (debuginfo) {
+    if (debuginfo)
+    {
         orp->type = COMENT;
         obj_byte(orp, 0x40);
         obj_byte(orp, dEXTENDED);
@@ -1961,7 +2120,8 @@ static void obj_write_file(int debuginfo)
     /*
      * Write some LNAMES for the segment names
      */
-    for (seg = seghead; seg; seg = seg->next) {
+    for (seg = seghead; seg; seg = seg->next)
+    {
         orp = obj_name(orp, seg->name);
         if (seg->segclass)
             orp = obj_name(orp, seg->segclass);
@@ -1972,7 +2132,8 @@ static void obj_write_file(int debuginfo)
     /*
      * Write some LNAMES for the group names
      */
-    for (grp = grphead; grp; grp = grp->next) {
+    for (grp = grphead; grp; grp = grp->next)
+    {
         orp = obj_name(orp, grp->name);
         obj_commit(orp);
     }
@@ -1982,42 +2143,56 @@ static void obj_write_file(int debuginfo)
      * Write the SEGDEF records.
      */
     orp->type = SEGDEF;
-    for (seg = seghead; seg; seg = seg->next) {
+    for (seg = seghead; seg; seg = seg->next)
+    {
         int acbp;
         uint32_t seglen = seg->currentpos;
 
-        acbp = (seg->combine << 2);     /* C field */
+        acbp = (seg->combine << 2); /* C field */
 
         if (seg->use32)
-            acbp |= 0x01;       /* P bit is Use32 flag */
-        else if (seglen == 0x10000L) {
-            seglen = 0;         /* This special case may be needed for old linkers */
-            acbp |= 0x02;       /* B bit */
+            acbp |= 0x01; /* P bit is Use32 flag */
+        else if (seglen == 0x10000L)
+        {
+            seglen = 0;   /* This special case may be needed for old linkers */
+            acbp |= 0x02; /* B bit */
         }
 
         /* A field */
         if (seg->align >= SEG_ABS)
-            /* acbp |= 0x00 */ ;
-        else if (seg->align >= 4096) {
+            /* acbp |= 0x00 */;
+        else if (seg->align >= 4096)
+        {
             if (seg->align > 4096)
                 as_error(ERR_NONFATAL, "segment `%s' requires more alignment"
-                      " than OBJ format supports", seg->name);
-            acbp |= 0xC0;       /* PharLap extension */
-        } else if (seg->align >= 256) {
+                                       " than OBJ format supports",
+                         seg->name);
+            acbp |= 0xC0; /* PharLap extension */
+        }
+        else if (seg->align >= 256)
+        {
             acbp |= 0x80;
-        } else if (seg->align >= 16) {
+        }
+        else if (seg->align >= 16)
+        {
             acbp |= 0x60;
-        } else if (seg->align >= 4) {
+        }
+        else if (seg->align >= 4)
+        {
             acbp |= 0xA0;
-        } else if (seg->align >= 2) {
+        }
+        else if (seg->align >= 2)
+        {
             acbp |= 0x40;
-        } else
+        }
+        else
             acbp |= 0x20;
 
         obj_byte(orp, acbp);
-        if (seg->align & SEG_ABS) {
-            obj_x(orp, seg->align - SEG_ABS);   /* Frame */
-            obj_byte(orp, 0);   /* Offset */
+        if (seg->align & SEG_ABS)
+        {
+            obj_x(orp, seg->align - SEG_ABS); /* Frame */
+            obj_byte(orp, 0);                 /* Offset */
         }
         obj_x(orp, seglen);
         obj_index(orp, ++lname_idx);
@@ -2030,19 +2205,24 @@ static void obj_write_file(int debuginfo)
      * Write the GRPDEF records.
      */
     orp->type = GRPDEF;
-    for (grp = grphead; grp; grp = grp->next) {
+    for (grp = grphead; grp; grp = grp->next)
+    {
         int i;
 
-        if (grp->nindices != grp->nentries) {
-            for (i = grp->nindices; i < grp->nentries; i++) {
+        if (grp->nindices != grp->nentries)
+        {
+            for (i = grp->nindices; i < grp->nentries; i++)
+            {
                 as_error(ERR_NONFATAL, "group `%s' contains undefined segment"
-                      " `%s'", grp->name, grp->segs[i].name);
+                                       " `%s'",
+                         grp->name, grp->segs[i].name);
                 as_free(grp->segs[i].name);
                 grp->segs[i].name = NULL;
             }
         }
         obj_index(orp, ++lname_idx);
-        for (i = 0; i < grp->nindices; i++) {
+        for (i = 0; i < grp->nindices; i++)
+        {
             obj_byte(orp, 0xFF);
             obj_index(orp, grp->segs[i].index);
         }
@@ -2055,21 +2235,25 @@ static void obj_write_file(int debuginfo)
      */
     orp->type = PUBDEF;
     orp->ori = ori_pubdef;
-    for (seg = seghead; seg; seg = seg->next) {
+    for (seg = seghead; seg; seg = seg->next)
+    {
         orp->parm[0] = seg->grp ? seg->grp->obj_index : 0;
         orp->parm[1] = seg->obj_index;
-        for (pub = seg->pubhead; pub; pub = pub->next) {
+        for (pub = seg->pubhead; pub; pub = pub->next)
+        {
             orp = obj_name(orp, pub->name);
             orp = obj_x(orp, pub->offset);
-            orp = obj_byte(orp, 0);     /* type index */
+            orp = obj_byte(orp, 0); /* type index */
             obj_commit(orp);
         }
         obj_emit(orp);
     }
     orp->parm[0] = 0;
     orp->parm[1] = 0;
-    for (pub = fpubhead; pub; pub = pub->next) {        /* pub-crawl :-) */
-        if (orp->parm[2] != (uint32_t)pub->segment) {
+    for (pub = fpubhead; pub; pub = pub->next)
+    { /* pub-crawl :-) */
+        if (orp->parm[2] != (uint32_t)pub->segment)
+        {
             obj_emit(orp);
             orp->parm[2] = pub->segment;
         }
@@ -2084,27 +2268,36 @@ static void obj_write_file(int debuginfo)
      * Write the EXTDEF and COMDEF records, in order.
      */
     orp->ori = ori_null;
-    for (ext = exthead; ext; ext = ext->next) {
-        if (ext->commonsize == 0) {
-            if (orp->type != EXTDEF) {
+    for (ext = exthead; ext; ext = ext->next)
+    {
+        if (ext->commonsize == 0)
+        {
+            if (orp->type != EXTDEF)
+            {
                 obj_emit(orp);
                 orp->type = EXTDEF;
             }
             orp = obj_name(orp, ext->name);
             orp = obj_index(orp, 0);
-        } else {
-            if (orp->type != COMDEF) {
+        }
+        else
+        {
+            if (orp->type != COMDEF)
+            {
                 obj_emit(orp);
                 orp->type = COMDEF;
             }
             orp = obj_name(orp, ext->name);
             orp = obj_index(orp, 0);
-            if (ext->commonelem) {
-                orp = obj_byte(orp, 0x61);      /* far communal */
+            if (ext->commonelem)
+            {
+                orp = obj_byte(orp, 0x61); /* far communal */
                 orp = obj_value(orp, (ext->commonsize / ext->commonelem));
                 orp = obj_value(orp, ext->commonelem);
-            } else {
-                orp = obj_byte(orp, 0x62);      /* near communal */
+            }
+            else
+            {
+                orp = obj_byte(orp, 0x62); /* near communal */
                 orp = obj_value(orp, ext->commonsize);
             }
         }
@@ -2121,7 +2314,8 @@ static void obj_write_file(int debuginfo)
      * But, TASM puts it in all the time so if we are using
      * TASM debug stuff we are putting it in
      */
-    if (debuginfo || obj_entry_seg == NO_SEG) {
+    if (debuginfo || obj_entry_seg == NO_SEG)
+    {
         orp->type = COMENT;
         obj_byte(orp, 0x40);
         obj_byte(orp, dLINKPASS);
@@ -2133,7 +2327,8 @@ static void obj_write_file(int debuginfo)
      * 1) put out the compiler type
      * 2) Put out the type info.  The only type we are using is near label #19
      */
-    if (debuginfo) {
+    if (debuginfo)
+    {
         int i;
         struct Array *arrtmp = arrhead;
         orp->type = COMENT;
@@ -2145,69 +2340,70 @@ static void obj_write_file(int debuginfo)
 
         obj_byte(orp, 0x40);
         obj_byte(orp, dTYPEDEF);
-        obj_word(orp, 0x18);    /* type # for linking */
-        obj_word(orp, 6);       /* size of type */
-        obj_byte(orp, 0x2a);    /* absolute type for debugging */
+        obj_word(orp, 0x18); /* type # for linking */
+        obj_word(orp, 6);    /* size of type */
+        obj_byte(orp, 0x2a); /* absolute type for debugging */
         obj_emit2(orp);
         obj_byte(orp, 0x40);
         obj_byte(orp, dTYPEDEF);
-        obj_word(orp, 0x19);    /* type # for linking */
-        obj_word(orp, 0);       /* size of type */
-        obj_byte(orp, 0x24);    /* absolute type for debugging */
-        obj_byte(orp, 0);       /* near/far specifier */
+        obj_word(orp, 0x19); /* type # for linking */
+        obj_word(orp, 0);    /* size of type */
+        obj_byte(orp, 0x24); /* absolute type for debugging */
+        obj_byte(orp, 0);    /* near/far specifier */
         obj_emit2(orp);
         obj_byte(orp, 0x40);
         obj_byte(orp, dTYPEDEF);
-        obj_word(orp, 0x1A);    /* type # for linking */
-        obj_word(orp, 0);       /* size of type */
-        obj_byte(orp, 0x24);    /* absolute type for debugging */
-        obj_byte(orp, 1);       /* near/far specifier */
+        obj_word(orp, 0x1A); /* type # for linking */
+        obj_word(orp, 0);    /* size of type */
+        obj_byte(orp, 0x24); /* absolute type for debugging */
+        obj_byte(orp, 1);    /* near/far specifier */
         obj_emit2(orp);
         obj_byte(orp, 0x40);
         obj_byte(orp, dTYPEDEF);
-        obj_word(orp, 0x1b);    /* type # for linking */
-        obj_word(orp, 0);       /* size of type */
-        obj_byte(orp, 0x23);    /* absolute type for debugging */
+        obj_word(orp, 0x1b); /* type # for linking */
+        obj_word(orp, 0);    /* size of type */
+        obj_byte(orp, 0x23); /* absolute type for debugging */
         obj_byte(orp, 0);
         obj_byte(orp, 0);
         obj_byte(orp, 0);
         obj_emit2(orp);
         obj_byte(orp, 0x40);
         obj_byte(orp, dTYPEDEF);
-        obj_word(orp, 0x1c);    /* type # for linking */
-        obj_word(orp, 0);       /* size of type */
-        obj_byte(orp, 0x23);    /* absolute type for debugging */
+        obj_word(orp, 0x1c); /* type # for linking */
+        obj_word(orp, 0);    /* size of type */
+        obj_byte(orp, 0x23); /* absolute type for debugging */
         obj_byte(orp, 0);
         obj_byte(orp, 4);
         obj_byte(orp, 0);
         obj_emit2(orp);
         obj_byte(orp, 0x40);
         obj_byte(orp, dTYPEDEF);
-        obj_word(orp, 0x1d);    /* type # for linking */
-        obj_word(orp, 0);       /* size of type */
-        obj_byte(orp, 0x23);    /* absolute type for debugging */
+        obj_word(orp, 0x1d); /* type # for linking */
+        obj_word(orp, 0);    /* size of type */
+        obj_byte(orp, 0x23); /* absolute type for debugging */
         obj_byte(orp, 0);
         obj_byte(orp, 1);
         obj_byte(orp, 0);
         obj_emit2(orp);
         obj_byte(orp, 0x40);
         obj_byte(orp, dTYPEDEF);
-        obj_word(orp, 0x1e);    /* type # for linking */
-        obj_word(orp, 0);       /* size of type */
-        obj_byte(orp, 0x23);    /* absolute type for debugging */
+        obj_word(orp, 0x1e); /* type # for linking */
+        obj_word(orp, 0);    /* size of type */
+        obj_byte(orp, 0x23); /* absolute type for debugging */
         obj_byte(orp, 0);
         obj_byte(orp, 5);
         obj_byte(orp, 0);
         obj_emit2(orp);
 
         /* put out the array types */
-        for (i = ARRAYBOT; i < arrindex; i++) {
+        for (i = ARRAYBOT; i < arrindex; i++)
+        {
             obj_byte(orp, 0x40);
             obj_byte(orp, dTYPEDEF);
-            obj_word(orp, i);   /* type # for linking */
-            obj_word(orp, arrtmp->size);        /* size of type */
-            obj_byte(orp, 0x1A);        /* absolute type for debugging (array) */
-            obj_byte(orp, arrtmp->basetype);    /* base type */
+            obj_word(orp, i);                /* type # for linking */
+            obj_word(orp, arrtmp->size);     /* size of type */
+            obj_byte(orp, 0x1A);             /* absolute type for debugging (array) */
+            obj_byte(orp, arrtmp->basetype); /* base type */
             obj_emit2(orp);
             arrtmp = arrtmp->next;
         }
@@ -2219,10 +2415,12 @@ static void obj_write_file(int debuginfo)
      * is that one file may have many records for the same segment
      * if there are lots of segment switches
      */
-    if (fnhead && debuginfo) {
+    if (fnhead && debuginfo)
+    {
         seg = fnhead->lnhead->segment;
 
-        for (fn = fnhead; fn; fn = fn->next) {
+        for (fn = fnhead; fn; fn = fn->next)
+        {
             /* write out current file name */
             orp->type = COMENT;
             orp->ori = ori_null;
@@ -2237,8 +2435,10 @@ static void obj_write_file(int debuginfo)
 
             orp->type = LINNUM;
             orp->ori = ori_linnum;
-            for (ln = fn->lnhead; ln; ln = ln->next) {
-                if (seg != ln->segment) {
+            for (ln = fn->lnhead; ln; ln = ln->next)
+            {
+                if (seg != ln->segment)
+                {
                     /* if we get here have to flush the buffer and start
                      * a new record for a new segment
                      */
@@ -2261,9 +2461,12 @@ static void obj_write_file(int debuginfo)
      * entry point is.
      *
      */
-    if (obj_entry_seg != NO_SEG) {
-        for (seg = seghead; seg; seg = seg->next) {
-            if (seg->index == obj_entry_seg) {
+    if (obj_entry_seg != NO_SEG)
+    {
+        for (seg = seghead; seg; seg = seg->next)
+        {
+            if (seg->index == obj_entry_seg)
+            {
                 entry_seg_ptr = seg;
                 break;
             }
@@ -2284,9 +2487,10 @@ static void obj_write_file(int debuginfo)
      * not (officially) support dots in label names
      * and I don't know what various versions of TLINK will do
      */
-    if (debuginfo && obj_entry_seg != NO_SEG) {
+    if (debuginfo && obj_entry_seg != NO_SEG)
+    {
         orp = obj_name(orp, "start_of_program");
-        orp = obj_word(orp, 0x19);      /* type: near label */
+        orp = obj_word(orp, 0x19); /* type: near label */
         orp = obj_index(orp, seg->grp ? seg->grp->obj_index : 0);
         orp = obj_index(orp, seg->obj_index);
         orp = obj_x(orp, obj_entry_ofs);
@@ -2296,9 +2500,11 @@ static void obj_write_file(int debuginfo)
     /*
      * put out the local labels
      */
-    for (seg = seghead; seg && debuginfo; seg = seg->next) {
+    for (seg = seghead; seg && debuginfo; seg = seg->next)
+    {
         /* labels this seg */
-        for (loc = seg->lochead; loc; loc = loc->next) {
+        for (loc = seg->lochead; loc; loc = loc->next)
+        {
             orp = obj_name(orp, loc->name);
             orp = obj_word(orp, loc->type);
             orp = obj_index(orp, seg->grp ? seg->grp->obj_index : 0);
@@ -2313,7 +2519,8 @@ static void obj_write_file(int debuginfo)
     /*
      * Write the LEDATA/FIXUPP pairs.
      */
-    for (seg = seghead; seg; seg = seg->next) {
+    for (seg = seghead; seg; seg = seg->next)
+    {
         obj_emit(seg->orp);
         as_free(seg->orp);
     }
@@ -2323,14 +2530,18 @@ static void obj_write_file(int debuginfo)
      */
     orp->type = obj_use32 ? MODE32 : MODEND;
     orp->ori = ori_null;
-    if (entry_seg_ptr) {
+    if (entry_seg_ptr)
+    {
         orp->type = entry_seg_ptr->use32 ? MODE32 : MODEND;
         obj_byte(orp, 0xC1);
         seg = entry_seg_ptr;
-        if (seg->grp) {
+        if (seg->grp)
+        {
             obj_byte(orp, 0x10);
             obj_index(orp, seg->grp->obj_index);
-        } else {
+        }
+        else
+        {
             /*
              * the below changed to prevent TLINK crashing.
              * Previous more efficient version read:
@@ -2342,13 +2553,14 @@ static void obj_write_file(int debuginfo)
         }
         obj_index(orp, seg->obj_index);
         obj_x(orp, obj_entry_ofs);
-    } else
+    }
+    else
         obj_byte(orp, 0);
     obj_emit2(orp);
     as_free(orp);
 }
 
-static void obj_fwrite(ObjRecord * orp)
+static void obj_fwrite(ObjRecord *orp)
 {
     unsigned int cksum, len;
     uint8_t *ptr;
@@ -2379,9 +2591,11 @@ void dbgbi_init(void)
 static void dbgbi_cleanup(void)
 {
     struct Segment *segtmp;
-    while (fnhead) {
+    while (fnhead)
+    {
         struct FileName *fntemp = fnhead;
-        while (fnhead->lnhead) {
+        while (fnhead->lnhead)
+        {
             struct LineNumber *lntemp = fnhead->lnhead;
             fnhead->lnhead = lntemp->next;
             as_free(lntemp);
@@ -2390,15 +2604,18 @@ static void dbgbi_cleanup(void)
         as_free(fntemp->name);
         as_free(fntemp);
     }
-    for (segtmp = seghead; segtmp; segtmp = segtmp->next) {
-        while (segtmp->lochead) {
+    for (segtmp = seghead; segtmp; segtmp = segtmp->next)
+    {
+        while (segtmp->lochead)
+        {
             struct Public *loctmp = segtmp->lochead;
             segtmp->lochead = loctmp->next;
             as_free(loctmp->name);
             as_free(loctmp);
         }
     }
-    while (arrhead) {
+    while (arrhead)
+    {
         struct Array *arrtmp = arrhead;
         arrhead = arrhead->next;
         as_free(arrtmp);
@@ -2418,8 +2635,9 @@ static void dbgbi_linnum(const char *lnfname, int32_t lineno, int32_t segto)
      * If `any_segs' is still false, we must define a default
      * segment.
      */
-    if (!any_segs) {
-        int tempint;            /* ignored */
+    if (!any_segs)
+    {
+        int tempint; /* ignored */
         if (segto != obj_segment("__ASDEFSEG", 2, &tempint))
             as_error(ERR_PANIC, "strange segment conditions in OBJ driver");
     }
@@ -2433,11 +2651,12 @@ static void dbgbi_linnum(const char *lnfname, int32_t lineno, int32_t segto)
     if (!seg)
         as_error(ERR_PANIC, "lineno directed to nonexistent segment?");
 
-/*    for (fn = fnhead; fn; fn = fnhead->next) */
-    for (fn = fnhead; fn; fn = fn->next)        /* fbk - Austin Lunnen - John Fine */
+    /*    for (fn = fnhead; fn; fn = fnhead->next) */
+    for (fn = fnhead; fn; fn = fn->next) /* fbk - Austin Lunnen - John Fine */
         if (!as_stricmp(lnfname, fn->name))
             break;
-    if (!fn) {
+    if (!fn)
+    {
         fn = as_malloc(sizeof(*fn));
         fn->name = as_malloc(strlen(lnfname) + 1);
         strcpy(fn->name, lnfname);
@@ -2454,7 +2673,6 @@ static void dbgbi_linnum(const char *lnfname, int32_t lineno, int32_t segto)
     ln->next = NULL;
     *fn->lntail = ln;
     fn->lntail = &ln->next;
-
 }
 static void dbgbi_deflabel(char *name, int32_t segment,
                            int64_t offset, int is_global, char *special)
@@ -2473,22 +2691,27 @@ static void dbgbi_deflabel(char *name, int32_t segment,
      * First check for the double-period, signifying something
      * unusual.
      */
-    if (name[0] == '.' && name[1] == '.' && name[2] != '@') {
+    if (name[0] == '.' && name[1] == '.' && name[2] != '@')
+    {
         return;
     }
 
     /*
      * Case (i):
      */
-    if (obj_seg_needs_update) {
+    if (obj_seg_needs_update)
+    {
         return;
-    } else if (obj_grp_needs_update) {
+    }
+    else if (obj_grp_needs_update)
+    {
         return;
     }
     if (segment < SEG_ABS && segment != NO_SEG && segment % 2)
         return;
 
-    if (segment >= SEG_ABS || segment == NO_SEG) {
+    if (segment >= SEG_ABS || segment == NO_SEG)
+    {
         return;
     }
 
@@ -2500,7 +2723,8 @@ static void dbgbi_deflabel(char *name, int32_t segment,
      */
 
     for (seg = seghead; seg; seg = seg->next)
-        if (seg->index == segment) {
+        if (seg->index == segment)
+        {
             struct Public *loc = as_malloc(sizeof(*loc));
             /*
              * Case (ii). Maybe MODPUB someday?
@@ -2521,38 +2745,40 @@ static void dbgbi_typevalue(int32_t type)
     if (!last_defined)
         return;
 
-    switch (type) {
+    switch (type)
+    {
     case TY_BYTE:
         last_defined->type = 8; /* uint8_t */
         vsize = 1;
         break;
     case TY_WORD:
-        last_defined->type = 10;        /* unsigned word */
+        last_defined->type = 10; /* unsigned word */
         vsize = 2;
         break;
     case TY_DWORD:
-        last_defined->type = 12;        /* unsigned dword */
+        last_defined->type = 12; /* unsigned dword */
         vsize = 4;
         break;
     case TY_FLOAT:
-        last_defined->type = 14;        /* float */
+        last_defined->type = 14; /* float */
         vsize = 4;
         break;
     case TY_QWORD:
-        last_defined->type = 15;        /* qword */
+        last_defined->type = 15; /* qword */
         vsize = 8;
         break;
     case TY_TBYTE:
-        last_defined->type = 16;        /* TBYTE */
+        last_defined->type = 16; /* TBYTE */
         vsize = 10;
         break;
     default:
-        last_defined->type = 0x19;      /*label */
+        last_defined->type = 0x19; /*label */
         vsize = 0;
         break;
     }
 
-    if (elem > 1) {
+    if (elem > 1)
+    {
         struct Array *arrtmp = as_malloc(sizeof(*arrtmp));
         int vtype = last_defined->type;
         arrtmp->size = vsize * elem;
@@ -2584,8 +2810,7 @@ static struct dfmt borland_debug_form = {
 static struct dfmt *borland_debug_arr[3] = {
     &borland_debug_form,
     &null_debug_form,
-    NULL
-};
+    NULL};
 
 struct ofmt of_obj = {
     "MS-DOS 16-bit/32-bit OMF object files",
@@ -2603,6 +2828,5 @@ struct ofmt of_obj = {
     obj_segbase,
     obj_directive,
     obj_filename,
-    obj_cleanup
-};
-#endif                          /* OF_OBJ */
+    obj_cleanup};
+#endif /* OF_OBJ */

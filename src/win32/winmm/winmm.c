@@ -7,30 +7,34 @@
 
 MMRESULT WINAPI
 timeBeginPeriod(
-        UINT
-uPeriod) {
-TRACE("timeBeginPeriod");
-syslog(LOG_DEBUG,
-"timeBeginPeriod: timer resolution is %d", uPeriod);
-return 0;
+    UINT
+        uPeriod)
+{
+        TRACE("timeBeginPeriod");
+        syslog(LOG_DEBUG,
+               "timeBeginPeriod: timer resolution is %d", uPeriod);
+        return 0;
 }
 
 MMRESULT WINAPI
 timeEndPeriod(
-        UINT
-uPeriod) {
-TRACE("timeEndPeriod");
-syslog(LOG_DEBUG,
-"timeEndPeriod: timer resolution is %d", uPeriod);
-return 0;
+    UINT
+        uPeriod)
+{
+        TRACE("timeEndPeriod");
+        syslog(LOG_DEBUG,
+               "timeEndPeriod: timer resolution is %d", uPeriod);
+        return 0;
 }
 
 DWORD WINAPI
-timeGetTime(VOID) {
+timeGetTime(VOID)
+{
         TRACE("timeGetTime");
         return clock();
 }
 
-int __stdcall DllMain(handle_t hmod, int reason, void *reserved) {
-    return TRUE;
+int __stdcall DllMain(handle_t hmod, int reason, void *reserved)
+{
+        return TRUE;
 }

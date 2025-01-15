@@ -3,7 +3,6 @@
 //
 // Master Boot Record
 //
-
 #ifndef MBR_H
 #define MBR_H
 

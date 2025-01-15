@@ -1,18 +1,19 @@
 #ifndef DFS_H
 #define DFS_H
 
-#define DFS_SIGNATURE              0x00534644
-#define DFS_VERSION                2
+#define DFS_SIGNATURE 0x00534644
+#define DFS_VERSION 2
 
-#define DFS_TOPBLOCKDIR_SIZE       16
-#define DFS_MAX_DEPTH              16
+#define DFS_TOPBLOCKDIR_SIZE 16
+#define DFS_MAX_DEPTH 16
 
-#define DFS_INODE_ROOT             0
-#define DFS_INODE_KERNEL           1
+#define DFS_INODE_ROOT 0
+#define DFS_INODE_KERNEL 1
 
-#define DFS_MAXFNAME               255
+#define DFS_MAXFNAME 255
 
-struct superblock {
+struct superblock
+{
     unsigned int signature;
     unsigned int version;
     unsigned int log_block_size;
@@ -30,7 +31,8 @@ struct superblock {
     unsigned int cache_buffers;
 };
 
-struct groupdesc {
+struct groupdesc
+{
     unsigned int block_count;
     vfs_blkno_t block_bitmap_block;
     vfs_blkno_t inode_bitmap_block;
@@ -40,7 +42,8 @@ struct groupdesc {
     char reserved[8];
 };
 
-struct inodedesc {
+struct inodedesc
+{
     unsigned short mode;
     unsigned short uid;
     unsigned short gid;
@@ -56,27 +59,31 @@ struct inodedesc {
     vfs_blkno_t blockdir[DFS_TOPBLOCKDIR_SIZE];
 };
 
-struct dentry {
+struct dentry
+{
     vfs_ino_t ino;
     unsigned int reclen;
     unsigned int namelen;
     char name[0];
 };
 
-struct group {
+struct group
+{
     struct groupdesc *desc;
     unsigned int first_free_block; // relative to group
     unsigned int first_free_inode; // relative to group
 };
 
-struct inode {
+struct inode
+{
     struct filsys *fs;
     vfs_ino_t ino;
     struct inodedesc *desc;
     struct buf *buf;
 };
 
-struct filsys {
+struct filsys
+{
     vfs_devno_t devno;
 
     unsigned int blocksize;

@@ -27,10 +27,10 @@ extern unsigned char as_tolower_tab[256];
 
 /* Wrappers around <ctype.h> functions */
 /* These are only valid for values that cannot include EOF */
-#define as_isspace(x)  isspace((unsigned char)(x))
-#define as_isalpha(x)  isalpha((unsigned char)(x))
-#define as_isdigit(x)  isdigit((unsigned char)(x))
-#define as_isalnum(x)  isalnum((unsigned char)(x))
+#define as_isspace(x) isspace((unsigned char)(x))
+#define as_isalpha(x) isalpha((unsigned char)(x))
+#define as_isdigit(x) isdigit((unsigned char)(x))
+#define as_isalnum(x) isalnum((unsigned char)(x))
 #define as_isxdigit(x) isxdigit((unsigned char)(x))
 
 /*
@@ -70,41 +70,41 @@ void as_set_verror(vefunc);
  * argument to an efunc.
  */
 
-#define ERR_DEBUG       0x00000008      /* put out debugging message */
-#define ERR_WARNING     0x00000000      /* warn only: no further action */
-#define ERR_NONFATAL    0x00000001      /* terminate assembly after phase */
-#define ERR_FATAL       0x00000002      /* instantly fatal: exit with error */
-#define ERR_PANIC       0x00000003      /* internal error: panic instantly
-                                         * and dump core for reference */
-#define ERR_MASK        0x0000000F      /* mask off the above codes */
-#define ERR_NOFILE      0x00000010      /* don't give source file name/line */
-#define ERR_USAGE       0x00000020      /* print a usage message */
-#define ERR_PASS1       0x00000040      /* only print this error on pass one */
-#define ERR_PASS2       0x00000080
-#define ERR_NO_SEVERITY 0x00000100      /* suppress printing severity */
+#define ERR_DEBUG 0x00000008    /* put out debugging message */
+#define ERR_WARNING 0x00000000  /* warn only: no further action */
+#define ERR_NONFATAL 0x00000001 /* terminate assembly after phase */
+#define ERR_FATAL 0x00000002    /* instantly fatal: exit with error */
+#define ERR_PANIC 0x00000003    /* internal error: panic instantly \
+                                 * and dump core for reference */
+#define ERR_MASK 0x0000000F     /* mask off the above codes */
+#define ERR_NOFILE 0x00000010   /* don't give source file name/line */
+#define ERR_USAGE 0x00000020    /* print a usage message */
+#define ERR_PASS1 0x00000040    /* only print this error on pass one */
+#define ERR_PASS2 0x00000080
+#define ERR_NO_SEVERITY 0x00000100 /* suppress printing severity */
 
 /*
  * These codes define specific types of suppressible warning.
  */
 
-#define ERR_WARN_MASK   0xFFFFF000      /* the mask for this feature */
-#define ERR_WARN_SHR    12              /* how far to shift right */
+#define ERR_WARN_MASK 0xFFFFF000 /* the mask for this feature */
+#define ERR_WARN_SHR 12          /* how far to shift right */
 
 #define WARN(x) ((x) << ERR_WARN_SHR)
 
-#define ERR_WARN_MNP            WARN( 1) /* macro-num-parameters warning */
-#define ERR_WARN_MSR            WARN( 2) /* macro self-reference */
-#define ERR_WARN_MDP            WARN( 3) /* macro default parameters check */
-#define ERR_WARN_OL             WARN( 4) /* orphan label (no colon, and
-                                          * alone on line) */
-#define ERR_WARN_NOV            WARN( 5) /* numeric overflow */
-#define ERR_WARN_GNUELF         WARN( 6) /* using GNU ELF extensions */
-#define ERR_WARN_FL_OVERFLOW    WARN( 7) /* FP overflow */
-#define ERR_WARN_FL_DENORM      WARN( 8) /* FP denormal */
-#define ERR_WARN_FL_UNDERFLOW   WARN( 9) /* FP underflow */
-#define ERR_WARN_FL_TOOLONG     WARN(10) /* FP too many digits */
-#define ERR_WARN_USER           WARN(11) /* %warning directives */
-#define ERR_WARN_MAX            11       /* the highest numbered one */
+#define ERR_WARN_MNP WARN(1)          /* macro-num-parameters warning */
+#define ERR_WARN_MSR WARN(2)          /* macro self-reference */
+#define ERR_WARN_MDP WARN(3)          /* macro default parameters check */
+#define ERR_WARN_OL WARN(4)           /* orphan label (no colon, and \
+                                       * alone on line) */
+#define ERR_WARN_NOV WARN(5)          /* numeric overflow */
+#define ERR_WARN_GNUELF WARN(6)       /* using GNU ELF extensions */
+#define ERR_WARN_FL_OVERFLOW WARN(7)  /* FP overflow */
+#define ERR_WARN_FL_DENORM WARN(8)    /* FP denormal */
+#define ERR_WARN_FL_UNDERFLOW WARN(9) /* FP underflow */
+#define ERR_WARN_FL_TOOLONG WARN(10)  /* FP too many digits */
+#define ERR_WARN_USER WARN(11)        /* %warning directives */
+#define ERR_WARN_MAX 11               /* the highest numbered one */
 
 /*
  * Wrappers around malloc, realloc and free. as_malloc will
@@ -134,12 +134,12 @@ void *as_realloc_log(const char *, int, void *, size_t);
 void as_free_log(const char *, int, void *);
 char *as_strdup_log(const char *, int, const char *);
 char *as_strndup_log(const char *, int, const char *, size_t);
-#define as_malloc(x) as_malloc_log(__FILE__,__LINE__,x)
-#define as_zalloc(x) as_zalloc_log(__FILE__,__LINE__,x)
-#define as_realloc(x,y) as_realloc_log(__FILE__,__LINE__,x,y)
-#define as_free(x) as_free_log(__FILE__,__LINE__,x)
-#define as_strdup(x) as_strdup_log(__FILE__,__LINE__,x)
-#define as_strndup(x,y) as_strndup_log(__FILE__,__LINE__,x,y)
+#define as_malloc(x) as_malloc_log(__FILE__, __LINE__, x)
+#define as_zalloc(x) as_zalloc_log(__FILE__, __LINE__, x)
+#define as_realloc(x, y) as_realloc_log(__FILE__, __LINE__, x, y)
+#define as_free(x) as_free_log(__FILE__, __LINE__, x)
+#define as_strdup(x) as_strdup_log(__FILE__, __LINE__, x)
+#define as_strndup(x, y) as_strndup_log(__FILE__, __LINE__, x, y)
 #endif
 
 /*
@@ -147,16 +147,17 @@ char *as_strndup_log(const char *, int, const char *, size_t);
  */
 no_return as_assert_failed(const char *, int, const char *);
 
-#define as_assert(x)                                          \
-    do {                                                        \
-        if (unlikely(!(x)))                                     \
-            as_assert_failed(__FILE__,__LINE__,#x);           \
+#define as_assert(x)                                  \
+    do                                                \
+    {                                                 \
+        if (unlikely(!(x)))                           \
+            as_assert_failed(__FILE__, __LINE__, #x); \
     } while (0)
 
 /*
  * AS failure at build time if x != 0
  */
-#define as_build_assert(x) (void)(sizeof(char[1-2*!!(x)]))
+#define as_build_assert(x) (void)(sizeof(char[1 - 2 * !!(x)]))
 
 /*
  * ANSI doesn't guarantee the presence of `stricmp' or
@@ -191,7 +192,6 @@ int as_memicmp(const char *, const char *, size_t);
 char *as_strsep(char **stringp, const char *delim);
 
 #endif
-
 
 /*
  * Convert a string into a number, using AS number rules. Sets
@@ -235,18 +235,18 @@ void standard_extension(char *inname, char *outname, char *extension);
  *  list_for_each - regular iterator over list
  *  list_for_each_safe - the same but safe against list items removal
  */
-#define list_for_each(pos, head)                        \
+#define list_for_each(pos, head) \
     for (pos = head; pos; pos = pos->next)
 #define list_for_each_safe(pos, n, head)                \
     for (pos = head, n = (pos ? pos->next : NULL); pos; \
-        pos = n, n = (n ? n->next : NULL))
+         pos = n, n = (n ? n->next : NULL))
 
 /*
  * Power of 2 align helpers
  */
-#define ALIGN_MASK(v, mask)     (((v) + (mask)) & ~(mask))
-#define ALIGN(v, a)             ALIGN_MASK(v, (a) - 1)
-#define IS_ALIGNED(v, a)        (((v) & ((a) - 1)) == 0)
+#define ALIGN_MASK(v, mask) (((v) + (mask)) & ~(mask))
+#define ALIGN(v, a) ALIGN_MASK(v, (a) - 1)
+#define IS_ALIGNED(v, a) (((v) & ((a) - 1)) == 0)
 
 /*
  * some handy macros that will probably be of use in more than one
@@ -256,98 +256,109 @@ void standard_extension(char *inname, char *outname, char *extension);
 
 #if X86_MEMORY
 
-#define WRITECHAR(p,v)                          \
-    do {                                        \
-        *(uint8_t *)(p) = (v);                  \
-        (p) += 1;                               \
+#define WRITECHAR(p, v)        \
+    do                         \
+    {                          \
+        *(uint8_t *)(p) = (v); \
+        (p) += 1;              \
     } while (0)
 
-#define WRITESHORT(p,v)                         \
-    do {                                        \
-        *(uint16_t *)(p) = (v);                 \
-        (p) += 2;                               \
+#define WRITESHORT(p, v)        \
+    do                          \
+    {                           \
+        *(uint16_t *)(p) = (v); \
+        (p) += 2;               \
     } while (0)
 
-#define WRITELONG(p,v)                          \
-    do {                                        \
-        *(uint32_t *)(p) = (v);                 \
-        (p) += 4;                               \
+#define WRITELONG(p, v)         \
+    do                          \
+    {                           \
+        *(uint32_t *)(p) = (v); \
+        (p) += 4;               \
     } while (0)
 
-#define WRITEDLONG(p,v)                         \
-    do {                                        \
-        *(uint64_t *)(p) = (v);                 \
-        (p) += 8;                               \
+#define WRITEDLONG(p, v)        \
+    do                          \
+    {                           \
+        *(uint64_t *)(p) = (v); \
+        (p) += 8;               \
     } while (0)
 
-#define WRITEADDR(p,v,s)                        \
-    do {                                        \
-        uint64_t _wa_v = (v);                   \
-        memcpy((p), &_wa_v, (s));               \
-        (p) += (s);                             \
+#define WRITEADDR(p, v, s)        \
+    do                            \
+    {                             \
+        uint64_t _wa_v = (v);     \
+        memcpy((p), &_wa_v, (s)); \
+        (p) += (s);               \
     } while (0)
 
 #else /* !X86_MEMORY */
 
-#define WRITECHAR(p, v)                          \
-    do {                                        \
-        uint8_t *_wc_p = (uint8_t *)(p);        \
-        uint8_t _wc_v = (v);                    \
-        _wc_p[0] = _wc_v;                       \
-        (p) = (void *)(_wc_p + 1);              \
+#define WRITECHAR(p, v)                  \
+    do                                   \
+    {                                    \
+        uint8_t *_wc_p = (uint8_t *)(p); \
+        uint8_t _wc_v = (v);             \
+        _wc_p[0] = _wc_v;                \
+        (p) = (void *)(_wc_p + 1);       \
     } while (0)
 
-#define WRITESHORT(p, v)                         \
-    do {                                        \
-        uint8_t *_ws_p = (uint8_t *)(p);        \
-        uint16_t _ws_v = (v);                   \
-        _ws_p[0] = _ws_v;                       \
-        _ws_p[1] = _ws_v >> 8;                  \
-        (p) = (void *)(_ws_p + 2);              \
+#define WRITESHORT(p, v)                 \
+    do                                   \
+    {                                    \
+        uint8_t *_ws_p = (uint8_t *)(p); \
+        uint16_t _ws_v = (v);            \
+        _ws_p[0] = _ws_v;                \
+        _ws_p[1] = _ws_v >> 8;           \
+        (p) = (void *)(_ws_p + 2);       \
     } while (0)
 
-#define WRITELONG(p, v)                          \
-    do {                                        \
-        uint8_t *_wl_p = (uint8_t *)(p);        \
-        uint32_t _wl_v = (v);                   \
-        _wl_p[0] = _wl_v;                       \
-        _wl_p[1] = _wl_v >> 8;                  \
-        _wl_p[2] = _wl_v >> 16;                 \
-        _wl_p[3] = _wl_v >> 24;                 \
-        (p) = (void *)(_wl_p + 4);              \
+#define WRITELONG(p, v)                  \
+    do                                   \
+    {                                    \
+        uint8_t *_wl_p = (uint8_t *)(p); \
+        uint32_t _wl_v = (v);            \
+        _wl_p[0] = _wl_v;                \
+        _wl_p[1] = _wl_v >> 8;           \
+        _wl_p[2] = _wl_v >> 16;          \
+        _wl_p[3] = _wl_v >> 24;          \
+        (p) = (void *)(_wl_p + 4);       \
     } while (0)
 
-#define WRITEDLONG(p, v)                         \
-    do {                                        \
-        uint8_t *_wq_p = (uint8_t *)(p);        \
-        uint64_t _wq_v = (v);                   \
-        _wq_p[0] = _wq_v;                       \
-        _wq_p[1] = _wq_v >> 8;                  \
-        _wq_p[2] = _wq_v >> 16;                 \
-        _wq_p[3] = _wq_v >> 24;                 \
-        _wq_p[4] = _wq_v >> 32;                 \
-        _wq_p[5] = _wq_v >> 40;                 \
-        _wq_p[6] = _wq_v >> 48;                 \
-        _wq_p[7] = _wq_v >> 56;                 \
-        (p) = (void *)(_wq_p + 8);              \
+#define WRITEDLONG(p, v)                 \
+    do                                   \
+    {                                    \
+        uint8_t *_wq_p = (uint8_t *)(p); \
+        uint64_t _wq_v = (v);            \
+        _wq_p[0] = _wq_v;                \
+        _wq_p[1] = _wq_v >> 8;           \
+        _wq_p[2] = _wq_v >> 16;          \
+        _wq_p[3] = _wq_v >> 24;          \
+        _wq_p[4] = _wq_v >> 32;          \
+        _wq_p[5] = _wq_v >> 40;          \
+        _wq_p[6] = _wq_v >> 48;          \
+        _wq_p[7] = _wq_v >> 56;          \
+        (p) = (void *)(_wq_p + 8);       \
     } while (0)
 
-#define WRITEADDR(p, v, s)                        \
-    do {                                        \
-        int _wa_s = (s);                        \
-        uint64_t _wa_v = (v);                   \
-        while (_wa_s--) {                       \
-            WRITECHAR(p,_wa_v);                 \
-            _wa_v >>= 8;                        \
-        }                                       \
-    } while(0)
+#define WRITEADDR(p, v, s)       \
+    do                           \
+    {                            \
+        int _wa_s = (s);         \
+        uint64_t _wa_v = (v);    \
+        while (_wa_s--)          \
+        {                        \
+            WRITECHAR(p, _wa_v); \
+            _wa_v >>= 8;         \
+        }                        \
+    } while (0)
 
 #endif
 
 /*
  * and routines to do the same thing to a file
  */
-#define fwriteint8_t(d, f) putc(d,f)
+#define fwriteint8_t(d, f) putc(d, f)
 
 void fwriteint16_t(uint16_t data, FILE *fp);
 
@@ -405,7 +416,8 @@ extern const uint8_t zero_buffer[ZERO_BUF_SIZE];
 
 size_t fwritezero(size_t bytes, FILE *fp);
 
-static inline bool overflow_general(int64_t value, int bytes) {
+static inline bool overflow_general(int64_t value, int bytes)
+{
     int sbit;
     int64_t vmax, vmin;
 
@@ -413,13 +425,14 @@ static inline bool overflow_general(int64_t value, int bytes) {
         return false;
 
     sbit = (bytes << 3) - 1;
-    vmax = ((int64_t) 2 << sbit) - 1;
-    vmin = -((int64_t) 1 << sbit);
+    vmax = ((int64_t)2 << sbit) - 1;
+    vmin = -((int64_t)1 << sbit);
 
     return value < vmin || value > vmax;
 }
 
-static inline bool overflow_signed(int64_t value, int bytes) {
+static inline bool overflow_signed(int64_t value, int bytes)
+{
     int sbit;
     int64_t vmax, vmin;
 
@@ -427,13 +440,14 @@ static inline bool overflow_signed(int64_t value, int bytes) {
         return false;
 
     sbit = (bytes << 3) - 1;
-    vmax = ((int64_t) 1 << sbit) - 1;
-    vmin = -((int64_t) 1 << sbit);
+    vmax = ((int64_t)1 << sbit) - 1;
+    vmin = -((int64_t)1 << sbit);
 
     return value < vmin || value > vmax;
 }
 
-static inline bool overflow_unsigned(int64_t value, int bytes) {
+static inline bool overflow_unsigned(int64_t value, int bytes)
+{
     int sbit;
     int64_t vmax, vmin;
 
@@ -441,17 +455,19 @@ static inline bool overflow_unsigned(int64_t value, int bytes) {
         return false;
 
     sbit = (bytes << 3) - 1;
-    vmax = ((int64_t) 2 << sbit) - 1;
+    vmax = ((int64_t)2 << sbit) - 1;
     vmin = 0;
 
     return value < vmin || value > vmax;
 }
 
-static inline int64_t signed_bits(int64_t value, int bits) {
-    if (bits < 64) {
-        value &= ((int64_t) 1 << bits) - 1;
-        if (value & (int64_t) 1 << (bits - 1))
-            value |= (int64_t) - 1 << bits;
+static inline int64_t signed_bits(int64_t value, int bits)
+{
+    if (bits < 64)
+    {
+        value &= ((int64_t)1 << bits) - 1;
+        if (value & (int64_t)1 << (bits - 1))
+            value |= (int64_t)-1 << bits;
     }
     return value;
 }
@@ -459,7 +475,7 @@ static inline int64_t signed_bits(int64_t value, int bits) {
 int idata_bytes(int opcode);
 
 /* check if value is power of 2 */
-#define is_power2(v)   ((v) && ((v) & ((v) - 1)) == 0)
+#define is_power2(v) ((v) && ((v) & ((v) - 1)) == 0)
 
 /*
  * floor(log2(v))

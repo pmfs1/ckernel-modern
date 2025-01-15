@@ -19,8 +19,8 @@
  * -----------------
  */
 static efunc error;
-static bool daz = false;        /* denormals as zero */
-static enum float_round rc = FLOAT_RC_NEAR;     /* rounding control */
+static bool daz = false;                    /* denormals as zero */
+static enum float_round rc = FLOAT_RC_NEAR; /* rounding control */
 
 /*
  * -----------
@@ -32,12 +32,12 @@ static enum float_round rc = FLOAT_RC_NEAR;     /* rounding control */
 typedef uint32_t fp_limb;
 typedef uint64_t fp_2limb;
 
-#define LIMB_BITS       32
-#define LIMB_BYTES      (LIMB_BITS/8)
-#define LIMB_TOP_BIT    ((fp_limb)1 << (LIMB_BITS-1))
-#define LIMB_MASK       ((fp_limb)(~0))
-#define LIMB_ALL_BYTES  ((fp_limb)0x01010101)
-#define LIMB_BYTE(x)    ((x)*LIMB_ALL_BYTES)
+#define LIMB_BITS 32
+#define LIMB_BYTES (LIMB_BITS / 8)
+#define LIMB_TOP_BIT ((fp_limb)1 << (LIMB_BITS - 1))
+#define LIMB_MASK ((fp_limb)(~0))
+#define LIMB_ALL_BYTES ((fp_limb)0x01010101)
+#define LIMB_BYTE(x) ((x) * LIMB_ALL_BYTES)
 
 /* 112 bits + 64 bits for accuracy + 16 bits for rounding */
 #define MANT_LIMBS 6
@@ -49,8 +49,8 @@ typedef uint64_t fp_2limb;
 #define MANT_FMT "%08x_%08x_%08x_%08x_%08x_%08x"
 #define MANT_ARG SOME_ARG(mant, 0)
 
-#define SOME_ARG(a, i) (a)[(i)+0], (a)[(i)+1], (a)[(i)+2], \
-                      (a)[(i)+3], (a)[(i)+4], (a)[(i)+5]
+#define SOME_ARG(a, i) (a)[(i) + 0], (a)[(i) + 1], (a)[(i) + 2], \
+                       (a)[(i) + 3], (a)[(i) + 4], (a)[(i) + 5]
 
 /*
  * ---------------------------------------------------------------------------
@@ -61,7 +61,10 @@ typedef uint64_t fp_2limb;
 #ifdef DEBUG_FLOAT
 #define dprintf(x) printf x
 #else
-#define dprintf(x) do { } while (0)
+#define dprintf(x) \
+    do             \
+    {              \
+    } while (0)
 #endif
 
 /*
@@ -69,7 +72,8 @@ typedef uint64_t fp_2limb;
  *  multiply
  * ---------------------------------------------------------------------------
  */
-static int float_multiply(fp_limb *to, fp_limb *from) {
+static int float_multiply(fp_limb *to, fp_limb *from)
+{
     fp_2limb temp[MANT_LIMBS * 2];
     int i, j;
 
@@ -82,31 +86,39 @@ static int float_multiply(fp_limb *to, fp_limb *from) {
 
     memset(temp, 0, sizeof temp);
 
-    for (i = 0; i < MANT_LIMBS; i++) {
-        for (j = 0; j < MANT_LIMBS; j++) {
+    for (i = 0; i < MANT_LIMBS; i++)
+    {
+        for (j = 0; j < MANT_LIMBS; j++)
+        {
             fp_2limb n;
-            n = (fp_2limb) to[i] * (fp_2limb) from[j];
+            n = (fp_2limb)to[i] * (fp_2limb)from[j];
             temp[i + j] += n >> LIMB_BITS;
-            temp[i + j + 1] += (fp_limb) n;
+            temp[i + j + 1] += (fp_limb)n;
         }
     }
 
-    for (i = MANT_LIMBS * 2; --i;) {
+    for (i = MANT_LIMBS * 2; --i;)
+    {
         temp[i - 1] += temp[i] >> LIMB_BITS;
         temp[i] &= LIMB_MASK;
     }
 
     dprintf(("%s=" MANT_FMT "_" MANT_FMT "\n", "temp", SOME_ARG(temp, 0),
-            SOME_ARG(temp, MANT_LIMBS)));
+             SOME_ARG(temp, MANT_LIMBS)));
 
-    if (temp[0] & LIMB_TOP_BIT) {
-        for (i = 0; i < MANT_LIMBS; i++) {
+    if (temp[0] & LIMB_TOP_BIT)
+    {
+        for (i = 0; i < MANT_LIMBS; i++)
+        {
             to[i] = temp[i] & LIMB_MASK;
         }
         dprintf(("%s=" MANT_FMT " (%i)\n", "prod", SOME_ARG(to, 0), 0));
         return 0;
-    } else {
-        for (i = 0; i < MANT_LIMBS; i++) {
+    }
+    else
+    {
+        for (i = 0; i < MANT_LIMBS; i++)
+        {
             to[i] = (temp[i] << 1) + ((temp[i + 1] & LIMB_TOP_BIT) != 0);
         }
         dprintf(("%s=" MANT_FMT " (%i)\n", "prod", SOME_ARG(to, 0), -1));
@@ -119,18 +131,24 @@ static int float_multiply(fp_limb *to, fp_limb *from) {
  *  read an exponent; returns INT32_MAX on error
  * ---------------------------------------------------------------------------
  */
-static int32_t read_exponent(const char *string, int32_t max) {
+static int32_t read_exponent(const char *string, int32_t max)
+{
     int32_t i = 0;
     bool neg = false;
 
-    if (*string == '+') {
+    if (*string == '+')
+    {
         string++;
-    } else if (*string == '-') {
+    }
+    else if (*string == '-')
+    {
         neg = true;
         string++;
     }
-    while (*string) {
-        if (*string >= '0' && *string <= '9') {
+    while (*string)
+    {
+        if (*string >= '0' && *string <= '9')
+        {
             i = (i * 10) + (*string - '0');
 
             /*
@@ -145,9 +163,13 @@ static int32_t read_exponent(const char *string, int32_t max) {
              */
             if (i > max)
                 i = max;
-        } else if (*string == '_') {
+        }
+        else if (*string == '_')
+        {
             /* do nothing */
-        } else {
+        }
+        else
+        {
             error(ERR_NONFATAL | ERR_PASS1,
                   "invalid character in floating-point constant %s: '%c'",
                   "exponent", *string);
@@ -165,7 +187,8 @@ static int32_t read_exponent(const char *string, int32_t max) {
  * ---------------------------------------------------------------------------
  */
 static bool ieee_flconvert(const char *string, fp_limb *mant,
-                           int32_t *exponent) {
+                           int32_t *exponent)
+{
     char digits[MANT_DIGITS];
     char *p, *q, *r;
     fp_limb mult[MANT_LIMBS], bit;
@@ -179,39 +202,60 @@ static bool ieee_flconvert(const char *string, fp_limb *mant,
     tenpwr = 0;
     started = seendot = false;
 
-    while (*string && *string != 'E' && *string != 'e') {
-        if (*string == '.') {
-            if (!seendot) {
+    while (*string && *string != 'E' && *string != 'e')
+    {
+        if (*string == '.')
+        {
+            if (!seendot)
+            {
                 seendot = true;
-            } else {
+            }
+            else
+            {
                 error(ERR_NONFATAL | ERR_PASS1,
                       "too many periods in floating-point constant");
                 return false;
             }
-        } else if (*string >= '0' && *string <= '9') {
-            if (*string == '0' && !started) {
-                if (seendot) {
+        }
+        else if (*string >= '0' && *string <= '9')
+        {
+            if (*string == '0' && !started)
+            {
+                if (seendot)
+                {
                     tenpwr--;
                 }
-            } else {
+            }
+            else
+            {
                 started = true;
-                if (p < digits + sizeof(digits)) {
+                if (p < digits + sizeof(digits))
+                {
                     *p++ = *string - '0';
-                } else {
-                    if (!warned) {
+                }
+                else
+                {
+                    if (!warned)
+                    {
                         error(ERR_WARNING | ERR_WARN_FL_TOOLONG | ERR_PASS1,
                               "floating-point constant significand contains "
-                              "more than %i digits", MANT_DIGITS);
+                              "more than %i digits",
+                              MANT_DIGITS);
                         warned = true;
                     }
                 }
-                if (!seendot) {
+                if (!seendot)
+                {
                     tenpwr++;
                 }
             }
-        } else if (*string == '_') {
+        }
+        else if (*string == '_')
+        {
             /* do nothing */
-        } else {
+        }
+        else
+        {
             error(ERR_NONFATAL | ERR_PASS1,
                   "invalid character in floating-point constant %s: '%c'",
                   "significand", *string);
@@ -220,10 +264,11 @@ static bool ieee_flconvert(const char *string, fp_limb *mant,
         string++;
     }
 
-    if (*string) {
+    if (*string)
+    {
         int32_t e;
 
-        string++;               /* eat the E */
+        string++; /* eat the E */
         e = read_exponent(string, 5000);
         if (e == INT32_MAX)
             return false;
@@ -237,7 +282,8 @@ static bool ieee_flconvert(const char *string, fp_limb *mant,
      */
     q = digits;
     dprintf(("X = 0."));
-    while (q < p) {
+    while (q < p)
+    {
         dprintf(("%c", *q + '0'));
         q++;
     }
@@ -247,44 +293,59 @@ static bool ieee_flconvert(const char *string, fp_limb *mant,
      * Now convert [digits,p) to our internal representation.
      */
     bit = LIMB_TOP_BIT;
-    for (m = mant; m < mant + MANT_LIMBS; m++) {
+    for (m = mant; m < mant + MANT_LIMBS; m++)
+    {
         *m = 0;
     }
     m = mant;
     q = digits;
     started = false;
     twopwr = 0;
-    while (m < mant + MANT_LIMBS) {
+    while (m < mant + MANT_LIMBS)
+    {
         fp_limb carry = 0;
-        while (p > q && !p[-1]) {
+        while (p > q && !p[-1])
+        {
             p--;
         }
-        if (p <= q) {
+        if (p <= q)
+        {
             break;
         }
-        for (r = p; r-- > q;) {
+        for (r = p; r-- > q;)
+        {
             int32_t i;
             i = 2 * *r + carry;
-            if (i >= 10) {
+            if (i >= 10)
+            {
                 carry = 1;
                 i -= 10;
-            } else {
+            }
+            else
+            {
                 carry = 0;
             }
             *r = i;
         }
-        if (carry) {
+        if (carry)
+        {
             *m |= bit;
             started = true;
         }
-        if (started) {
-            if (bit == 1) {
+        if (started)
+        {
+            if (bit == 1)
+            {
                 bit = LIMB_TOP_BIT;
                 m++;
-            } else {
+            }
+            else
+            {
                 bit >>= 1;
             }
-        } else {
+        }
+        else
+        {
             twopwr--;
         }
     }
@@ -296,13 +357,15 @@ static bool ieee_flconvert(const char *string, fp_limb *mant,
      * tiplied by 2^twopwr and 5^tenpwr gives X.
      */
     dprintf(("X = " MANT_FMT " * 2^%i * 5^%i\n", MANT_ARG, twopwr,
-            tenpwr));
+             tenpwr));
 
     /*
      * Now multiply 'mant' by 5^tenpwr.
      */
-    if (tenpwr < 0) {           /* mult = 5^-1 = 0.2 */
-        for (m = mult; m < mult + MANT_LIMBS - 1; m++) {
+    if (tenpwr < 0)
+    { /* mult = 5^-1 = 0.2 */
+        for (m = mult; m < mult + MANT_LIMBS - 1; m++)
+        {
             *m = LIMB_BYTE(0xcc);
         }
         mult[MANT_LIMBS - 1] = LIMB_BYTE(0xcc) + 1;
@@ -316,19 +379,26 @@ static bool ieee_flconvert(const char *string, fp_limb *mant,
          * Because we already truncated tenpwr to +5000...-5000 inside
          * the exponent parsing code, this shouldn't happen though.
          */
-    } else if (tenpwr > 0) {    /* mult = 5^+1 = 5.0 */
-        mult[0] = (fp_limb) 5 << (LIMB_BITS - 3); /* 0xA000... */
-        for (m = mult + 1; m < mult + MANT_LIMBS; m++) {
+    }
+    else if (tenpwr > 0)
+    {                                            /* mult = 5^+1 = 5.0 */
+        mult[0] = (fp_limb)5 << (LIMB_BITS - 3); /* 0xA000... */
+        for (m = mult + 1; m < mult + MANT_LIMBS; m++)
+        {
             *m = 0;
         }
         extratwos = 3;
-    } else {
+    }
+    else
+    {
         extratwos = 0;
     }
-    while (tenpwr) {
+    while (tenpwr)
+    {
         dprintf(("loop=" MANT_FMT " * 2^%i * 5^%i (%i)\n", MANT_ARG,
-                twopwr, tenpwr, extratwos));
-        if (tenpwr & 1) {
+                 twopwr, tenpwr, extratwos));
+        if (tenpwr & 1)
+        {
             dprintf(("mant*mult\n"));
             twopwr += extratwos + float_multiply(mant, mult);
         }
@@ -346,7 +416,7 @@ static bool ieee_flconvert(const char *string, fp_limb *mant,
          * the exponent parsing code, this shouldn't matter; neverthe-
          * less it is the right thing to do here.
          */
-        tenpwr &= (uint32_t) - 1 >> 1;
+        tenpwr &= (uint32_t)-1 >> 1;
     }
 
     /*
@@ -366,17 +436,20 @@ static bool ieee_flconvert(const char *string, fp_limb *mant,
  */
 
 /* Set a bit, using *bigendian* bit numbering (0 = MSB) */
-static void set_bit(fp_limb *mant, int bit) {
+static void set_bit(fp_limb *mant, int bit)
+{
     mant[bit / LIMB_BITS] |= LIMB_TOP_BIT >> (bit & (LIMB_BITS - 1));
 }
 
 /* Test a single bit */
-static int test_bit(const fp_limb *mant, int bit) {
+static int test_bit(const fp_limb *mant, int bit)
+{
     return (mant[bit / LIMB_BITS] >> (~bit & (LIMB_BITS - 1))) & 1;
 }
 
 /* Report if the mantissa value is all zero */
-static bool is_zero(const fp_limb *mant) {
+static bool is_zero(const fp_limb *mant)
+{
     int i;
 
     for (i = 0; i < MANT_LIMBS; i++)
@@ -392,65 +465,86 @@ static bool is_zero(const fp_limb *mant) {
  * ---------------------------------------------------------------------------
  */
 
-#define ROUND_COLLECT_BITS                      \
-    do {                                        \
-        m = mant[i] & (2*bit-1);                \
-        for (j = i+1; j < MANT_LIMBS; j++)      \
-            m = m | mant[j];                    \
+#define ROUND_COLLECT_BITS                   \
+    do                                       \
+    {                                        \
+        m = mant[i] & (2 * bit - 1);         \
+        for (j = i + 1; j < MANT_LIMBS; j++) \
+            m = m | mant[j];                 \
     } while (0)
 
-#define ROUND_ABS_DOWN                          \
-    do {                                        \
-        mant[i] &= ~(bit-1);                    \
-        for (j = i+1; j < MANT_LIMBS; j++)      \
-            mant[j] = 0;                        \
-        return false;                           \
+#define ROUND_ABS_DOWN                       \
+    do                                       \
+    {                                        \
+        mant[i] &= ~(bit - 1);               \
+        for (j = i + 1; j < MANT_LIMBS; j++) \
+            mant[j] = 0;                     \
+        return false;                        \
     } while (0)
 
 #define ROUND_ABS_UP                            \
-    do {                                        \
-        mant[i] = (mant[i] & ~(bit-1)) + bit;   \
-        for (j = i+1; j < MANT_LIMBS; j++)      \
+    do                                          \
+    {                                           \
+        mant[i] = (mant[i] & ~(bit - 1)) + bit; \
+        for (j = i + 1; j < MANT_LIMBS; j++)    \
             mant[j] = 0;                        \
         while (i > 0 && !mant[i])               \
             ++mant[--i];                        \
         return !mant[0];                        \
     } while (0)
 
-static bool ieee_round(bool minus, fp_limb *mant, int bits) {
+static bool ieee_round(bool minus, fp_limb *mant, int bits)
+{
     fp_limb m = 0;
     int32_t j;
     int i = bits / LIMB_BITS;
     int p = bits % LIMB_BITS;
     fp_limb bit = LIMB_TOP_BIT >> p;
 
-    if (rc == FLOAT_RC_NEAR) {
-        if (mant[i] & bit) {
+    if (rc == FLOAT_RC_NEAR)
+    {
+        if (mant[i] & bit)
+        {
             mant[i] &= ~bit;
             ROUND_COLLECT_BITS;
             mant[i] |= bit;
-            if (m) {
+            if (m)
+            {
                 ROUND_ABS_UP;
-            } else {
-                if (test_bit(mant, bits - 1)) {
+            }
+            else
+            {
+                if (test_bit(mant, bits - 1))
+                {
                     ROUND_ABS_UP;
-                } else {
+                }
+                else
+                {
                     ROUND_ABS_DOWN;
                 }
             }
-        } else {
+        }
+        else
+        {
             ROUND_ABS_DOWN;
         }
-    } else if (rc == FLOAT_RC_ZERO ||
-               rc == (minus ? FLOAT_RC_UP : FLOAT_RC_DOWN)) {
+    }
+    else if (rc == FLOAT_RC_ZERO ||
+             rc == (minus ? FLOAT_RC_UP : FLOAT_RC_DOWN))
+    {
         ROUND_ABS_DOWN;
-    } else {
+    }
+    else
+    {
         /* rc == (minus ? FLOAT_RC_DOWN : FLOAT_RC_UP) */
         /* Round toward +/- infinity */
         ROUND_COLLECT_BITS;
-        if (m) {
+        if (m)
+        {
             ROUND_ABS_UP;
-        } else {
+        }
+        else
+        {
             ROUND_ABS_DOWN;
         }
     }
@@ -458,8 +552,9 @@ static bool ieee_round(bool minus, fp_limb *mant, int bits) {
 }
 
 /* Returns a value >= 16 if not a valid hex digit */
-static unsigned int hexval(char c) {
-    unsigned int v = (unsigned char) c;
+static unsigned int hexval(char c)
+{
+    unsigned int v = (unsigned char)c;
 
     if (v >= '0' && v <= '9')
         return v - '0';
@@ -469,9 +564,10 @@ static unsigned int hexval(char c) {
 
 /* Handle floating-point numbers with radix 2^bits and binary exponent */
 static bool ieee_flconvert_bin(const char *string, int bits,
-                               fp_limb *mant, int32_t *exponent) {
+                               fp_limb *mant, int32_t *exponent)
+{
     static const int log2tbl[16] =
-            {-1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3};
+        {-1, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3};
     fp_limb mult[MANT_LIMBS + 1], *mp;
     int ms;
     int32_t twopwr;
@@ -487,17 +583,23 @@ static bool ieee_flconvert_bin(const char *string, int bits,
 
     memset(mult, 0, sizeof mult);
 
-    while ((c = *string++) != '\0') {
-        if (c == '.') {
+    while ((c = *string++) != '\0')
+    {
+        if (c == '.')
+        {
             if (!seendot)
                 seendot = true;
-            else {
+            else
+            {
                 error(ERR_NONFATAL | ERR_PASS1,
                       "too many periods in floating-point constant");
                 return false;
             }
-        } else if ((v = hexval(c)) < (unsigned int) radix) {
-            if (!seendigit && v) {
+        }
+        else if ((v = hexval(c)) < (unsigned int)radix)
+        {
+            if (!seendigit && v)
+            {
                 int l = log2tbl[v];
 
                 seendigit = true;
@@ -507,8 +609,10 @@ static bool ieee_flconvert_bin(const char *string, int bits,
                 twopwr = seendot ? twopwr - bits + l : l + 1 - bits;
             }
 
-            if (seendigit) {
-                if (ms <= 0) {
+            if (seendigit)
+            {
+                if (ms <= 0)
+                {
                     *mp |= v >> -ms;
                     mp++;
                     if (mp > &mult[MANT_LIMBS])
@@ -520,30 +624,41 @@ static bool ieee_flconvert_bin(const char *string, int bits,
 
                 if (!seendot)
                     twopwr += bits;
-            } else {
+            }
+            else
+            {
                 if (seendot)
                     twopwr -= bits;
             }
-        } else if (c == 'p' || c == 'P') {
+        }
+        else if (c == 'p' || c == 'P')
+        {
             int32_t e;
             e = read_exponent(string, 20000);
             if (e == INT32_MAX)
                 return false;
             twopwr += e;
             break;
-        } else if (c == '_') {
+        }
+        else if (c == '_')
+        {
             /* ignore */
-        } else {
+        }
+        else
+        {
             error(ERR_NONFATAL | ERR_PASS1,
                   "floating-point constant: `%c' is invalid character", c);
             return false;
         }
     }
 
-    if (!seendigit) {
+    if (!seendigit)
+    {
         memset(mant, 0, MANT_LIMBS * sizeof(fp_limb)); /* Zero */
         *exponent = 0;
-    } else {
+    }
+    else
+    {
         memcpy(mant, mult, MANT_LIMBS * sizeof(fp_limb));
         *exponent = twopwr;
     }
@@ -554,7 +669,8 @@ static bool ieee_flconvert_bin(const char *string, int bits,
 /*
  * Shift a mantissa to the right by i bits.
  */
-static void ieee_shr(fp_limb *mant, int i) {
+static void ieee_shr(fp_limb *mant, int i)
+{
     fp_limb n, m;
     int j = 0;
     int sr, sl, offs;
@@ -563,13 +679,17 @@ static void ieee_shr(fp_limb *mant, int i) {
     sl = LIMB_BITS - sr;
     offs = i / LIMB_BITS;
 
-    if (sr == 0) {
+    if (sr == 0)
+    {
         if (offs)
             for (j = MANT_LIMBS - 1; j >= offs; j--)
                 mant[j] = mant[j - offs];
-    } else {
+    }
+    else
+    {
         n = mant[MANT_LIMBS - 1 - offs] >> sr;
-        for (j = MANT_LIMBS - 1; j > offs; j--) {
+        for (j = MANT_LIMBS - 1; j > offs; j--)
+        {
             m = mant[j - offs - 1];
             mant[j] = (m << sl) | n;
             n = m >> sr;
@@ -588,11 +708,12 @@ static void ieee_shr(fp_limb *mant, int i) {
    - the sign bit plus exponent fit in 16 bits.
    - the exponent bias is 2^(n-1)-1 for an n-bit exponent */
 
-struct ieee_format {
+struct ieee_format
+{
     int bytes;
-    int mantissa;               /* Fractional bits in the mantissa */
-    int explicit;               /* Explicit integer */
-    int exponent;               /* Bits in the exponent */
+    int mantissa; /* Fractional bits in the mantissa */
+    int explicit; /* Explicit integer */
+    int exponent; /* Bits in the exponent */
 };
 
 /*
@@ -614,7 +735,8 @@ static const struct ieee_format ieee_80 = {10, 63, 1, 15};
 static const struct ieee_format ieee_128 = {16, 112, 0, 15};
 
 /* Types of values we can generate */
-enum floats {
+enum floats
+{
     FL_ZERO,
     FL_DENORMAL,
     FL_NORMAL,
@@ -625,61 +747,76 @@ enum floats {
 
 static int to_packed_bcd(const char *str, const char *p,
                          int s, uint8_t *result,
-                         const struct ieee_format *fmt) {
+                         const struct ieee_format *fmt)
+{
     int n = 0;
     char c;
     int tv = -1;
 
-    if (fmt != &ieee_80) {
+    if (fmt != &ieee_80)
+    {
         error(ERR_NONFATAL | ERR_PASS1,
               "packed BCD requires an 80-bit format");
         return 0;
     }
 
-    while (p >= str) {
+    while (p >= str)
+    {
         c = *p--;
-        if (c >= '0' && c <= '9') {
-            if (tv < 0) {
-                if (n == 9) {
+        if (c >= '0' && c <= '9')
+        {
+            if (tv < 0)
+            {
+                if (n == 9)
+                {
                     error(ERR_WARNING | ERR_PASS1,
                           "packed BCD truncated to 18 digits");
                 }
                 tv = c - '0';
-            } else {
+            }
+            else
+            {
                 if (n < 9)
                     *result++ = tv + ((c - '0') << 4);
                 n++;
                 tv = -1;
             }
-        } else if (c == '_') {
+        }
+        else if (c == '_')
+        {
             /* do nothing */
-        } else {
+        }
+        else
+        {
             error(ERR_NONFATAL | ERR_PASS1,
                   "invalid character `%c' in packed BCD constant", c);
             return 0;
         }
     }
-    if (tv >= 0) {
+    if (tv >= 0)
+    {
         if (n < 9)
             *result++ = tv;
         n++;
     }
-    while (n < 9) {
+    while (n < 9)
+    {
         *result++ = 0;
         n++;
     }
     *result = (s < 0) ? 0x80 : 0;
 
-    return 1;                   /* success */
+    return 1; /* success */
 }
 
 static int to_float(const char *str, int s, uint8_t *result,
-                    const struct ieee_format *fmt) {
+                    const struct ieee_format *fmt)
+{
     fp_limb mant[MANT_LIMBS];
     int32_t exponent = 0;
     const int32_t expmax = 1 << (fmt->exponent - 1);
     fp_limb one_mask = LIMB_TOP_BIT >>
-                                    ((fmt->exponent + fmt->explicit) % LIMB_BITS);
+                       ((fmt->exponent + fmt->explicit) % LIMB_BITS);
     const int one_pos = (fmt->exponent + fmt->explicit) / LIMB_BITS;
     int i;
     int shift;
@@ -689,7 +826,8 @@ static int to_float(const char *str, int s, uint8_t *result,
     const int bits = fmt->bytes * 8;
     const char *strend;
 
-    if (!str[0]) {
+    if (!str[0])
+    {
         error(ERR_PANIC,
               "internal errror: empty string passed to float_const");
         return 0;
@@ -699,162 +837,191 @@ static int to_float(const char *str, int s, uint8_t *result,
     if (strend[-1] == 'P' || strend[-1] == 'p')
         return to_packed_bcd(str, strend - 2, s, result, fmt);
 
-    if (str[0] == '_') {
+    if (str[0] == '_')
+    {
         /* Special tokens */
 
-        switch (str[2]) {
-            case 'n':              /* __nan__ */
-            case 'N':
-            case 'q':              /* __qnan__ */
-            case 'Q':
-                type = FL_QNAN;
-                break;
-            case 's':              /* __snan__ */
-            case 'S':
-                type = FL_SNAN;
-                break;
-            case 'i':              /* __infinity__ */
-            case 'I':
-                type = FL_INFINITY;
-                break;
-            default:
-                error(ERR_NONFATAL | ERR_PASS1,
-                      "internal error: unknown FP constant token `%s'\n", str);
-                type = FL_QNAN;
-                break;
+        switch (str[2])
+        {
+        case 'n': /* __nan__ */
+        case 'N':
+        case 'q': /* __qnan__ */
+        case 'Q':
+            type = FL_QNAN;
+            break;
+        case 's': /* __snan__ */
+        case 'S':
+            type = FL_SNAN;
+            break;
+        case 'i': /* __infinity__ */
+        case 'I':
+            type = FL_INFINITY;
+            break;
+        default:
+            error(ERR_NONFATAL | ERR_PASS1,
+                  "internal error: unknown FP constant token `%s'\n", str);
+            type = FL_QNAN;
+            break;
         }
-    } else {
-        if (str[0] == '0') {
-            switch (str[1]) {
-                case 'x':
-                case 'X':
-                case 'h':
-                case 'H':
-                    ok = ieee_flconvert_bin(str + 2, 4, mant, &exponent);
-                    break;
-                case 'o':
-                case 'O':
-                case 'q':
-                case 'Q':
-                    ok = ieee_flconvert_bin(str + 2, 3, mant, &exponent);
-                    break;
-                case 'b':
-                case 'B':
-                case 'y':
-                case 'Y':
-                    ok = ieee_flconvert_bin(str + 2, 1, mant, &exponent);
-                    break;
-                case 'd':
-                case 'D':
-                case 't':
-                case 'T':
-                    ok = ieee_flconvert(str + 2, mant, &exponent);
-                    break;
-                case 'p':
-                case 'P':
-                    return to_packed_bcd(str + 2, strend - 1, s, result, fmt);
-                default:
-                    /* Leading zero was just a zero? */
-                    ok = ieee_flconvert(str, mant, &exponent);
-                    break;
+    }
+    else
+    {
+        if (str[0] == '0')
+        {
+            switch (str[1])
+            {
+            case 'x':
+            case 'X':
+            case 'h':
+            case 'H':
+                ok = ieee_flconvert_bin(str + 2, 4, mant, &exponent);
+                break;
+            case 'o':
+            case 'O':
+            case 'q':
+            case 'Q':
+                ok = ieee_flconvert_bin(str + 2, 3, mant, &exponent);
+                break;
+            case 'b':
+            case 'B':
+            case 'y':
+            case 'Y':
+                ok = ieee_flconvert_bin(str + 2, 1, mant, &exponent);
+                break;
+            case 'd':
+            case 'D':
+            case 't':
+            case 'T':
+                ok = ieee_flconvert(str + 2, mant, &exponent);
+                break;
+            case 'p':
+            case 'P':
+                return to_packed_bcd(str + 2, strend - 1, s, result, fmt);
+            default:
+                /* Leading zero was just a zero? */
+                ok = ieee_flconvert(str, mant, &exponent);
+                break;
             }
-        } else if (str[0] == '$') {
+        }
+        else if (str[0] == '$')
+        {
             ok = ieee_flconvert_bin(str + 1, 4, mant, &exponent);
-        } else {
+        }
+        else
+        {
             ok = ieee_flconvert(str, mant, &exponent);
         }
 
-        if (!ok) {
+        if (!ok)
+        {
             type = FL_QNAN;
-        } else if (mant[0] & LIMB_TOP_BIT) {
+        }
+        else if (mant[0] & LIMB_TOP_BIT)
+        {
             /*
              * Non-zero.
              */
             exponent--;
-            if (exponent >= 2 - expmax && exponent <= expmax) {
+            if (exponent >= 2 - expmax && exponent <= expmax)
+            {
                 type = FL_NORMAL;
-            } else if (exponent > 0) {
+            }
+            else if (exponent > 0)
+            {
                 if (pass0 == 1)
                     error(ERR_WARNING | ERR_WARN_FL_OVERFLOW | ERR_PASS1,
                           "overflow in floating-point constant");
                 type = FL_INFINITY;
-            } else {
+            }
+            else
+            {
                 /* underflow or denormal; the denormal code handles
                    actual underflow. */
                 type = FL_DENORMAL;
             }
-        } else {
+        }
+        else
+        {
             /* Zero */
             type = FL_ZERO;
         }
     }
 
-    switch (type) {
-        case FL_ZERO:
-        zero:
-            memset(mant, 0, sizeof mant);
-            break;
+    switch (type)
+    {
+    case FL_ZERO:
+    zero:
+        memset(mant, 0, sizeof mant);
+        break;
 
-        case FL_DENORMAL: {
-            shift = -(exponent + expmax - 2 - fmt->exponent)
-                    + fmt->explicit;
-            ieee_shr(mant, shift);
-            ieee_round(minus, mant, bits);
-            if (mant[one_pos] & one_mask) {
-                /* One's position is set, we rounded up into normal range */
-                exponent = 1;
-                if (!fmt->explicit)
-                    mant[one_pos] &= ~one_mask;     /* remove explicit one */
-                mant[0] |= exponent << (LIMB_BITS - 1 - fmt->exponent);
-            } else {
-                if (daz || is_zero(mant)) {
-                    /* Flush denormals to zero */
-                    error(ERR_WARNING | ERR_WARN_FL_UNDERFLOW | ERR_PASS1,
-                          "underflow in floating-point constant");
-                    goto zero;
-                } else {
-                    error(ERR_WARNING | ERR_WARN_FL_DENORM | ERR_PASS1,
-                          "denormal floating-point constant");
-                }
-            }
-            break;
-        }
-
-        case FL_NORMAL:
-            exponent += expmax - 1;
-            ieee_shr(mant, fmt->exponent + fmt->explicit);
-            ieee_round(minus, mant, bits);
-            /* did we scale up by one? */
-            if (test_bit(mant, fmt->exponent + fmt->explicit - 1)) {
-                ieee_shr(mant, 1);
-                exponent++;
-                if (exponent >= (expmax << 1) - 1) {
-                    error(ERR_WARNING | ERR_WARN_FL_OVERFLOW | ERR_PASS1,
-                          "overflow in floating-point constant");
-                    type = FL_INFINITY;
-                    goto overflow;
-                }
-            }
-
+    case FL_DENORMAL:
+    {
+        shift = -(exponent + expmax - 2 - fmt->exponent) + fmt->explicit;
+        ieee_shr(mant, shift);
+        ieee_round(minus, mant, bits);
+        if (mant[one_pos] & one_mask)
+        {
+            /* One's position is set, we rounded up into normal range */
+            exponent = 1;
             if (!fmt->explicit)
                 mant[one_pos] &= ~one_mask; /* remove explicit one */
             mant[0] |= exponent << (LIMB_BITS - 1 - fmt->exponent);
-            break;
+        }
+        else
+        {
+            if (daz || is_zero(mant))
+            {
+                /* Flush denormals to zero */
+                error(ERR_WARNING | ERR_WARN_FL_UNDERFLOW | ERR_PASS1,
+                      "underflow in floating-point constant");
+                goto zero;
+            }
+            else
+            {
+                error(ERR_WARNING | ERR_WARN_FL_DENORM | ERR_PASS1,
+                      "denormal floating-point constant");
+            }
+        }
+        break;
+    }
 
-        case FL_INFINITY:
-        case FL_QNAN:
-        case FL_SNAN:
-        overflow:
-            memset(mant, 0, sizeof mant);
-            mant[0] = (((fp_limb) 1 << fmt->exponent) - 1)
-                    << (LIMB_BITS - 1 - fmt->exponent);
-            if (fmt->explicit)
-                mant[one_pos] |= one_mask;
-            if (type == FL_QNAN)
-                set_bit(mant, fmt->exponent + fmt->explicit + 1);
-            else if (type == FL_SNAN)
-                set_bit(mant, fmt->exponent + fmt->explicit + fmt->mantissa);
-            break;
+    case FL_NORMAL:
+        exponent += expmax - 1;
+        ieee_shr(mant, fmt->exponent + fmt->explicit);
+        ieee_round(minus, mant, bits);
+        /* did we scale up by one? */
+        if (test_bit(mant, fmt->exponent + fmt->explicit - 1))
+        {
+            ieee_shr(mant, 1);
+            exponent++;
+            if (exponent >= (expmax << 1) - 1)
+            {
+                error(ERR_WARNING | ERR_WARN_FL_OVERFLOW | ERR_PASS1,
+                      "overflow in floating-point constant");
+                type = FL_INFINITY;
+                goto overflow;
+            }
+        }
+
+        if (!fmt->explicit)
+            mant[one_pos] &= ~one_mask; /* remove explicit one */
+        mant[0] |= exponent << (LIMB_BITS - 1 - fmt->exponent);
+        break;
+
+    case FL_INFINITY:
+    case FL_QNAN:
+    case FL_SNAN:
+    overflow:
+        memset(mant, 0, sizeof mant);
+        mant[0] = (((fp_limb)1 << fmt->exponent) - 1)
+                  << (LIMB_BITS - 1 - fmt->exponent);
+        if (fmt->explicit)
+            mant[one_pos] |= one_mask;
+        if (type == FL_QNAN)
+            set_bit(mant, fmt->exponent + fmt->explicit + 1);
+        else if (type == FL_SNAN)
+            set_bit(mant, fmt->exponent + fmt->explicit + fmt->mantissa);
+        break;
     }
 
     mant[0] |= minus ? LIMB_TOP_BIT : 0;
@@ -862,57 +1029,75 @@ static int to_float(const char *str, int s, uint8_t *result,
     for (i = fmt->bytes - 1; i >= 0; i--)
         *result++ = mant[i / LIMB_BYTES] >> (((LIMB_BYTES - 1) - (i % LIMB_BYTES)) * 8);
 
-    return 1;                   /* success */
+    return 1; /* success */
 }
 
 int float_const(const char *number, int sign, uint8_t *result,
-                int bytes, efunc err) {
+                int bytes, efunc err)
+{
     error = err;
 
-    switch (bytes) {
-        case 1:
-            return to_float(number, sign, result, &ieee_8);
-        case 2:
-            return to_float(number, sign, result, &ieee_16);
-        case 4:
-            return to_float(number, sign, result, &ieee_32);
-        case 8:
-            return to_float(number, sign, result, &ieee_64);
-        case 10:
-            return to_float(number, sign, result, &ieee_80);
-        case 16:
-            return to_float(number, sign, result, &ieee_128);
-        default:
-            error(ERR_PANIC, "strange value %d passed to float_const", bytes);
-            return 0;
+    switch (bytes)
+    {
+    case 1:
+        return to_float(number, sign, result, &ieee_8);
+    case 2:
+        return to_float(number, sign, result, &ieee_16);
+    case 4:
+        return to_float(number, sign, result, &ieee_32);
+    case 8:
+        return to_float(number, sign, result, &ieee_64);
+    case 10:
+        return to_float(number, sign, result, &ieee_80);
+    case 16:
+        return to_float(number, sign, result, &ieee_128);
+    default:
+        error(ERR_PANIC, "strange value %d passed to float_const", bytes);
+        return 0;
     }
 }
 
 /* Set floating-point options */
-int float_option(const char *option) {
-    if (!as_stricmp(option, "daz")) {
+int float_option(const char *option)
+{
+    if (!as_stricmp(option, "daz"))
+    {
         daz = true;
         return 0;
-    } else if (!as_stricmp(option, "nodaz")) {
+    }
+    else if (!as_stricmp(option, "nodaz"))
+    {
         daz = false;
         return 0;
-    } else if (!as_stricmp(option, "near")) {
+    }
+    else if (!as_stricmp(option, "near"))
+    {
         rc = FLOAT_RC_NEAR;
         return 0;
-    } else if (!as_stricmp(option, "down")) {
+    }
+    else if (!as_stricmp(option, "down"))
+    {
         rc = FLOAT_RC_DOWN;
         return 0;
-    } else if (!as_stricmp(option, "up")) {
+    }
+    else if (!as_stricmp(option, "up"))
+    {
         rc = FLOAT_RC_UP;
         return 0;
-    } else if (!as_stricmp(option, "zero")) {
+    }
+    else if (!as_stricmp(option, "zero"))
+    {
         rc = FLOAT_RC_ZERO;
         return 0;
-    } else if (!as_stricmp(option, "default")) {
+    }
+    else if (!as_stricmp(option, "default"))
+    {
         rc = FLOAT_RC_NEAR;
         daz = false;
         return 0;
-    } else {
-        return -1;              /* Unknown option */
+    }
+    else
+    {
+        return -1; /* Unknown option */
     }
 }

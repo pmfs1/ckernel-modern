@@ -1,4 +1,4 @@
-/* 
+/*
  * preproc.h  header file for preproc.c
  */
 

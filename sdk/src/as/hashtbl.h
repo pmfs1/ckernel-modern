@@ -11,20 +11,23 @@
 #include <stddef.h>
 #include "aslib.h"
 
-struct hash_tbl_node {
+struct hash_tbl_node
+{
     uint64_t hash;
     const char *key;
     void *data;
 };
 
-struct hash_table {
+struct hash_table
+{
     struct hash_tbl_node *table;
     size_t load;
     size_t size;
     size_t max_load;
 };
 
-struct hash_insert {
+struct hash_insert
+{
     uint64_t hash;
     struct hash_table *head;
     struct hash_tbl_node *where;
@@ -37,9 +40,9 @@ uint64_t crc64i(uint64_t crc, const char *string);
 #define CRC64_INIT UINT64_C(0xffffffffffffffff)
 
 /* Some reasonable initial sizes... */
-#define HASH_SMALL    4
-#define HASH_MEDIUM    16
-#define HASH_LARGE    256
+#define HASH_SMALL 4
+#define HASH_MEDIUM 16
+#define HASH_LARGE 256
 
 void hash_init(struct hash_table *head, size_t size);
 

@@ -3,7 +3,8 @@
 #ifndef AS_INSNSI_H
 #define AS_INSNSI_H 1
 
-enum opcode {
+enum opcode
+{
     I_AAA,
     I_AAD,
     I_AAM,

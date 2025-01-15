@@ -1,4 +1,2 @@
 #!/bin/sh
 [ -x /dev/eth0 ]
-# telnetd &
-# ftpd &

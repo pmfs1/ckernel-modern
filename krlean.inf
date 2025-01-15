@@ -16,7 +16,6 @@ clib
 cmds
 edit
 fdisk
-ftpd
 genvmdk
 impdef
 login
@@ -27,7 +26,6 @@ sdk
 setup
 sh
 sys
-telnetd
 
 [license]
 OSL-3.0

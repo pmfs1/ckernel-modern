@@ -1,16 +1,16 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define VFS_S_IFMT           0170000         // File type mask
-#define VFS_S_IFREG        0100000         // Regular file
-#define VFS_S_IFDIR        0040000         // Directory
+#define VFS_S_IFMT 0170000  // File type mask
+#define VFS_S_IFREG 0100000 // Regular file
+#define VFS_S_IFDIR 0040000 // Directory
 
-#define VFS_S_IREAD        0000400         // Read permission, owner
-#define VFS_S_IWRITE       0000200         // Write permission, owner
-#define VFS_S_IEXEC        0000100         // Execute/search permission, owner
+#define VFS_S_IREAD 0000400  // Read permission, owner
+#define VFS_S_IWRITE 0000200 // Write permission, owner
+#define VFS_S_IEXEC 0000100  // Execute/search permission, owner
 
-#define VFS_S_ISREG(m)      (((m) & VFS_S_IFMT) == VFS_S_IFREG)
-#define VFS_S_ISDIR(m)      (((m) & VFS_S_IFMT) == VFS_S_IFDIR)
+#define VFS_S_ISREG(m) (((m) & VFS_S_IFMT) == VFS_S_IFREG)
+#define VFS_S_ISDIR(m) (((m) & VFS_S_IFMT) == VFS_S_IFDIR)
 
 #define VFS_S_IRWXU 00700
 #define VFS_S_IRWXG 00070
@@ -47,4 +47,3 @@ typedef unsigned long long uint64_t;
 #endif
 
 #endif
-

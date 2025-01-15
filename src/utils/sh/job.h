@@ -6,26 +6,28 @@
 
 #include "sh.h"
 
-#define STD_HANDLES  3
+#define STD_HANDLES 3
 
-#define J_VAR_SCOPE     0x0001
-#define J_ARG_SCOPE     0x0002
+#define J_VAR_SCOPE 0x0001
+#define J_ARG_SCOPE 0x0002
 #define J_DEFERRED_VARS 0x0004
-#define J_LOOP          0x0008
-#define J_BREAK         0x0010
-#define J_CONTINUE      0x0020
-#define J_FUNCTION      0x0040
+#define J_LOOP 0x0008
+#define J_BREAK 0x0010
+#define J_CONTINUE 0x0020
+#define J_FUNCTION 0x0040
 
 //
 // Arguments
 //
 
-struct arg {
+struct arg
+{
     struct arg *next;
     char *value;
 };
 
-struct args {
+struct args
+{
     struct arg *first;
     struct arg *last;
     int num;
@@ -35,7 +37,8 @@ struct args {
 // Variables
 //
 
-struct var {
+struct var
+{
     struct var *next;
     int hash;
     char *name;
@@ -46,7 +49,8 @@ struct var {
 // Job
 //
 
-struct job {
+struct job
+{
     int flags;
     struct shell *shell;
     struct job *parent;

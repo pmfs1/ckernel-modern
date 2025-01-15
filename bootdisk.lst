@@ -17,8 +17,6 @@
 /boot/krnl.ini     boot\krnl.ini
 
 /bin/sh.exe        bin\sh.exe
-/bin/telnetd.exe   bin\telnetd.exe
-/bin/ftpd.exe      bin\ftpd.exe
 /bin/setup.exe     bin\setup.exe
 /bin/fdisk.exe     bin\fdisk.exe
 /bin/mkboot.exe    bin\mkboot.exe

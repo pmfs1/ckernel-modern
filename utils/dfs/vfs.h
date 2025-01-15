@@ -1,45 +1,49 @@
 #ifndef VFS_H
 #define VFS_H
 
-#define VFS_O_RDONLY                0x0000  // Open for reading only
-#define VFS_O_WRONLY                0x0001  // Open for writing only
-#define VFS_O_RDWR                  0x0002  // Open for reading and writing
-#define VFS_O_APPEND                0x0008  // Writes done at EOF
+#define VFS_O_RDONLY 0x0000 // Open for reading only
+#define VFS_O_WRONLY 0x0001 // Open for writing only
+#define VFS_O_RDWR 0x0002   // Open for reading and writing
+#define VFS_O_APPEND 0x0008 // Writes done at EOF
 
-#define VFS_O_SPECIAL               0x0010
+#define VFS_O_SPECIAL 0x0010
 
-#define VFS_O_CREAT                 0x0100  // Create and open file
-#define VFS_O_TRUNC                 0x0200  // Truncate file
-#define VFS_O_EXCL                  0x0400  // Open only if file doesn't already exist
+#define VFS_O_CREAT 0x0100 // Create and open file
+#define VFS_O_TRUNC 0x0200 // Truncate file
+#define VFS_O_EXCL 0x0400  // Open only if file doesn't already exist
 
-#define F_MODIFIED                  0x1000  // File has been modified since it was opened
-#define F_DIR                       0x2000  // File is a directory
+#define F_MODIFIED 0x1000 // File has been modified since it was opened
+#define F_DIR 0x2000      // File is a directory
 
-#define FS_DIRECTORY                1       // File is a directory
+#define FS_DIRECTORY 1 // File is a directory
 
-#define VFS_SEEK_SET                0       // Seek relative to begining of file
-#define VFS_SEEK_CUR                1       // Seek relative to current file position
-#define VFS_SEEK_END                2       // Seek relative to end of file
+#define VFS_SEEK_SET 0 // Seek relative to begining of file
+#define VFS_SEEK_CUR 1 // Seek relative to current file position
+#define VFS_SEEK_END 2 // Seek relative to end of file
 
-#define MAXPATH                     256     // Maximum filename length (including trailing zero)
+#define MAXPATH 256 // Maximum filename length (including trailing zero)
 
-#define PS1                         '/'    // Primary path separator
-#define PS2                         '\\'   // Alternate path separator
+#define PS1 '/'  // Primary path separator
+#define PS2 '\\' // Alternate path separator
 
-struct vfs_utimbuf {
+struct vfs_utimbuf
+{
     vfs_time_t ctime;
     vfs_time_t mtime;
     vfs_time_t atime;
 };
 
-struct vfs_stat {
+struct vfs_stat
+{
     int mode;
     vfs_ino_t ino;
     vfs_time_t atime;
     vfs_time_t mtime;
     vfs_time_t ctime;
-    union {
-        struct {
+    union
+    {
+        struct
+        {
             unsigned long size_low;
             unsigned long size_high;
         } quad;
@@ -47,7 +51,8 @@ struct vfs_stat {
     };
 };
 
-struct vfs_dirent {
+struct vfs_dirent
+{
     vfs_ino_t ino;
     unsigned int reclen;
     unsigned int namelen;
@@ -56,13 +61,15 @@ struct vfs_dirent {
 
 struct vfsops;
 
-struct filesystem {
+struct filesystem
+{
     char *name;
     struct fsops *ops;
     struct filesystem *next;
 };
 
-struct fs {
+struct fs
+{
     vfs_devno_t devno;
     char path[MAXPATH + 1];
     struct fsops *ops;
@@ -70,14 +77,16 @@ struct fs {
     void *data;
 };
 
-struct file {
+struct file
+{
     struct fs *fs;
     int flags;
     vfs_loff_t pos;
     void *data;
 };
 
-struct fsops {
+struct fsops
+{
     int (*format)(vfs_devno_t devno, char *opts);
 
     int (*mount)(struct fs *fs, char *opts);

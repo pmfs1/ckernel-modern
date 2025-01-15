@@ -7,20 +7,21 @@
 
 int WINAPI
 MessageBoxA(
-        HWND
-hWnd,
-LPCTSTR lpText,
-        LPCTSTR
-lpCaption,
-UINT uType
-) {
-TRACE("MessageBoxA");
-syslog(LOG_INFO,
-"Messagebox %s: %s", lpCaption, lpText);
-panic("MessageBoxA not implemented");
-return 0;
+    HWND
+        hWnd,
+    LPCTSTR lpText,
+    LPCTSTR
+        lpCaption,
+    UINT uType)
+{
+    TRACE("MessageBoxA");
+    syslog(LOG_INFO,
+           "Messagebox %s: %s", lpCaption, lpText);
+    panic("MessageBoxA not implemented");
+    return 0;
 }
 
-int __stdcall DllMain(handle_t hmod, int reason, void *reserved) {
+int __stdcall DllMain(handle_t hmod, int reason, void *reserved)
+{
     return TRUE;
 }

@@ -1,35 +1,39 @@
 #ifndef BUF_H
 #define BUF_H
 
-struct thread {
+struct thread
+{
     void *ready;
     struct thread *next_buffer_waiter;
 };
 
 #define BUFPOOL_HASHSIZE 512
 
-#define BUF_STATE_FREE      0
-#define BUF_STATE_CLEAN     1
-#define BUF_STATE_DIRTY     2
-#define BUF_STATE_READING   3
-#define BUF_STATE_WRITING   4
-#define BUF_STATE_LOCKED    5
-#define BUF_STATE_UPDATED   6
-#define BUF_STATE_INVALID   7
+#define BUF_STATE_FREE 0
+#define BUF_STATE_CLEAN 1
+#define BUF_STATE_DIRTY 2
+#define BUF_STATE_READING 3
+#define BUF_STATE_WRITING 4
+#define BUF_STATE_LOCKED 5
+#define BUF_STATE_UPDATED 6
+#define BUF_STATE_INVALID 7
 
 struct buf;
 
-struct buflist {
+struct buflist
+{
     struct buf *head;
     struct buf *tail;
 };
 
-struct buflink {
+struct buflink
+{
     struct buf *next;
     struct buf *prev;
 };
 
-struct buf {
+struct buf
+{
     struct buflink bucket;
     struct buflink chain;
     unsigned short state;
@@ -39,7 +43,8 @@ struct buf {
     char *data;
 };
 
-struct bufpool {
+struct bufpool
+{
     vfs_devno_t devno;
     int poolsize;
     int bufsize;
@@ -48,9 +53,9 @@ struct bufpool {
     struct buf *bufbase;
     char *database;
 
-    struct buflist dirty;  // List of dirty buffers (head is least recently changed)
-    struct buflist clean;  // List of clean buffers (head is least recently used)
-    struct buf *freelist;  // List of free buffers
+    struct buflist dirty; // List of dirty buffers (head is least recently changed)
+    struct buflist clean; // List of clean buffers (head is least recently used)
+    struct buf *freelist; // List of free buffers
 
     struct buf *hashtable[BUFPOOL_HASHSIZE];
 };

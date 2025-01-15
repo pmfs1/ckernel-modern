@@ -5,7 +5,8 @@
  * based on DWARF 3 standart
  */
 
-enum dwarf_tag {
+enum dwarf_tag
+{
     DW_TAG_padding = 0x00,
     DW_TAG_array_type = 0x01,
     DW_TAG_class_type = 0x02,
@@ -72,12 +73,14 @@ enum dwarf_tag {
     DW_TAG_hi_user = 0xffff
 };
 
-enum dwarf_child {
+enum dwarf_child
+{
     DW_CHILDREN_no = 0x00,
     DW_CHILDREN_yes = 0x01
 };
 
-enum dwarf_form {
+enum dwarf_form
+{
     DW_FORM_addr = 0x01,
     DW_FORM_block2 = 0x03,
     DW_FORM_block4 = 0x04,
@@ -101,7 +104,8 @@ enum dwarf_form {
     DW_FORM_indirect = 0x16
 };
 
-enum dwarf_attribute {
+enum dwarf_attribute
+{
     DW_AT_sibling = 0x01,
     DW_AT_location = 0x02,
     DW_AT_name = 0x03,
@@ -193,7 +197,8 @@ enum dwarf_attribute {
     DW_AT_hi_user = 0x3fff
 };
 
-enum dwarf_op {
+enum dwarf_op
+{
     DW_OP_addr = 0x03,
     DW_OP_deref = 0x06,
     DW_OP_const1u = 0x08,
@@ -351,7 +356,8 @@ enum dwarf_op {
     DW_OP_hi_user = 0xff
 };
 
-enum dwarf_base_type {
+enum dwarf_base_type
+{
     DW_ATE_address = 0x01,
     DW_ATE_boolean = 0x02,
     DW_ATE_complex_float = 0x03,
@@ -372,7 +378,8 @@ enum dwarf_base_type {
     DW_ATE_hi_user = 0xff
 };
 
-enum dwarf_decimal_sign {
+enum dwarf_decimal_sign
+{
     DW_DS_unsigned = 0x01,
     DW_DS_leading_overpunch = 0x02,
     DW_DS_trailing_overpunch = 0x03,
@@ -380,7 +387,8 @@ enum dwarf_decimal_sign {
     DW_DS_trailing_separate = 0x05
 };
 
-enum dwarf_endianity {
+enum dwarf_endianity
+{
     DW_END_default = 0x00,
     DW_END_big = 0x01,
     DW_END_little = 0x02,
@@ -389,25 +397,29 @@ enum dwarf_endianity {
     DW_END_hi_user = 0xff
 };
 
-enum dwarf_accessibility {
+enum dwarf_accessibility
+{
     DW_ACCESS_public = 0x01,
     DW_ACCESS_protected = 0x02,
     DW_ACCESS_private = 0x03
 };
 
-enum dwarf_visibility {
+enum dwarf_visibility
+{
     DW_VIS_local = 0x01,
     DW_VIS_exported = 0x02,
     DW_VIS_qualified = 0x03
 };
 
-enum dwarf_virtuality {
+enum dwarf_virtuality
+{
     DW_VIRTUALITY_none = 0x00,
     DW_VIRTUALITY_virtual = 0x01,
     DW_VIRTUALITY_pure_virtual = 0x02
 };
 
-enum dwarf_language {
+enum dwarf_language
+{
     DW_LANG_C89 = 0x0001,
     DW_LANG_C = 0x0002,
     DW_LANG_Ada83 = 0x0003,
@@ -434,14 +446,16 @@ enum dwarf_language {
     DW_LANG_hi_user = 0xffff
 };
 
-enum dwarf_identifier_case {
+enum dwarf_identifier_case
+{
     DW_ID_case_sensitive = 0x00,
     DW_ID_up_case = 0x01,
     DW_ID_down_case = 0x02,
     DW_ID_case_insensitive = 0x03
 };
 
-enum dwarf_calling_conversion {
+enum dwarf_calling_conversion
+{
     DW_CC_normal = 0x01,
     DW_CC_program = 0x02,
     DW_CC_nocall = 0x03,
@@ -450,24 +464,28 @@ enum dwarf_calling_conversion {
     DW_CC_hi_user = 0xff
 };
 
-enum dwarf_inline {
+enum dwarf_inline
+{
     DW_INL_not_inlined = 0x00,
     DW_INL_inlined = 0x01,
     DW_INL_declared_not_inlined = 0x02,
     DW_INL_declared_inlined = 0x03
 };
 
-enum dwarf_ordering {
+enum dwarf_ordering
+{
     DW_ORD_row_major = 0x00,
     DW_ORD_col_major = 0x01
 };
 
-enum dwarf_discriminant {
+enum dwarf_discriminant
+{
     DW_DSC_label = 0x00,
     DW_DSC_range = 0x01
 };
 
-enum dwarf_line_number {
+enum dwarf_line_number
+{
     DW_LNS_extended_op = 0x00,
     DW_LNS_copy = 0x01,
     DW_LNS_advance_pc = 0x02,
@@ -483,7 +501,8 @@ enum dwarf_line_number {
     DW_LNS_set_isa = 0x0c
 };
 
-enum dwarf_line_number_extended {
+enum dwarf_line_number_extended
+{
     DW_LNE_end_sequence = 0x01,
     DW_LNE_set_address = 0x02,
     DW_LNE_define_file = 0x03,
@@ -491,7 +510,8 @@ enum dwarf_line_number_extended {
     DW_LNE_hi_user = 0xff
 };
 
-enum dwarf_macinfo_type {
+enum dwarf_macinfo_type
+{
     DW_MACINFO_define = 0x01,
     DW_MACINFO_undef = 0x02,
     DW_MACINFO_start_file = 0x03,
@@ -499,7 +519,8 @@ enum dwarf_macinfo_type {
     DW_MACINFO_vendor_ext = 0xff
 };
 
-enum dwarf_call_frame {
+enum dwarf_call_frame
+{
     DW_CFA_advance_loc = 0x01,
     DW_CFA_offset = 0x02,
     DW_CFA_restore = 0x03,

@@ -3,13 +3,15 @@
 
 struct property;
 
-struct section {
+struct section
+{
     char *name;
     struct section *next;
     struct property *properties;
 };
 
-struct property {
+struct property
+{
     char *name;
     char *value;
     struct property *next;

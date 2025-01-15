@@ -1,4 +1,4 @@
-/* 
+/*
  * parser.h   header file for the parser module of the Netwide
  *            Assembler
  */

@@ -21,10 +21,18 @@ jobs:
       run: |
         sudo apt-get update -y && sudo apt-get install -y gcc-multilib libc6-dev-i386 genisoimage
         make
-    - name: 'BUILD'
+    - name: 'BUILD (CDROM)''
       shell: bash
       run: |
-        make krlean cdrom floppy vmdk hdmin
+        make krlean cdrom
+    - name: 'BUILD (FLOPPY)'
+      shell: bash
+      run: |
+        make krlean floppy
+    - name: 'BUILD (VMDK)'
+      shell: bash
+      run: |
+        make krlean vmdk
     - name: 'CLEAN'
       shell: bash
       run: |

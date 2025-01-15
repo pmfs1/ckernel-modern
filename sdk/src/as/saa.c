@@ -3,10 +3,11 @@
 #include "saa.h"
 
 /* Aggregate SAA components smaller than this */
-#define SAA_BLKSHIFT    16
-#define SAA_BLKLEN    ((size_t)1 << SAA_BLKSHIFT)
+#define SAA_BLKSHIFT 16
+#define SAA_BLKLEN ((size_t)1 << SAA_BLKSHIFT)
 
-struct SAA *saa_init(size_t elem_len) {
+struct SAA *saa_init(size_t elem_len)
+{
     struct SAA *s;
     char *data;
 
@@ -28,7 +29,8 @@ struct SAA *saa_init(size_t elem_len) {
     return s;
 }
 
-void saa_free(struct SAA *s) {
+void saa_free(struct SAA *s)
+{
     char **p;
     size_t n;
 
@@ -40,16 +42,18 @@ void saa_free(struct SAA *s) {
 }
 
 /* Add one allocation block to an SAA */
-static void saa_extend(struct SAA *s) {
+static void saa_extend(struct SAA *s)
+{
     size_t blkn = s->nblks++;
 
-    if (blkn >= s->nblkptrs) {
+    if (blkn >= s->nblkptrs)
+    {
         size_t rindex = s->rblk - s->blk_ptrs;
         size_t windex = s->wblk - s->blk_ptrs;
 
         s->nblkptrs <<= 1;
         s->blk_ptrs =
-                as_realloc(s->blk_ptrs, s->nblkptrs * sizeof(char *));
+            as_realloc(s->blk_ptrs, s->nblkptrs * sizeof(char *));
 
         s->rblk = s->blk_ptrs + rindex;
         s->wblk = s->blk_ptrs + windex;
@@ -59,12 +63,14 @@ static void saa_extend(struct SAA *s) {
     s->length += s->blk_len;
 }
 
-void *saa_wstruct(struct SAA *s) {
+void *saa_wstruct(struct SAA *s)
+{
     void *p;
 
     as_assert((s->wpos % s->elem_len) == 0);
 
-    if (s->wpos + s->elem_len > s->blk_len) {
+    if (s->wpos + s->elem_len > s->blk_len)
+    {
         as_assert(s->wpos == s->blk_len);
         if (s->wptr + s->elem_len > s->length)
             saa_extend(s);
@@ -82,18 +88,23 @@ void *saa_wstruct(struct SAA *s) {
     return p;
 }
 
-void saa_wbytes(struct SAA *s, const void *data, size_t len) {
+void saa_wbytes(struct SAA *s, const void *data, size_t len)
+{
     const char *d = data;
 
-    while (len) {
+    while (len)
+    {
         size_t l = s->blk_len - s->wpos;
         if (l > len)
             l = len;
-        if (l) {
-            if (d) {
+        if (l)
+        {
+            if (d)
+            {
                 memcpy(*s->wblk + s->wpos, d, l);
                 d += l;
-            } else
+            }
+            else
                 memset(*s->wblk + s->wpos, 0, l);
             s->wpos += l;
             s->wptr += l;
@@ -102,7 +113,8 @@ void saa_wbytes(struct SAA *s, const void *data, size_t len) {
             if (s->datalen < s->wptr)
                 s->datalen = s->wptr;
         }
-        if (len) {
+        if (len)
+        {
             if (s->wptr >= s->length)
                 saa_extend(s);
             s->wblk++;
@@ -111,12 +123,14 @@ void saa_wbytes(struct SAA *s, const void *data, size_t len) {
     }
 }
 
-void saa_rewind(struct SAA *s) {
+void saa_rewind(struct SAA *s)
+{
     s->rblk = s->blk_ptrs;
     s->rpos = s->rptr = 0;
 }
 
-void *saa_rstruct(struct SAA *s) {
+void *saa_rstruct(struct SAA *s)
+{
     void *p;
 
     if (s->rptr + s->elem_len > s->datalen)
@@ -124,7 +138,8 @@ void *saa_rstruct(struct SAA *s) {
 
     as_assert((s->rpos % s->elem_len) == 0);
 
-    if (s->rpos + s->elem_len > s->blk_len) {
+    if (s->rpos + s->elem_len > s->blk_len)
+    {
         s->rblk++;
         s->rpos = 0;
     }
@@ -136,16 +151,19 @@ void *saa_rstruct(struct SAA *s) {
     return p;
 }
 
-const void *saa_rbytes(struct SAA *s, size_t *lenp) {
+const void *saa_rbytes(struct SAA *s, size_t *lenp)
+{
     const void *p;
     size_t len;
 
-    if (s->rptr >= s->datalen) {
+    if (s->rptr >= s->datalen)
+    {
         *lenp = 0;
         return NULL;
     }
 
-    if (s->rpos >= s->blk_len) {
+    if (s->rpos >= s->blk_len)
+    {
         s->rblk++;
         s->rpos = 0;
     }
@@ -165,12 +183,14 @@ const void *saa_rbytes(struct SAA *s, size_t *lenp) {
     return p;
 }
 
-void saa_rnbytes(struct SAA *s, void *data, size_t len) {
+void saa_rnbytes(struct SAA *s, void *data, size_t len)
+{
     char *d = data;
 
     as_assert(s->rptr + len <= s->datalen);
 
-    while (len) {
+    while (len)
+    {
         size_t l;
         const void *p;
 
@@ -184,15 +204,19 @@ void saa_rnbytes(struct SAA *s, void *data, size_t len) {
 }
 
 /* Same as saa_rnbytes, except position the counter first */
-void saa_fread(struct SAA *s, size_t posn, void *data, size_t len) {
+void saa_fread(struct SAA *s, size_t posn, void *data, size_t len)
+{
     size_t ix;
 
     as_assert(posn + len <= s->datalen);
 
-    if (likely(s->blk_len == SAA_BLKLEN)) {
+    if (likely(s->blk_len == SAA_BLKLEN))
+    {
         ix = posn >> SAA_BLKSHIFT;
         s->rpos = posn & (SAA_BLKLEN - 1);
-    } else {
+    }
+    else
+    {
         ix = posn / s->blk_len;
         s->rpos = posn % s->blk_len;
     }
@@ -203,23 +227,28 @@ void saa_fread(struct SAA *s, size_t posn, void *data, size_t len) {
 }
 
 /* Same as saa_wbytes, except position the counter first */
-void saa_fwrite(struct SAA *s, size_t posn, const void *data, size_t len) {
+void saa_fwrite(struct SAA *s, size_t posn, const void *data, size_t len)
+{
     size_t ix;
 
     /* Seek beyond the end of the existing array not supported */
     as_assert(posn <= s->datalen);
 
-    if (likely(s->blk_len == SAA_BLKLEN)) {
+    if (likely(s->blk_len == SAA_BLKLEN))
+    {
         ix = posn >> SAA_BLKSHIFT;
         s->wpos = posn & (SAA_BLKLEN - 1);
-    } else {
+    }
+    else
+    {
         ix = posn / s->blk_len;
         s->wpos = posn % s->blk_len;
     }
     s->wptr = posn;
     s->wblk = &s->blk_ptrs[ix];
 
-    if (!s->wpos) {
+    if (!s->wpos)
+    {
         s->wpos = s->blk_len;
         s->wblk--;
     }
@@ -227,7 +256,8 @@ void saa_fwrite(struct SAA *s, size_t posn, const void *data, size_t len) {
     saa_wbytes(s, data, len);
 }
 
-void saa_fpwrite(struct SAA *s, FILE *fp) {
+void saa_fpwrite(struct SAA *s, FILE *fp)
+{
     const char *data;
     size_t len;
 
@@ -236,7 +266,8 @@ void saa_fpwrite(struct SAA *s, FILE *fp) {
         fwrite(data, 1, len, fp);
 }
 
-void saa_write8(struct SAA *s, uint8_t v) {
+void saa_write8(struct SAA *s, uint8_t v)
+{
     saa_wbytes(s, &v, 1);
 }
 
@@ -262,9 +293,10 @@ void saa_writeaddr(struct SAA *s, uint64_t v, size_t len)
     saa_wbytes(s, &v, len);
 }
 
-#else                           /* not WORDS_LITTLEENDIAN */
+#else /* not WORDS_LITTLEENDIAN */
 
-void saa_write16(struct SAA *s, uint16_t v) {
+void saa_write16(struct SAA *s, uint16_t v)
+{
     uint8_t b[2];
 
     b[0] = v;
@@ -272,7 +304,8 @@ void saa_write16(struct SAA *s, uint16_t v) {
     saa_wbytes(s, b, 2);
 }
 
-void saa_write32(struct SAA *s, uint32_t v) {
+void saa_write32(struct SAA *s, uint32_t v)
+{
     uint8_t b[4];
 
     b[0] = v;
@@ -282,7 +315,8 @@ void saa_write32(struct SAA *s, uint32_t v) {
     saa_wbytes(s, b, 4);
 }
 
-void saa_write64(struct SAA *s, uint64_t v) {
+void saa_write64(struct SAA *s, uint64_t v)
+{
     uint8_t b[8];
 
     b[0] = v;
@@ -296,7 +330,8 @@ void saa_write64(struct SAA *s, uint64_t v) {
     saa_wbytes(s, b, 8);
 }
 
-void saa_writeaddr(struct SAA *s, uint64_t v, size_t len) {
+void saa_writeaddr(struct SAA *s, uint64_t v, size_t len)
+{
     uint8_t b[8];
 
     b[0] = v;
@@ -311,20 +346,22 @@ void saa_writeaddr(struct SAA *s, uint64_t v, size_t len) {
     saa_wbytes(s, &v, len);
 }
 
-#endif                          /* WORDS_LITTEENDIAN */
+#endif /* WORDS_LITTEENDIAN */
 
 /* write unsigned LEB128 value to SAA */
-void saa_wleb128u(struct SAA *psaa, int value) {
+void saa_wleb128u(struct SAA *psaa, int value)
+{
     char temp[64], *ptemp;
     uint8_t byte;
     int len;
 
     ptemp = temp;
     len = 0;
-    do {
+    do
+    {
         byte = value & 127;
         value >>= 7;
-        if (value != 0)         /* more bytes to come */
+        if (value != 0) /* more bytes to come */
             byte |= 0x80;
         *ptemp = byte;
         ptemp++;
@@ -334,7 +371,8 @@ void saa_wleb128u(struct SAA *psaa, int value) {
 }
 
 /* write signed LEB128 value to SAA */
-void saa_wleb128s(struct SAA *psaa, int value) {
+void saa_wleb128s(struct SAA *psaa, int value)
+{
     char temp[64], *ptemp;
     uint8_t byte;
     bool more, negative;
@@ -345,7 +383,8 @@ void saa_wleb128s(struct SAA *psaa, int value) {
     negative = (value < 0);
     size = sizeof(int) * 8;
     len = 0;
-    while (more) {
+    while (more)
+    {
         byte = value & 0x7f;
         value >>= 7;
         if (negative)

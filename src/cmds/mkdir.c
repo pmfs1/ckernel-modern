@@ -9,82 +9,101 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-struct options {
+struct options
+{
     int makepath;
     char *mode;
 };
 
-static int make_directory(char *path, struct options *opts) {
+static int make_directory(char *path, struct options *opts)
+{
     char *p;
     int mode;
 
-    if (opts->mode) {
+    if (opts->mode)
+    {
         mode = parse_symbolic_mode(opts->mode, 0);
-        if (mode == -1) {
+        if (mode == -1)
+        {
             fprintf(stderr, "%s: invalid mode\n", opts->mode);
             return 1;
         }
-    } else {
+    }
+    else
+    {
         mode = 0777;
     }
 
-    if (mkdir(path, mode) < 0) {
-        if (!opts->makepath) {
+    if (mkdir(path, mode) < 0)
+    {
+        if (!opts->makepath)
+        {
             perror(path);
             return 1;
         }
 
         p = path;
-        while (p) {
+        while (p)
+        {
             p = strchr(p, '/');
-            if (p) *p = 0;
-            if (mkdir(path, mode) < 0 && errno != EEXIST) {
+            if (p)
+                *p = 0;
+            if (mkdir(path, mode) < 0 && errno != EEXIST)
+            {
                 perror(path);
                 return 1;
             }
-            if (p) *p++ = '/';
+            if (p)
+                *p++ = '/';
         }
     }
 
     return 0;
 }
 
-static void usage() {
+static void usage()
+{
     fprintf(stderr, "usage: mkdir [OPTIONS] DIR...\n\n");
     fprintf(stderr, "  -p      Create any missing intermediate pathname components\n");
     fprintf(stderr, "  -m mode Set file permission mode\n");
     exit(1);
 }
 
-shellcmd(mkdir) {
-        struct options opts;
-        int c;
-        int i;
-        int rc;
+shellcmd(mkdir)
+{
+    struct options opts;
+    int c;
+    int i;
+    int rc;
 
-        // Parse command line options
-        memset(&opts, 0, sizeof(struct options));
-        while ((c = getopt(argc, argv, "pm:?")) != EOF) {
-            switch (c) {
-                case 'p':
-                    opts.makepath = 1;
-                    break;
+    // Parse command line options
+    memset(&opts, 0, sizeof(struct options));
+    while ((c = getopt(argc, argv, "pm:?")) != EOF)
+    {
+        switch (c)
+        {
+        case 'p':
+            opts.makepath = 1;
+            break;
 
-                case 'm':
-                    opts.mode = optarg;
-                    break;
+        case 'm':
+            opts.mode = optarg;
+            break;
 
-                case '?':
-                default:
-                    usage();
-            }
+        case '?':
+        default:
+            usage();
         }
-        if (optind == argc) usage();
+    }
+    if (optind == argc)
+        usage();
 
-        for (i = optind; i < argc; i++) {
-            rc = make_directory(argv[i], &opts);
-            if (rc != 0) return 1;
-        }
+    for (i = optind; i < argc; i++)
+    {
+        rc = make_directory(argv[i], &opts);
+        if (rc != 0)
+            return 1;
+    }
 
-        return 0;
+    return 0;
 }

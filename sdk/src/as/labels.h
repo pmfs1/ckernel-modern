@@ -1,4 +1,4 @@
-/* 
+/*
  * labels.h  header file for labels.c
  */
 

@@ -14,7 +14,7 @@ CCFLAGS=-B bin/install/usr
 PKGREPO=/mnt/pkg
 PKGDIR=bin/install/usr/share/pkg
 
-krlean: dirs build-utils boot sys libc utils cmds sdk
+krlean: clean dirs build-utils boot sys libc utils cmds sdk
 	cp -p krlean.inf $(PKGDIR)
 
 dirs: bin/.timestamp
@@ -50,9 +50,7 @@ bin/.timestamp:
 	[ -d bin/install/usr/src/utils/ar ]      || ln -s ../../../../../src/utils/ar bin/install/usr/src/utils/ar
 	[ -d bin/install/usr/src/utils/edit ]    || ln -s ../../../../../src/utils/edit bin/install/usr/src/utils/edit
 	[ -d bin/install/usr/src/utils/fdisk ]   || ln -s ../../../../../src/utils/fdisk bin/install/usr/src/utils/fdisk
-	[ -d bin/install/usr/src/utils/ftpd ]    || ln -s ../../../../../src/utils/ftpd bin/install/usr/src/utils/ftpd
 	[ -d bin/install/usr/src/utils/genvmdk ] || ln -s ../../../../../src/utils/genvmdk bin/install/usr/src/utils/genvmdk
-	[ -d bin/install/usr/src/utils/httpd ]   || ln -s ../../../../../src/utils/httpd bin/install/usr/src/utils/httpd
 	[ -d bin/install/usr/src/utils/impdef ]  || ln -s ../../../../../src/utils/impdef bin/install/usr/src/utils/impdef
 	[ -d bin/install/usr/src/utils/login ]   || ln -s ../../../../../src/utils/login bin/install/usr/src/utils/login
 	[ -d bin/install/usr/src/utils/make ]    || ln -s ../../../../../src/utils/make bin/install/usr/src/utils/make
@@ -60,7 +58,6 @@ bin/.timestamp:
 	[ -d bin/install/usr/src/utils/msh ]     || ln -s ../../../../../src/utils/msh bin/install/usr/src/utils/msh
 	[ -d bin/install/usr/src/utils/setup ]   || ln -s ../../../../../src/utils/setup bin/install/usr/src/utils/setup
 	[ -d bin/install/usr/src/utils/sh ]      || ln -s ../../../../../src/utils/sh bin/install/usr/src/utils/sh
-	[ -d bin/install/usr/src/utils/telnetd ] || ln -s ../../../../../src/utils/telnetd bin/install/usr/src/utils/telnetd
 	[ -d bin/install/usr/src/utils/cc ]      || ln -s ../../../../../sdk/src/cc bin/install/usr/src/utils/cc
 	[ -d bin/install/usr/src/utils/as ]      || ln -s ../../../../../sdk/src/as bin/install/usr/src/utils/as
 	[ -d bin/install/usr/src/win32 ]         || ln -s ../../../../src/win32 bin/install/usr/src/win32
@@ -668,8 +665,6 @@ utils: \
   bin/install/bin/setup.exe \
   bin/install/bin/mkboot.exe \
   bin/install/bin/genvmdk.exe \
-  bin/install/bin/ftpd.exe \
-  bin/install/bin/telnetd.exe \
   bin/install/bin/login.exe \
   bin/install/usr/bin/make.exe \
   bin/install/usr/bin/ar.exe \
@@ -721,14 +716,6 @@ bin/install/bin/mkboot.exe: src/utils/mkboot/mkboot.c
 bin/install/bin/genvmdk.exe: src/utils/genvmdk/genvmdk.c
 	$(CC) -o $@ $^ $(CCFLAGS)
 	cp -p genvmdk.inf $(PKGDIR)
-
-bin/install/bin/ftpd.exe: src/utils/ftpd/ftpd.c
-	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p ftpd.inf $(PKGDIR)
-
-bin/install/bin/telnetd.exe: src/utils/telnetd/telnetd.c
-	$(CC) -o $@ $^ $(CCFLAGS)
-	cp -p telnetd.inf $(PKGDIR)
 
 bin/install/bin/login.exe: src/utils/login/login.c
 	$(CC) -o $@ $^ $(CCFLAGS)

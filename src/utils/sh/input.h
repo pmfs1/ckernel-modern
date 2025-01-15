@@ -6,7 +6,8 @@
 
 #define FILEBUFSIZ 512
 
-struct inputfile {
+struct inputfile
+{
     struct inputfile *prev;
     int lineno;
     int fd;
