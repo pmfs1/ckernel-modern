@@ -328,7 +328,7 @@ int dfs_unlink(struct fs *fs, char *name)
     }
 
     inode = get_inode(dir->fs, ino);
-    if (!dir)
+    if (!inode)
     {
         release_inode(dir);
         return -1;
