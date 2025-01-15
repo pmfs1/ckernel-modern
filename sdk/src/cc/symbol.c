@@ -49,8 +49,9 @@ Section *new_section(CCState *s1, const char *name, int sh_type, int sh_flags)
 {
     Section *sec;
 
-    sec = cc_mallocz(sizeof(Section) + strlen(name) + 1);
-    strncpy(sec->name, name, strlen(name) + 1);
+    size_t name_len = strlen(name) + 1;
+    sec = cc_mallocz(sizeof(Section) + name_len);
+    strncpy(sec->name, name, name_len);
     sec->sh_type = sh_type;
     sec->sh_flags = sh_flags;
     switch (sh_type)
