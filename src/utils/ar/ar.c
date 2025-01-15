@@ -515,6 +515,16 @@ void usage()
     fprintf(stderr, "  -m            Add individual entries in input archives.\n");
 }
 
+int is_valid_filename(const char *filename)
+{
+    // Check for invalid sequences in the user input
+    if (strstr(filename, "..") || strchr(filename, '/') || strchr(filename, '\\'))
+    {
+        return 0;
+    }
+    return 1;
+}
+
 int main(int argc, char *argv[])
 {
     int c, fd;
@@ -547,6 +557,13 @@ int main(int argc, char *argv[])
         return 1;
     }
     archive_filename = argv[optind++];
+
+    // Validate the archive filename
+    if (!is_valid_filename(archive_filename))
+    {
+        fprintf(stderr, "Invalid archive filename.\n");
+        return 1;
+    }
 
     // Read all the input object files
     init_archive(&ar);
