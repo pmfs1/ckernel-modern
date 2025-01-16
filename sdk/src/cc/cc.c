@@ -528,9 +528,12 @@ int main(int argc, char **argv)
         }
         else
         {
-            s->outfile = fopen(outfile, "w");
-            if (!s->outfile)
+            int fd = open(outfile, O_WRONLY | O_CREAT | O_TRUNC, S_IWUSR | S_IRUSR);
+            if (fd < 0)
                 error("could not open '%s", outfile);
+            s->outfile = fdopen(fd, "w");
+            if (!s->outfile)
+                error("could not fdopen '%s", outfile);
         }
     }
     else
