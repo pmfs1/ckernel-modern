@@ -596,7 +596,7 @@ int main(int argc, char *argv[])
     }
 
     // Open output archive
-    fd = open(archive_filename, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0666);
+    fd = open(archive_filename, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IWUSR | S_IRUSR);
     if (fd < 0)
     {
         perror(archive_filename);
