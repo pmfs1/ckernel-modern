@@ -927,17 +927,26 @@ static void pe_build_exports(struct pe_info *pe)
     if (pe->def != NULL)
     {
         // Write exports to .def file
-        op = fopen(pe->def, "w");
-        if (op == NULL)
+        int fd = open(pe->def, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
+        if (fd < 0)
         {
             error_noabort("could not create '%s': %s", pe->def, strerror(errno));
         }
         else
         {
-            fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
-            if (verbose)
+            op = fdopen(fd, "w");
+            if (op == NULL)
             {
-                printf("<- %s (%d symbols)\n", buf, sym_count);
+                close(fd);
+                error_noabort("could not create '%s': %s", pe->def, strerror(errno));
+            }
+            else
+            {
+                fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
+                if (verbose)
+                {
+                    printf("<- %s (%d symbols)\n", buf, sym_count);
+                }
             }
         }
     }
