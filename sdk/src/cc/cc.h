@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <math.h>
 #include <setjmp.h>
 #include <stdarg.h>
@@ -20,7 +21,7 @@
 #include "elf.h"
 
 #ifndef offsetof
-#define offsetof(type, field) ((size_t)&((type *)0)->field)
+#define offsetof(type, field) ((size_t) & ((type *)0)->field)
 #endif
 
 #ifndef countof
