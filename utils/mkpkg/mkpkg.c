@@ -120,10 +120,18 @@ static int write_pkgdb(char *dbfile, struct pkgdb *db)
 {
     FILE *f;
     struct pkg *pkg;
+    int fd;
 
-    f = fopen(dbfile, "w");
+    fd = open(dbfile, O_WRONLY | O_CREAT | O_TRUNC, S_IWUSR | S_IRUSR);
+    if (fd < 0)
+    {
+        perror(dbfile);
+        return 1;
+    }
+    f = fdopen(fd, "w");
     if (!f)
     {
+        close(fd);
         perror(dbfile);
         return 1;
     }
