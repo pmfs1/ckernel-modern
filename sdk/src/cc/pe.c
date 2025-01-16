@@ -1,4 +1,5 @@
 #include "cc.h"
+#include <sys/stat.h>
 
 #define PE_MERGE_DATA
 
@@ -595,7 +596,7 @@ static int pe_write(struct pe_info *pe)
     }
     ((PIMAGE_DOS_HEADER)stub)->e_lfanew = stub_size;
 
-    fd = open(pe->filename, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, 0777);
+    fd = open(pe->filename, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IWUSR | S_IRUSR);
     if (fd < 0)
     {
         error_noabort("could not write '%s': %s", pe->filename, strerror(errno));
