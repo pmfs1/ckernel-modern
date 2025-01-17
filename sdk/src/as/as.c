@@ -1232,13 +1232,25 @@ static void parse_cmdline(int argc, char **argv)
 
     if (*errname)
     {
-        error_file = fopen(errname, "w");
-        if (!error_file)
+        int fd = open(errname, O_WRONLY | O_CREAT | O_TRUNC, S_IWUSR | S_IRUSR);
+        if (fd < 0)
         {
             error_file = stderr; /* Revert to default! */
             as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
                      "cannot open file `%s' for error messages",
                      errname);
+        }
+        else
+        {
+            error_file = fdopen(fd, "w");
+            if (!error_file)
+            {
+                close(fd);
+                error_file = stderr; /* Revert to default! */
+                as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
+                         "cannot open file `%s' for error messages",
+                         errname);
+            }
         }
     }
 }
