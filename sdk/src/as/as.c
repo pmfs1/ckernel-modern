@@ -268,9 +268,17 @@ static void emit_dependencies(StrList *list)
 
     if (depend_file && strcmp(depend_file, "-"))
     {
-        deps = fopen(depend_file, "w");
+        int fd = open(depend_file, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
+        if (fd < 0)
+        {
+            as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
+                     "unable to write dependency file `%s'", depend_file);
+            return;
+        }
+        deps = fdopen(fd, "w");
         if (!deps)
         {
+            close(fd);
             as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
                      "unable to write dependency file `%s'", depend_file);
             return;
