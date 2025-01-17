@@ -1524,7 +1524,17 @@ static void pe_print_sections(CCState *s1, const char *fname)
     Section *s;
     FILE *f;
     int i;
-    f = fopen(fname, "wt");
+    int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (fd < 0) {
+        // handle error
+        return;
+    }
+    f = fdopen(fd, "wt");
+    if (f == NULL) {
+        close(fd);
+        // handle error
+        return;
+    }
     for (i = 1; i < s1->nb_sections; ++i)
     {
         s = s1->sections[i];
