@@ -398,11 +398,19 @@ int main(int argc, char **argv)
 
         if (*outname)
         {
-            ofile = fopen(outname, "w");
-            if (!ofile)
+            int fd = open(outname, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
+            if (fd < 0)
                 as_error(ERR_FATAL | ERR_NOFILE,
                          "unable to open output file `%s'",
                          outname);
+            ofile = fdopen(fd, "w");
+            if (!ofile)
+            {
+                close(fd);
+                as_error(ERR_FATAL | ERR_NOFILE,
+                         "unable to open output file `%s'",
+                         outname);
+            }
         }
         else
             ofile = NULL;
