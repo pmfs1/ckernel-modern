@@ -10,6 +10,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include "as.h"
 #include "aslib.h"
@@ -97,9 +99,17 @@ static void list_emit(void)
 
 static void list_init(char *fname, efunc error)
 {
-    listfp = fopen(fname, "w");
+    int fd = open(fname, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
+    if (fd < 0)
+    {
+        error(ERR_NONFATAL, "unable to open listing file `%s'",
+              fname);
+        return;
+    }
+    listfp = fdopen(fd, "w");
     if (!listfp)
     {
+        close(fd);
         error(ERR_NONFATAL, "unable to open listing file `%s'",
               fname);
         return;
