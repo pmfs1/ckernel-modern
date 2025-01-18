@@ -56,6 +56,8 @@
 #include "eval.h"
 #include "out/outform.h"
 #include "out/outlib.h"
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #ifdef OF_BIN
 
@@ -78,7 +80,7 @@ static struct bin_label
 {
     char *name;
     struct bin_label *next;
-} *no_seg_labels, **nsl_tail;
+} * no_seg_labels, **nsl_tail;
 
 static struct Section
 {
@@ -110,7 +112,7 @@ static struct Section
      * any other good way for us to handle that label.
      */
 
-} *sections, *last_section;
+} * sections, *last_section;
 
 static struct Reloc
 {
@@ -120,7 +122,7 @@ static struct Reloc
     int32_t secref;
     int32_t secrel;
     struct Section *target;
-} *relocs, **reloctail;
+} * relocs, **reloctail;
 
 static uint64_t origin;
 static int origin_defined;
@@ -1448,9 +1450,18 @@ static int bin_directive(enum directives directive, char *args, int pass)
                     rf = stderr;
                 else
                 { /* Must be a filename. */
-                    rf = fopen(p, "wt");
+                    int fd = open(p, O_WRONLY | O_CREAT | O_TRUNC, S_IWUSR | S_IRUSR);
+                    if (fd < 0)
+                    {
+                        as_error(ERR_WARNING, "unable to open map file `%s'",
+                                 p);
+                        map_control = 0;
+                        return 1;
+                    }
+                    rf = fdopen(fd, "wt");
                     if (!rf)
                     {
+                        close(fd);
                         as_error(ERR_WARNING, "unable to open map file `%s'",
                                  p);
                         map_control = 0;
