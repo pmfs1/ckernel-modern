@@ -52,7 +52,6 @@ jobs:
     concurrency:
       group: "${{ github.ref_name }}-${{ github.run_id }}"
       cancel-in-progress: true
-    environment: ${{ github.ref_name }}
     steps:
       - name: 'CHECKOUT'
         uses: actions/checkout@v4
