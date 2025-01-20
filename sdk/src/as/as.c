@@ -200,6 +200,25 @@ static int64_t posix_mktime(struct tm *tm)
     return t;
 }
 
+
+// Add this helper function near the top with other utility functions
+static bool is_valid_path(const char *path) {
+    // Reject paths with directory traversal attempts
+    if (strstr(path, "..") != NULL) return false;
+    
+    // Reject paths starting with / or \
+    if (path[0] == '/' || path[0] == '\\') return false;
+    
+    // Basic character validation
+    const char *p;
+    for (p = path; *p; p++) {
+        if (*p < 32 || *p == '<' || *p == '>' || *p == '|' || *p == '*' || *p == '?')
+            return false;
+    }
+    
+    return true;
+}
+
 static void define_macros_early(void)
 {
     char temp[128];
@@ -2387,22 +2406,4 @@ static int get_bits(char *value)
         i = 16;
     }
     return i;
-}
-
-// Add this helper function near the top with other utility functions
-static bool is_valid_path(const char *path) {
-    // Reject paths with directory traversal attempts
-    if (strstr(path, "..") != NULL) return false;
-    
-    // Reject paths starting with / or \
-    if (path[0] == '/' || path[0] == '\\') return false;
-    
-    // Basic character validation
-    const char *p;
-    for (p = path; *p; p++) {
-        if (*p < 32 || *p == '<' || *p == '>' || *p == '|' || *p == '*' || *p == '?')
-            return false;
-    }
-    
-    return true;
 }

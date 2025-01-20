@@ -1716,6 +1716,26 @@ static bool in_list(const StrList *list, const char *str)
 }
 
 /*
+ * Add this helper function near the top with other utility functions
+ */
+static bool is_valid_path(const char *path) {
+    // Reject paths with directory traversal attempts 
+    if (strstr(path, "..") != NULL) return false;
+    
+    // Reject paths starting with / or \
+    if (path[0] == '/' || path[0] == '\\') return false;
+    
+    // Basic character validation
+    const char *p;
+    for (p = path; *p; p++) {
+        if (*p < 32 || *p == '<' || *p == '>' || *p == '|' || *p == '*' || *p == '?')
+            return false;
+    }
+    
+    return true;
+}
+
+/*
  * Open an include file. This routine must always return a valid
  * file pointer if it returns - it's responsible for throwing an
  * ERR_FATAL and bombing out completely if not. It should also try
@@ -1732,11 +1752,24 @@ static FILE *inc_fopen(const char *file, StrList **dhead, StrList ***dtail,
     size_t prefix_len = 0;
     StrList *sl;
 
+    // Check if file path is valid before attempting to open
+    if (!is_valid_path(file)) {
+        error(ERR_FATAL, "invalid include file path `%s'", file);
+        return NULL;
+    }
+
     while (1)
     {
         sl = as_malloc(prefix_len + len + 1 + sizeof sl->next);
         memcpy(sl->str, prefix, prefix_len);
         memcpy(sl->str + prefix_len, file, len + 1);
+        
+        // Validate the full path as well
+        if (!is_valid_path(sl->str)) {
+            as_free(sl);
+            continue;
+        }
+        
         fp = fopen(sl->str, "r");
         if (fp && dhead && !in_list(*dhead, sl->str))
         {
