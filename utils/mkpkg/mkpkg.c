@@ -165,8 +165,29 @@ char *joinpath(char *dir, char *filename, char *path)
     return path;
 }
 
+static int is_valid_path(const char *path) {
+    if (!path || !*path) return 0;
+    if (strstr(path, "..")) return 0;
+    if (strstr(path, "//")) return 0;
+    
+    // Check for absolute paths
+    if (path[0] == '/') return 0;
+    
+    // Basic character validation
+    for (const char *p = path; *p; p++) {
+        if (*p < 32 || *p == '\\' || *p == ':' || *p > 126) return 0;
+    }
+    return 1;
+}
+
 int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
 {
+    // Add path validation
+    if (!is_valid_path(srcfn) || !is_valid_path(dstfn)) {
+        fprintf(stderr, "Invalid path detected\n");
+        return 1;
+    }
+
     struct stat st;
     int fd;
     if ((fd = open(srcfn, O_RDONLY)) < 0)
@@ -277,6 +298,12 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
 
 int make_package(struct pkgdb *db, char *inffn)
 {
+    // Add path validation at the start
+    if (!is_valid_path(inffn)) {
+        fprintf(stderr, "Invalid input file path\n");
+        return 1;
+    }
+
     struct section *manifest;
     struct section *source;
     struct section *prebuilt;
@@ -346,6 +373,13 @@ int make_package(struct pkgdb *db, char *inffn)
         struct property *p;
         for (p = source->properties; p; p = p->next)
         {
+            // Validate property name before using as path
+            if (!is_valid_path(p->name)) {
+                fprintf(stderr, "Invalid source path in manifest\n");
+                fclose(archive);
+                unlink(dstpkgfn);
+                return 1;
+            }
             joinpath(srcdir, p->name, srcfn);
             rc = add_file(archive, srcfn, p->name, &pkg->time, 0);
             if (rc != 0)
@@ -363,6 +397,13 @@ int make_package(struct pkgdb *db, char *inffn)
         struct property *p;
         for (p = prebuilt->properties; p; p = p->next)
         {
+            // Validate property name before using as path
+            if (!is_valid_path(p->name)) {
+                fprintf(stderr, "Invalid prebuilt path in manifest\n");
+                fclose(archive);
+                unlink(dstpkgfn);
+                return 1;
+            }
             joinpath(srcdir, p->name, srcfn);
             rc = add_file(archive, srcfn, p->name, &pkg->time, 1);
             if (rc != 0)
@@ -400,6 +441,12 @@ int main(int argc, char *argv[])
     memset(&db, 0, sizeof(struct pkgdb));
     srcdir = argv[1];
     dstdir = argv[2];
+
+    // Validate input paths
+    if (!is_valid_path(argv[1]) || (strcmp(argv[2], "-") != 0 && !is_valid_path(argv[2]))) {
+        fprintf(stderr, "Invalid source or destination directory\n");
+        return 1;
+    }
 
     if (strcmp(dstdir, "-") == 0)
     {
