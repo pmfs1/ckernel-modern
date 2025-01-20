@@ -152,6 +152,41 @@ static int write_pkgdb(char *dbfile, struct pkgdb *db)
     return 0;
 }
 
+static int is_path_traversal(const char *path) {
+    const char *p = path;
+    const char *component = path;
+    
+    while (*p) {
+        if (*p == '/') {
+            size_t len = p - component;
+            if (len == 2 && component[0] == '.' && component[1] == '.') {
+                return 1;  // Found path traversal attempt
+            }
+            component = p + 1;
+        }
+        p++;
+    }
+    
+    // Check last component
+    if (strcmp(component, "..") == 0) {
+        return 1;
+    }
+    
+    return 0;
+}
+
+int is_valid_filename(const char *filename) {
+    if (!filename || !*filename) return 0;
+    
+    // Check for basic invalid characters
+    for (const char *p = filename; *p; p++) {
+        if (*p < 32 || *p == '\\' || *p > 126) return 0;
+    }
+    
+    // Check for path traversal attempts
+    return !is_path_traversal(filename);
+}
+
 char *joinpath(char *dir, char *filename, char *path)
 {
     int dirlen = strlen(dir);
@@ -159,6 +194,13 @@ char *joinpath(char *dir, char *filename, char *path)
         dirlen--;
     while (*filename == '/')
         filename++;
+        
+    // Check the filename for path traversal before joining
+    if (!is_valid_filename(filename)) {
+        path[0] = '\0';  // Return empty string on invalid input
+        return path;
+    }
+    
     memcpy(path, dir, dirlen);
     path[dirlen] = '/';
     strcpy(path + dirlen + 1, filename);
@@ -424,10 +466,6 @@ int make_package(struct pkgdb *db, char *inffn)
     utime(dstpkgfn, &times);
 
     return 0;
-}
-
-int is_valid_filename(const char *filename) {
-    return !(strstr(filename, "..") || strchr(filename, '/') || strchr(filename, '\\'));
 }
 
 int main(int argc, char *argv[])
