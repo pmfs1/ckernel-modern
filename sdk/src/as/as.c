@@ -2245,7 +2245,7 @@ static void no_pp_reset(char *file, int pass, ListGen *listgen,
 
     if (deplist)
     {
-        StrList *sl = as_malloc(strlen(file) + 1 + sizeof sl->next);
+        StrList *sl = as_malloc(sizeof(*sl) + strlen(file) + 1);
         sl->next = NULL;
         strcpy(sl->str, file);
         *deplist = sl;
