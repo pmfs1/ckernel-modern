@@ -426,6 +426,10 @@ int make_package(struct pkgdb *db, char *inffn)
     return 0;
 }
 
+int is_valid_filename(const char *filename) {
+    return !(strstr(filename, "..") || strchr(filename, '/') || strchr(filename, '\\'));
+}
+
 int main(int argc, char *argv[])
 {
     int i;
@@ -460,6 +464,11 @@ int main(int argc, char *argv[])
 
     for (i = 3; i < argc; i++)
     {
+        // Validate input filenames
+        if (!is_valid_filename(argv[i])) {
+            fprintf(stderr, "Invalid input file name: %s\n", argv[i]);
+            return 1;
+        }
         // printf("Generating package %s\n", argv[i]);
         if (make_package(&db, argv[i]) != 0)
             return 1;
