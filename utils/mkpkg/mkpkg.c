@@ -55,6 +55,21 @@ struct pkgdb
 char *srcdir;
 char *dstdir;
 
+static int is_valid_path(const char *path) {
+    if (!path) return 0;
+    
+    // Check for relative path attempts
+    if (strstr(path, "..")) return 0;
+    
+    // Check for absolute paths
+    if (path[0] == '/') return 0;
+    
+    // Disallow null bytes
+    if (strlen(path) != strcspn(path, "\0")) return 0;
+    
+    return 1;
+}
+
 static struct pkg *add_package(struct pkgdb *db, char *name)
 {
     struct pkg *pkg = calloc(1, sizeof(struct pkg));
@@ -154,11 +169,19 @@ static int write_pkgdb(char *dbfile, struct pkgdb *db)
 
 char *joinpath(char *dir, char *filename, char *path)
 {
+    // Validate paths
+    if (!dir || !filename || !path) return NULL;
+    if (!is_valid_path(filename)) return NULL;
+
     int dirlen = strlen(dir);
     while (dirlen > 0 && dir[dirlen - 1] == '/')
         dirlen--;
     while (*filename == '/')
         filename++;
+        
+    // Ensure we don't overflow
+    if (dirlen + strlen(filename) + 2 > STRLEN) return NULL;
+    
     memcpy(path, dir, dirlen);
     path[dirlen] = '/';
     strcpy(path + dirlen + 1, filename);
@@ -201,8 +224,16 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
                 continue;
             if (strcmp(dp->d_name, "..") == 0)
                 continue;
-            joinpath(srcfn, dp->d_name, subsrcfn);
-            joinpath(dstfn, dp->d_name, subdstfn);
+            if (!is_valid_path(dp->d_name)) continue;
+            
+            if (!joinpath(srcfn, dp->d_name, subsrcfn)) {
+                closedir(dirp);
+                return 1;
+            }
+            if (!joinpath(dstfn, dp->d_name, subdstfn)) {
+                closedir(dirp);
+                return 1;
+            }
             rc = add_file(archive, subsrcfn, subdstfn, time, prebuilt);
             if (rc != 0)
             {
@@ -403,11 +434,12 @@ int main(int argc, char *argv[])
 
     if (strcmp(dstdir, "-") == 0)
     {
+        if (!is_valid_path("db")) return 1;
         strcpy(dbfile, "db");
     }
     else
     {
-        joinpath(dstdir, "db", dbfile);
+        if (!joinpath(dstdir, "db", dbfile)) return 1;
     }
     read_pkgdb(dbfile, &db);
 

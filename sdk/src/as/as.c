@@ -200,6 +200,25 @@ static int64_t posix_mktime(struct tm *tm)
     return t;
 }
 
+
+// Add this helper function near the top with other utility functions
+static bool is_valid_path(const char *path) {
+    // Reject paths with directory traversal attempts
+    if (strstr(path, "..") != NULL) return false;
+    
+    // Reject paths starting with / or \
+    if (path[0] == '/' || path[0] == '\\') return false;
+    
+    // Basic character validation
+    const char *p;
+    for (p = path; *p; p++) {
+        if (*p < 32 || *p == '<' || *p == '>' || *p == '|' || *p == '*' || *p == '?')
+            return false;
+    }
+    
+    return true;
+}
+
 static void define_macros_early(void)
 {
     char temp[128];
@@ -398,6 +417,10 @@ int main(int argc, char **argv)
 
         if (*outname)
         {
+            if (!is_valid_path(outname)) {
+                as_error(ERR_FATAL | ERR_NOFILE,
+                         "invalid output filename `%s'", outname);
+            }
             int fd = open(outname, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
             if (fd < 0)
                 as_error(ERR_FATAL | ERR_NOFILE,
@@ -1240,6 +1263,11 @@ static void parse_cmdline(int argc, char **argv)
 
     if (*errname)
     {
+        if (!is_valid_path(errname)) {
+            error_file = stderr; /* Revert to default! */
+            as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
+                     "invalid error filename `%s'", errname);
+        }
         int fd = open(errname, O_WRONLY | O_CREAT | O_TRUNC, S_IWUSR | S_IRUSR);
         if (fd < 0)
         {
@@ -2201,6 +2229,10 @@ static int32_t no_pp_lineinc;
 static void no_pp_reset(char *file, int pass, ListGen *listgen,
                         StrList **deplist)
 {
+    if (!is_valid_path(file)) {
+        as_error(ERR_FATAL | ERR_NOFILE,
+                 "invalid input filename `%s'", file);
+    }
     src_set_fname(as_strdup(file));
     src_set_linnum(0);
     no_pp_lineinc = 1;
@@ -2213,7 +2245,7 @@ static void no_pp_reset(char *file, int pass, ListGen *listgen,
 
     if (deplist)
     {
-        StrList *sl = as_malloc(strlen(file) + 1 + sizeof sl->next);
+        StrList *sl = as_malloc(sizeof(*sl) + strlen(file) + 1);
         sl->next = NULL;
         strcpy(sl->str, file);
         *deplist = sl;
