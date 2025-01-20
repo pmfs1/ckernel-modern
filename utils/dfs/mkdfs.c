@@ -242,12 +242,6 @@ void set_time(int fd, struct file *f)
         panic("error setting file time");
 }
 
-static void sanitize_path(const char *input, char *output, size_t size) {
-    if (strlen(input) >= size) panic("path too long");
-    if (strstr(input, "..")) panic("invalid path");
-    strcpy(output, input);
-}
-
 void install_kernel()
 {
     int fd;
@@ -261,9 +255,7 @@ void install_kernel()
     size = filesize(fd);
 
     vfs_mkdir("/boot", 0755);
-    char safeKernelPath[256];
-    sanitize_path("/boot/krnl.dll", safeKernelPath, sizeof(safeKernelPath));
-    file = vfs_open(safeKernelPath, VFS_O_SPECIAL | (DFS_INODE_KERNEL << 24) | O_WRONLY, 0644);
+    file = vfs_open("/boot/krnl.dll", VFS_O_SPECIAL | (DFS_INODE_KERNEL << 24) | O_WRONLY, 0644);
     if (file == NULL)
         panic("error creating kernel file");
 
@@ -309,9 +301,7 @@ void transfer_file(char *dstfn, char *srcfn)
         executable = 1;
     }
 
-    char safeDstfn[256];
-    sanitize_path(dstfn, safeDstfn, sizeof(safeDstfn));
-    file = vfs_open(safeDstfn, VFS_O_CREAT, executable ? 0755 : 0644);
+    file = vfs_open(dstfn, VFS_O_CREAT, executable ? 0755 : 0644);
 
     if (verbose)
         printf("%s -> %s (%d bytes)\n", srcfn, dstfn, size);

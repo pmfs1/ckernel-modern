@@ -515,35 +515,6 @@ void usage()
     fprintf(stderr, "  -m            Add individual entries in input archives.\n");
 }
 
-int is_valid_path(const char *path) {
-    if (!path) return 0;
-    
-    // Only check for relative path traversal attempts
-    if (strstr(path, "../") || strstr(path, "..\\")) return 0;
-    
-    // Simple sanity check for string termination
-    if (strlen(path) > 4096) return 0;
-    
-    return 1;
-}
-
-char *get_safe_path(const char *input) {
-    if (!is_valid_path(input)) return NULL;
-    
-    // For absolute paths, just return a copy
-    if (input[0] == '/') {
-        return strdup(input);
-    }
-    
-    // For relative paths, try to resolve but fall back to original
-    char *real_path = realpath(input, NULL);
-    if (!real_path) {
-        return strdup(input);
-    }
-    
-    return real_path;
-}
-
 int main(int argc, char *argv[])
 {
     int c, fd;
@@ -583,22 +554,13 @@ int main(int argc, char *argv[])
     {
         // Open next input file
         char *input_file = argv[optind++];
-        char *safe_path = get_safe_path(input_file);
-        
-        if (!safe_path) {
-            fprintf(stderr, "%s: Invalid path\n", input_file);
+        fd = open(input_file, O_RDONLY | O_BINARY);
+        if (fd < 0)
+        {
+            perror(input_file);
             free_archive(&ar);
             return 1;
         }
-        
-        fd = open(safe_path, O_RDONLY | O_BINARY);
-        if (fd < 0) {
-            perror(safe_path);
-            free(safe_path);
-            free_archive(&ar);
-            return 1;
-        }
-        free(safe_path);
 
         // Determine file type
         if (read(fd, magic, 8) != 8)
@@ -634,21 +596,13 @@ int main(int argc, char *argv[])
     }
 
     // Open output archive
-    char *safe_archive = get_safe_path(archive_filename);
-    if (!safe_archive) {
-        fprintf(stderr, "%s: Invalid path\n", archive_filename);
+    fd = open(archive_filename, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IWUSR | S_IRUSR);
+    if (fd < 0)
+    {
+        perror(archive_filename);
         free_archive(&ar);
         return 1;
     }
-    
-    fd = open(safe_archive, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IWUSR | S_IRUSR);
-    if (fd < 0) {
-        perror(safe_archive);
-        free(safe_archive);
-        free_archive(&ar);
-        return 1;
-    }
-    free(safe_archive);
 
     // Build symbol table.
     if (make_symtab)
