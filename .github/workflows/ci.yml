@@ -4,6 +4,10 @@ on:
     branches: [ "**" ]
   pull_request:
     branches: [ "trunk" ]
+  workflow_dispatch:
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: "${{ github.repository }}-${{ github.ref_name }}"
 jobs:
   ci:
     name: 'CI'
@@ -35,3 +39,96 @@ jobs:
       shell: bash
       run: |
         make clean
+  publish:
+    name: 'PUBLISH'
+    needs: [ ci ]
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name }}
+    permissions:
+      id-token: write
+      packages: write
+      contents: read
+      attestations: write
+    concurrency:
+      group: "${{ github.ref_name }}-${{ github.run_id }}"
+      cancel-in-progress: true
+    environment: ${{ github.ref_name }}
+    steps:
+      - name: 'CHECKOUT'
+        uses: actions/checkout@v4
+      # Install the cosign tool except on PR
+      # https://github.com/sigstore/cosign-installer
+      - name: 'INSTALL COSIGN'
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
+        with:
+          cosign-release: 'v2.2.4'
+      - name: 'COMPILE'
+        if: github.event_name != 'pull_request'
+        run: sudo apt-get update -y && sudo apt-get install -y gcc-multilib libc6-dev-i386 kmod genisoimage squashfs-tools && make krlean cdrom
+      - name: 'PREPARE'
+        if: github.event_name != 'pull_request'
+        run: |  
+          mkdir rootfs unquashfs
+          lsmod | grep loop
+          sudo modprobe loop
+          lsmod | grep loop
+          sudo mount -o loop -t iso9660 bin/img/krlean.iso rootfs
+          find . -type f | grep filesystem.squashfs | xargs -I {} sudo unsquashfs -f -d unquashfs {}
+      - name: 'IMPORT'
+        if: github.event_name != 'pull_request'
+        run: |
+          sudo tar -C unsquashfs -c . | docker import - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      # Set up BuildKit Docker container builder to be able to build
+      # multi-platform images and export cache
+      # https://github.com/docker/setup-buildx-action
+      - name: 'SETUP'
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+      # Login against a Docker registry except on PR
+      # https://github.com/docker/login-action
+      - name: 'AUTHENTICATE'
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Extract metadata (tags, labels) for Docker
+      # https://github.com/docker/metadata-action
+      - name: 'GET METADATA'
+        id: meta
+        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      # Build and push Docker image with Buildx (don't push on PR)
+      # https://github.com/docker/build-push-action
+      - name: 'PUSH'
+        id: build-and-push
+        if: github.event_name != 'pull_request'
+        run: |
+          docker buildx build \
+            --platform linux/amd64,linux/arm64,linux/arm/v7 \
+            --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest \
+            --push .
+      # Sign the resulting Docker image digest except on PRs.
+      # This will only write to the public Rekor transparency log when the Docker
+      # repository is public to avoid leaking data.  If you would like to publish
+      # transparency data even for private images, pass --force to cosign below.
+      # https://github.com/sigstore/cosign
+      - name: 'SIGN '
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        # This step uses the identity token to provision an ephemeral certificate
+        # against the sigstore community Fulcio instance.
+        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+      - name: 'ATTEST'
+        uses: actions/attest-build-provenance@v1
+        id: attest
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build-and-push.outputs.digest }}
+          push-to-registry: true
