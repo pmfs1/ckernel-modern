@@ -55,6 +55,8 @@ static void as_verror_gnu(int severity, const char *fmt, va_list args);
 
 static void as_verror_vc(int severity, const char *fmt, va_list args);
 
+static bool validate_path(const char *path);
+
 static void as_verror_common(int severity, const char *fmt, va_list args);
 
 static bool is_suppressed_warning(int severity);
@@ -270,6 +272,12 @@ static void emit_dependencies(StrList *list)
 
     if (depend_file && strcmp(depend_file, "-"))
     {
+        if (!validate_path(depend_file))
+        {
+            as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
+                     "invalid dependency file path `%s'", depend_file);
+            return;
+        }
         int fd = open(depend_file, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
         if (fd < 0)
         {
@@ -920,7 +928,7 @@ static bool process_arg(char *p, char *q)
                 if (!as_stricmp(param, warnings[i].name))
                     break;
             if (i <= ERR_WARN_MAX)
-                warning_on_global[i] = do_warn;
+                warning_on[i] = do_warn;
             else if (!as_stricmp(param, "all"))
                 for (i = 1; i <= ERR_WARN_MAX; i++)
                     warning_on_global[i] = do_warn;
@@ -1162,6 +1170,7 @@ static void process_response_file(const char *file)
     }
     fclose(f);
 }
+
 
 static void parse_cmdline(int argc, char **argv)
 {
@@ -2374,4 +2383,27 @@ static int get_bits(char *value)
         i = 16;
     }
     return i;
+}
+
+static bool validate_path(const char *path)
+{
+    // Simple path validation to prevent writing outside intended directories
+    if (!path || !*path)
+        return false;
+
+    // Don't allow absolute paths
+    if (path[0] == '/')
+        return false;
+
+    // Don't allow paths with .. to prevent directory traversal
+    const char *p = path;
+    while ((p = strstr(p, "..")) != NULL) {
+        if (p == path || p[-1] == '/') {
+            if (p[2] == '\0' || p[2] == '/') 
+                return false;
+        }
+        p++;
+    }
+
+    return true;
 }
