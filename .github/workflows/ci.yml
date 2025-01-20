@@ -68,16 +68,12 @@ jobs:
       - name: 'PREPARE'
         if: github.event_name != 'pull_request'
         run: |  
-          mkdir rootfs unquashfs
-          lsmod | grep loop
-          sudo modprobe loop
-          lsmod | grep loop
+          mkdir rootfs
           sudo mount -o loop -t iso9660 bin/img/krlean.iso rootfs
-          find . -type f | grep filesystem.squashfs | xargs -I {} sudo unsquashfs -f -d unquashfs {}
       - name: 'IMPORT'
         if: github.event_name != 'pull_request'
         run: |
-          sudo tar -C unsquashfs -c . | docker import - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          sudo tar -C rootfs -c . | docker import - ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
       # Set up BuildKit Docker container builder to be able to build
       # multi-platform images and export cache
       # https://github.com/docker/setup-buildx-action
