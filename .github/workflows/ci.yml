@@ -1,11 +1,9 @@
 name: "CI"
 on:
   push:
-    branches: [ "trunk" ]
+    branches: [ "**" ]
   pull_request:
     branches: [ "trunk" ]
-  schedule:
-    - cron: '43 15 * * 3'
 jobs:
   ci:
     name: 'CI'
