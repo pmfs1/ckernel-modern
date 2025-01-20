@@ -234,11 +234,20 @@ char *get_tok_str(int v, CValue *cv)
     return cstr_buf.data;
 }
 
+static void sanitize_path(const char *input, char *output, size_t size) {
+    if (strlen(input) >= size - 1)
+        error("file path too long");
+    if (strstr(input, ".."))
+        error("invalid file path");
+    strcpy(output, input);
+}
+
 BufferedFile *cc_open(CCState *s1, const char *filename)
 {
     int fd;
     BufferedFile *bf;
-
+    char safeFilename[256];
+    sanitize_path(filename, safeFilename, sizeof(safeFilename));
     if (strcmp(filename, "-") == 0)
     {
         fd = 0;
@@ -246,7 +255,7 @@ BufferedFile *cc_open(CCState *s1, const char *filename)
     }
     else
     {
-        fd = open(filename, O_RDONLY | O_BINARY);
+        fd = open(safeFilename, O_RDONLY | O_BINARY);
     }
     if ((verbose == 2 && fd >= 0) || verbose == 3)
     {
