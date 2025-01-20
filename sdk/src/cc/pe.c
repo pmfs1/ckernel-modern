@@ -430,6 +430,18 @@ struct pe_info
 
 void error_noabort(const char *, ...);
 
+static int validate_path(const char *path)
+{
+    // Perform minimal checks (not empty, no suspicious chars, etc.)
+    if (!path || !*path)
+        return 0;
+    if (strstr(path, "..") != NULL)
+        return 0; // Disallow climbing directories
+    if (path[0] == '/')
+        return 0; // Disallow absolute paths on Unix-like systems
+    return 1;
+}
+
 static const char *get_alt_symbol(char *buffer, const char *symbol)
 {
     const char *p;
@@ -596,6 +608,10 @@ static int pe_write(struct pe_info *pe)
     }
     ((PIMAGE_DOS_HEADER)stub)->e_lfanew = stub_size;
 
+    if (!validate_path(pe->filename)) {
+        error_noabort("Invalid target filename: %s", pe->filename);
+        return 1;
+    }
     fd = open(pe->filename, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IWUSR | S_IRUSR);
     if (fd < 0)
     {
@@ -927,6 +943,10 @@ static void pe_build_exports(struct pe_info *pe)
     if (pe->def != NULL)
     {
         // Write exports to .def file
+        if (!validate_path(pe->def)) {
+            error_noabort("Invalid definition file: %s", pe->def);
+            return 1;
+        }
         int fd = open(pe->def, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
         if (fd < 0)
         {
