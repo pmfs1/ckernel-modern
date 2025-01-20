@@ -672,7 +672,6 @@ static bool process_arg(char *p, char *q)
     int i;
     bool advance = false;
     bool do_warn;
-    int validid; // Add this declaration
 
     if (!p || !p[0])
         return false;
