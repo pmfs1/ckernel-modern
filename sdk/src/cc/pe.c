@@ -809,7 +809,7 @@ static void pe_build_imports(struct pe_info *pe)
     pe_align_section(pe->thunk, 16);
 
     pe->imp_offs = dll_ptr = pe->thunk->data_offset;
-    pe->imp_size = (ndlls + 1) * sizeof(struct pe_import_header);
+    pe->imp_size = (size_t)(ndlls + 1) * sizeof(struct pe_import_header);
     pe->iat_offs = dll_ptr + pe->imp_size;
     pe->iat_size = (sym_cnt + ndlls) * sizeof(DWORD);
     section_ptr_add(pe->thunk, pe->imp_size + 2 * pe->iat_size);
