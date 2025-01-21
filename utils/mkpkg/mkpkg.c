@@ -11,6 +11,7 @@
 
 #define STRLEN 1024
 #define TAR_BLKSIZ 512
+#define MAX_PATH_LEN 4096
 
 struct tarhdr
 {
@@ -152,84 +153,135 @@ static int write_pkgdb(char *dbfile, struct pkgdb *db)
     return 0;
 }
 
-static int is_path_traversal(const char *path) {
+static int is_path_traversal(const char *path)
+{
     const char *p = path;
     const char *component = path;
-    
-    while (*p) {
-        if (*p == '/') {
+
+    while (*p)
+    {
+        if (*p == '/')
+        {
             size_t len = p - component;
-            if (len == 2 && component[0] == '.' && component[1] == '.') {
-                return 1;  // Found path traversal attempt
+            if (len == 2 && component[0] == '.' && component[1] == '.')
+            {
+                return 1; // Found path traversal attempt
             }
             component = p + 1;
         }
         p++;
     }
-    
+
     // Check last component
-    if (strcmp(component, "..") == 0) {
+    if (strcmp(component, "..") == 0)
+    {
         return 1;
     }
-    
+
     return 0;
 }
 
-int is_valid_filename(const char *filename) {
-    if (!filename || !*filename) return 0;
-    
+int is_valid_filename(const char *filename)
+{
+    if (!filename || !*filename)
+        return 0;
+
     // Check for basic invalid characters
-    for (const char *p = filename; *p; p++) {
-        if (*p < 32 || *p == '\\' || *p > 126) return 0;
+    for (const char *p = filename; *p; p++)
+    {
+        if (*p < 32 || *p == '\\' || *p > 126)
+            return 0;
     }
-    
+
     // Check for path traversal attempts
     return !is_path_traversal(filename);
 }
 
+// Add path canonicalization function
+static char *canonicalize_path(const char *path)
+{
+    char *canon = malloc(MAX_PATH_LEN);
+    if (!canon)
+        return NULL;
+
+    char *dst = canon;
+    const char *src = path;
+    size_t len = 0;
+
+    while (*src && len < MAX_PATH_LEN - 1)
+    {
+        if (*src == '/' && *(src + 1) == '/')
+            src++;
+        else
+            *dst++ = *src++, len++;
+    }
+    *dst = '\0';
+    return canon;
+}
+
+// Enhance is_valid_path with length check
+static int is_valid_path(const char *path)
+{
+    if (!path || !*path)
+        return 0;
+    if (strlen(path) >= MAX_PATH_LEN)
+        return 0;
+    if (strstr(path, ".."))
+        return 0;
+    if (strstr(path, "//"))
+        return 0;
+
+    // Check for absolute paths
+    if (path[0] == '/')
+        return 0;
+
+    // Basic character validation
+    for (const char *p = path; *p; p++)
+    {
+        if (*p < 32 || *p == '\\' || *p == ':' || *p > 126)
+            return 0;
+    }
+    return 1;
+}
+
 char *joinpath(char *dir, char *filename, char *path)
 {
+    if (strlen(dir) + strlen(filename) + 2 > MAX_PATH_LEN)
+    {
+        path[0] = '\0';
+        return path;
+    }
+
+    char *canon_filename = canonicalize_path(filename);
+    if (!canon_filename)
+    {
+        path[0] = '\0';
+        return path;
+    }
+
     int dirlen = strlen(dir);
     while (dirlen > 0 && dir[dirlen - 1] == '/')
         dirlen--;
     while (*filename == '/')
         filename++;
-        
+
     // Check the filename for path traversal before joining
-    if (!is_valid_filename(filename)) {
-        path[0] = '\0';  // Return empty string on invalid input
+    if (!is_valid_filename(filename))
+    {
+        path[0] = '\0'; // Return empty string on invalid input
         return path;
     }
-    
+
     memcpy(path, dir, dirlen);
     path[dirlen] = '/';
     strcpy(path + dirlen + 1, filename);
+
+    free(canon_filename);
     return path;
 }
 
-static int is_valid_path(const char *path) {
-    if (!path || !*path) return 0;
-    if (strstr(path, "..")) return 0;
-    if (strstr(path, "//")) return 0;
-    
-    // Check for absolute paths
-    if (path[0] == '/') return 0;
-    
-    // Basic character validation
-    for (const char *p = path; *p; p++) {
-        if (*p < 32 || *p == '\\' || *p == ':' || *p > 126) return 0;
-    }
-    return 1;
-}
-
-int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
+int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
 {
-    // Add path validation
-    if (!is_valid_path(srcfn) || !is_valid_path(dstfn)) {
-        fprintf(stderr, "Invalid path detected\n");
-        return 1;
-    }
-
     struct stat st;
     int fd;
     if ((fd = open(srcfn, O_RDONLY)) < 0)
@@ -304,7 +356,7 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
             chksum += blk[n];
         snprintf(hdr->chksum, sizeof(hdr->chksum), "%06o", chksum);
 
-        if (fwrite(blk, 1, TAR_BLKSIZ, archive) < 0)
+        if (fwrite(blk, 1, TAR_BLKSIZ, archive) != TAR_BLKSIZ)
         {
             perror("write");
             return 1;
@@ -320,7 +372,7 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
         {
             if (n < TAR_BLKSIZ)
                 memset(blk + n, 0, TAR_BLKSIZ - n);
-            if (fwrite(blk, 1, TAR_BLKSIZ, archive) < 0)
+            if (fwrite(blk, 1, TAR_BLKSIZ, archive) != TAR_BLKSIZ)
             {
                 perror("write");
                 fclose(f);
@@ -338,10 +390,39 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
     return 0;
 }
 
+int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
+{
+    char *canon_src = canonicalize_path(srcfn);
+    char *canon_dst = canonicalize_path(dstfn);
+    if (!canon_src || !canon_dst)
+    {
+        free(canon_src);
+        free(canon_dst);
+        fprintf(stderr, "Path canonicalization failed\n");
+        return 1;
+    }
+
+    if (!is_valid_path(canon_src) || !is_valid_path(canon_dst))
+    {
+        free(canon_src);
+        free(canon_dst);
+        fprintf(stderr, "Invalid path detected\n");
+        return 1;
+    }
+
+    // Continue with canonicalized paths
+    int ret = add_file_internal(archive, canon_src, canon_dst, time, prebuilt);
+
+    free(canon_src);
+    free(canon_dst);
+    return ret;
+}
+
 int make_package(struct pkgdb *db, char *inffn)
 {
     // Add path validation at the start
-    if (!is_valid_path(inffn)) {
+    if (!is_valid_path(inffn))
+    {
         fprintf(stderr, "Invalid input file path\n");
         return 1;
     }
@@ -392,12 +473,14 @@ int make_package(struct pkgdb *db, char *inffn)
     strcat(dstpkgfn, ".pkg");
 
     int fd = open(dstpkgfn, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
-    if (fd < 0) {
+    if (fd < 0)
+    {
         // handle error
         return 1;
     }
     archive = fdopen(fd, "w");
-    if (archive == NULL) {
+    if (archive == NULL)
+    {
         close(fd);
         // handle error
         return 1;
@@ -416,7 +499,8 @@ int make_package(struct pkgdb *db, char *inffn)
         for (p = source->properties; p; p = p->next)
         {
             // Validate property name before using as path
-            if (!is_valid_path(p->name)) {
+            if (!is_valid_path(p->name))
+            {
                 fprintf(stderr, "Invalid source path in manifest\n");
                 fclose(archive);
                 unlink(dstpkgfn);
@@ -440,7 +524,8 @@ int make_package(struct pkgdb *db, char *inffn)
         for (p = prebuilt->properties; p; p = p->next)
         {
             // Validate property name before using as path
-            if (!is_valid_path(p->name)) {
+            if (!is_valid_path(p->name))
+            {
                 fprintf(stderr, "Invalid prebuilt path in manifest\n");
                 fclose(archive);
                 unlink(dstpkgfn);
@@ -485,7 +570,8 @@ int main(int argc, char *argv[])
     dstdir = argv[2];
 
     // Validate input paths
-    if (!is_valid_path(argv[1]) || (strcmp(argv[2], "-") != 0 && !is_valid_path(argv[2]))) {
+    if (!is_valid_path(argv[1]) || (strcmp(argv[2], "-") != 0 && !is_valid_path(argv[2])))
+    {
         fprintf(stderr, "Invalid source or destination directory\n");
         return 1;
     }
@@ -503,7 +589,8 @@ int main(int argc, char *argv[])
     for (i = 3; i < argc; i++)
     {
         // Validate input filenames
-        if (!is_valid_filename(argv[i])) {
+        if (!is_valid_filename(argv[i]))
+        {
             fprintf(stderr, "Invalid input file name: %s\n", argv[i]);
             return 1;
         }
