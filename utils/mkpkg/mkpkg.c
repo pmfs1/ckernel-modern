@@ -1,3 +1,7 @@
+// This utility creates package files for the krlean operating system.
+// It reads package manifests, bundles files into tar archives, and maintains a package database.
+
+// Required header files for file operations, directory handling, and system calls
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,10 +13,12 @@
 #include <fcntl.h>
 #include "inifile.h"
 
+// TAR file block size (512 bytes - standard tar format)
 #define STRLEN 1024
 #define TAR_BLKSIZ 512
 #define MAX_PATH_LEN 4096
 
+// TAR header structure following the POSIX ustar format
 struct tarhdr
 {
     char name[100];
@@ -34,28 +40,32 @@ struct tarhdr
     char padding[12];
 };
 
+// Package structure representing a single software package
 struct pkg
 {
-    char *name;
-    char *description;
-    char *inffile;
-    struct section *manifest;
-    int removed;
-    int time;
-    struct pkg *next;
+    char *name;               // Package name
+    char *description;        // Package description
+    char *inffile;            // Path to package info file
+    struct section *manifest; // Package manifest data
+    int removed;              // Flag indicating if package is marked for removal
+    int time;                 // Package timestamp
+    struct pkg *next;         // Linked list pointer to next package
 };
 
+// Package database structure maintaining a linked list of packages
 struct pkgdb
 {
-    struct pkg *head;
-    struct pkg *tail;
-    char *repo;
-    int dirty;
+    struct pkg *head; // First package in the list
+    struct pkg *tail; // Last package in the list
+    char *repo;       // Repository path
+    int dirty;        // Flag indicating if database needs saving
 };
 
-char *srcdir;
-char *dstdir;
+// Global directory paths
+char *srcdir; // Source directory containing package files
+char *dstdir; // Destination directory for package output
 
+// Adds a new package to the database
 static struct pkg *add_package(struct pkgdb *db, char *name)
 {
     struct pkg *pkg = calloc(1, sizeof(struct pkg));
@@ -69,6 +79,7 @@ static struct pkg *add_package(struct pkgdb *db, char *name)
     return pkg;
 }
 
+// Searches for a package by name in the database
 static struct pkg *find_package(struct pkgdb *db, char *name)
 {
     struct pkg *pkg;
@@ -81,6 +92,7 @@ static struct pkg *find_package(struct pkgdb *db, char *name)
     return NULL;
 }
 
+// Reads package database from file
 static int read_pkgdb(char *dbfile, struct pkgdb *db)
 {
     FILE *f;
@@ -117,6 +129,7 @@ static int read_pkgdb(char *dbfile, struct pkgdb *db)
     return 0;
 }
 
+// Writes package database to file
 static int write_pkgdb(char *dbfile, struct pkgdb *db)
 {
     FILE *f;
@@ -153,6 +166,7 @@ static int write_pkgdb(char *dbfile, struct pkgdb *db)
     return 0;
 }
 
+// Checks for directory traversal attempts in paths (e.g., "../")
 static int is_path_traversal(const char *path)
 {
     const char *p = path;
@@ -181,6 +195,7 @@ static int is_path_traversal(const char *path)
     return 0;
 }
 
+// Validates filename characters and checks for path traversal
 int is_valid_filename(const char *filename)
 {
     if (!filename || !*filename)
@@ -197,7 +212,7 @@ int is_valid_filename(const char *filename)
     return !is_path_traversal(filename);
 }
 
-// Add path canonicalization function
+// Normalizes file paths by removing redundant separators
 static char *canonicalize_path(const char *path)
 {
     char *canon = malloc(MAX_PATH_LEN);
@@ -219,7 +234,7 @@ static char *canonicalize_path(const char *path)
     return canon;
 }
 
-// Enhance is_valid_path with length check
+// Comprehensive path validation including length and character checks
 static int is_valid_path(const char *path)
 {
     if (!path || !*path)
@@ -244,6 +259,7 @@ static int is_valid_path(const char *path)
     return 1;
 }
 
+// Safely joins directory and filename paths
 char *joinpath(char *dir, char *filename, char *path)
 {
     if (strlen(dir) + strlen(filename) + 2 > MAX_PATH_LEN)
@@ -280,10 +296,18 @@ char *joinpath(char *dir, char *filename, char *path)
     return path;
 }
 
+// Internal function to add files and directories to the package archive
+// Parameters:
+//   archive: Target TAR archive file pointer
+//   srcfn: Source file/directory path
+//   dstfn: Destination path within the archive
+//   time: Pointer to timestamp for tracking newest file
+//   prebuilt: Flag indicating if file is prebuilt (uses provided timestamp)
 int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
 {
     struct stat st;
     int fd;
+    // Open source file and get its status
     if ((fd = open(srcfn, O_RDONLY)) < 0)
     {
         perror(srcfn);
@@ -295,29 +319,34 @@ int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int pr
         close(fd);
         return 1;
     }
+    // Handle directory case
     if (S_ISDIR(st.st_mode))
     {
-        close(fd);
+        close(fd); // Close directory file descriptor
         struct dirent *dp;
         DIR *dirp;
         char subsrcfn[STRLEN];
         char subdstfn[STRLEN];
         int rc;
-
+        // Open and process directory contents
         dirp = opendir(srcfn);
         if (!dirp)
         {
             perror(srcfn);
             return 1;
         }
+        // Recursively process directory entries
         while ((dp = readdir(dirp)))
         {
+            // Skip . and .. entries
             if (strcmp(dp->d_name, ".") == 0)
                 continue;
             if (strcmp(dp->d_name, "..") == 0)
                 continue;
+            // Create paths for subdirectory/file
             joinpath(srcfn, dp->d_name, subsrcfn);
             joinpath(dstfn, dp->d_name, subdstfn);
+            // Recursive call to process entry
             rc = add_file(archive, subsrcfn, subdstfn, time, prebuilt);
             if (rc != 0)
             {
@@ -327,6 +356,7 @@ int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int pr
         }
         closedir(dirp);
     }
+    // Handle regular file case
     else
     {
         unsigned int chksum;
@@ -334,33 +364,36 @@ int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int pr
         FILE *f;
         unsigned char blk[TAR_BLKSIZ];
         struct tarhdr *hdr = (struct tarhdr *)blk;
+        // Initialize TAR header block
         memset(blk, 0, sizeof(blk));
-
+        // Remove leading slashes from destination path
         while (*dstfn == '/')
             dstfn++;
-        strcpy(hdr->name, dstfn);
-        snprintf(hdr->mode, sizeof(hdr->mode), "%07o", st.st_mode);
-        snprintf(hdr->uid, sizeof(hdr->uid), "%07o", 0);
-        snprintf(hdr->gid, sizeof(hdr->gid), "%07o", 0);
-        sprintf(hdr->size, "%011o", st.st_size);
-        sprintf(hdr->mtime, "%011o", prebuilt ? *time : st.st_mtime);
-        memcpy(hdr->chksum, "        ", 8);
-        hdr->typeflag = '0';
-        strncpy(hdr->magic, "ustar  ", sizeof(hdr->magic) - 1);
+        // Fill TAR header fields
+        strcpy(hdr->name, dstfn);                                     // File path in archive
+        snprintf(hdr->mode, sizeof(hdr->mode), "%07o", st.st_mode);   // File permissions
+        snprintf(hdr->uid, sizeof(hdr->uid), "%07o", 0);              // User ID (set to 0)
+        snprintf(hdr->gid, sizeof(hdr->gid), "%07o", 0);              // Group ID (set to 0)
+        sprintf(hdr->size, "%011o", st.st_size);                      // File size in octal
+        sprintf(hdr->mtime, "%011o", prebuilt ? *time : st.st_mtime); // Modification time
+        memcpy(hdr->chksum, "        ", 8);                           // Initialize checksum field
+        hdr->typeflag = '0';                                          // Regular file type
+        strncpy(hdr->magic, "ustar  ", sizeof(hdr->magic) - 1);       // ustar format identifier
         hdr->magic[sizeof(hdr->magic) - 1] = '\0';
-        strcpy(hdr->uname, "krlean");
-        strcpy(hdr->gname, "krlean");
-
+        strcpy(hdr->uname, "krlean"); // Owner username
+        strcpy(hdr->gname, "krlean"); // Owner group name
+        // Calculate header checksum (sum of all bytes in header)
         chksum = 0;
         for (n = 0; n < TAR_BLKSIZ; n++)
             chksum += blk[n];
         snprintf(hdr->chksum, sizeof(hdr->chksum), "%06o", chksum);
-
+        // Write TAR header block
         if (fwrite(blk, 1, TAR_BLKSIZ, archive) != TAR_BLKSIZ)
         {
             perror("write");
             return 1;
         }
+        // Open source file for reading content
         f = fdopen(fd, "r");
         if (!f)
         {
@@ -368,10 +401,13 @@ int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int pr
             close(fd);
             return 1;
         }
+        // Copy file content in TAR_BLKSIZ chunks
         while ((n = fread(blk, 1, TAR_BLKSIZ, f)) > 0)
         {
+            // Pad last block with zeros if needed
             if (n < TAR_BLKSIZ)
                 memset(blk + n, 0, TAR_BLKSIZ - n);
+            // Write content block
             if (fwrite(blk, 1, TAR_BLKSIZ, archive) != TAR_BLKSIZ)
             {
                 perror("write");
@@ -380,16 +416,17 @@ int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int pr
             }
         }
         fclose(f);
+        // Update package timestamp if not a prebuilt file
         if (!prebuilt)
         {
             if (*time == 0 || st.st_mtime > *time)
                 *time = st.st_mtime;
         }
     }
-
     return 0;
 }
 
+// Wrapper function for adding files with path safety checks
 int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
 {
     char *canon_src = canonicalize_path(srcfn);
@@ -418,6 +455,7 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
     return ret;
 }
 
+// Main package creation function
 int make_package(struct pkgdb *db, char *inffn)
 {
     // Add path validation at the start
@@ -553,6 +591,7 @@ int make_package(struct pkgdb *db, char *inffn)
     return 0;
 }
 
+// Main function: Processes command line arguments and creates packages
 int main(int argc, char *argv[])
 {
     int i;
