@@ -264,18 +264,22 @@ static int is_valid_path(const char *path)
 }
 
 // Enhanced path validation including absolute path and special character checks
-static int is_path_safe(const char *path) {
-    if (!path || !*path || !is_valid_path(path)) {
+static int is_path_safe(const char *path)
+{
+    if (!path || !*path || !is_valid_path(path))
+    {
         return 0;
     }
 
     // No absolute paths
-    if (path[0] == '/') {
+    if (path[0] == '/')
+    {
         return 0;
     }
 
     // No drive letters (Windows)
-    if (isalpha(path[0]) && path[1] == ':') {
+    if (isalpha(path[0]) && path[1] == ':')
+    {
         return 0;
     }
 
@@ -284,27 +288,32 @@ static int is_path_safe(const char *path) {
     const char *start = path;
     size_t component_len = 0;
 
-    while (*p) {
-        if (*p == '/') {
+    while (*p)
+    {
+        if (*p == '/')
+        {
             // Check component length
             component_len = p - start;
-            if (component_len == 0) {
-                return 0;  // Empty component
+            if (component_len == 0)
+            {
+                return 0; // Empty component
             }
-            if (component_len > 255) {
-                return 0;  // Component too long
+            if (component_len > 255)
+            {
+                return 0; // Component too long
             }
-            
+
             // Validate component
             char component[256];
             strncpy(component, start, component_len);
             component[component_len] = '\0';
-            
-            if (strcmp(component, ".") == 0 || 
-                strcmp(component, "..") == 0) {
+
+            if (strcmp(component, ".") == 0 ||
+                strcmp(component, "..") == 0)
+            {
                 return 0;
             }
-            
+
             start = p + 1;
         }
         p++;
@@ -312,18 +321,76 @@ static int is_path_safe(const char *path) {
 
     // Check final component
     component_len = p - start;
-    if (component_len > 0) {
+    if (component_len > 0)
+    {
         char component[256];
         strncpy(component, start, component_len);
         component[component_len] = '\0';
-        
-        if (strcmp(component, ".") == 0 || 
-            strcmp(component, "..") == 0) {
+
+        if (strcmp(component, ".") == 0 ||
+            strcmp(component, "..") == 0)
+        {
             return 0;
         }
     }
 
     return 1;
+}
+
+// Enhanced path sanitization function
+static char *sanitize_path(const char *path)
+{
+    if (!path || !is_path_safe(path))
+    {
+        return NULL;
+    }
+
+    // Allocate space for cleaned path
+    char *clean = malloc(MAX_PATH_LEN);
+    if (!clean)
+        return NULL;
+
+    // Start with empty string
+    clean[0] = '\0';
+
+    // Keep track of last component for additional checks
+    const char *last = NULL;
+    char *pos = clean;
+    const char *p = path;
+
+    // Process each character
+    while (*p && (pos - clean) < MAX_PATH_LEN - 1)
+    {
+        // Skip repeated slashes
+        if (*p == '/' && (pos == clean || *(pos - 1) == '/'))
+        {
+            p++;
+            continue;
+        }
+
+        // Mark start of new component
+        if (*p == '/')
+        {
+            last = p + 1;
+        }
+
+        // Copy valid character
+        *pos++ = *p++;
+    }
+    *pos = '\0';
+
+    // Additional safety checks
+    if (clean[0] == '/' ||             // No absolute paths
+        strstr(clean, "..") != NULL || // No parent dir references
+        strstr(clean, "./") != NULL || // No current dir references
+        strstr(clean, "//") != NULL || // No double slashes
+        (last && strcmp(last, "..") == 0))
+    { // No ending with parent ref
+        free(clean);
+        return NULL;
+    }
+
+    return clean;
 }
 
 // Safely joins directory and filename paths
@@ -525,8 +592,10 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
 // Main package creation function
 int make_package(struct pkgdb *db, char *inffn)
 {
-    // Strict path validation
-    if (!is_path_safe(inffn)) {
+    // Sanitize input filename
+    char *safe_inffn = sanitize_path(inffn);
+    if (!safe_inffn)
+    {
         fprintf(stderr, "Invalid or unsafe input file path\n");
         return 1;
     }
@@ -545,10 +614,11 @@ int make_package(struct pkgdb *db, char *inffn)
     FILE *archive;
     int rc;
 
-    manifest = read_properties(inffn);
+    manifest = read_properties(safe_inffn);
     if (!manifest)
     {
-        fprintf(stderr, "Error reading manifest from %s\n", inffn);
+        fprintf(stderr, "Error reading manifest from %s\n", safe_inffn);
+        free(safe_inffn);
         return 1;
     }
 
@@ -602,26 +672,29 @@ int make_package(struct pkgdb *db, char *inffn)
         struct property *p;
         for (p = source->properties; p; p = p->next)
         {
-            if (!is_path_safe(p->name)) {
+            if (!is_path_safe(p->name))
+            {
                 fprintf(stderr, "Invalid or unsafe source path in manifest: %s\n", p->name);
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
             }
-            
+
             char *safe_path = canonicalize_path(p->name);
-            if (!safe_path) {
+            if (!safe_path)
+            {
                 fprintf(stderr, "Path canonicalization failed\n");
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
             }
-            
+
             joinpath(srcdir, safe_path, srcfn);
             rc = add_file(archive, srcfn, safe_path, &pkg->time, 0);
             free(safe_path);
-            
-            if (rc != 0) {
+
+            if (rc != 0)
+            {
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
@@ -635,26 +708,29 @@ int make_package(struct pkgdb *db, char *inffn)
         struct property *p;
         for (p = prebuilt->properties; p; p = p->next)
         {
-            if (!is_path_safe(p->name)) {
+            if (!is_path_safe(p->name))
+            {
                 fprintf(stderr, "Invalid or unsafe prebuilt path in manifest: %s\n", p->name);
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
             }
-            
+
             char *safe_path = canonicalize_path(p->name);
-            if (!safe_path) {
+            if (!safe_path)
+            {
                 fprintf(stderr, "Path canonicalization failed\n");
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
             }
-            
+
             joinpath(srcdir, safe_path, srcfn);
             rc = add_file(archive, srcfn, safe_path, &pkg->time, 1);
             free(safe_path);
-            
-            if (rc != 0) {
+
+            if (rc != 0)
+            {
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
@@ -670,6 +746,7 @@ int make_package(struct pkgdb *db, char *inffn)
     times.actime = times.modtime = pkg->time;
     utime(dstpkgfn, &times);
 
+    free(safe_inffn);
     return 0;
 }
 
@@ -687,15 +764,21 @@ int main(int argc, char *argv[])
     }
 
     memset(&db, 0, sizeof(struct pkgdb));
-    srcdir = argv[1];
-    dstdir = argv[2];
 
-    // Validate input paths with stricter checks
-    if (!is_path_safe(argv[1]) || 
-        (strcmp(argv[2], "-") != 0 && !is_path_safe(argv[2]))) {
+    // Sanitize source and destination paths
+    char *safe_srcdir = sanitize_path(argv[1]);
+    char *safe_dstdir = strcmp(argv[2], "-") == 0 ? strdup("-") : sanitize_path(argv[2]);
+
+    if (!safe_srcdir || !safe_dstdir)
+    {
         fprintf(stderr, "Invalid or unsafe source/destination directory\n");
+        free(safe_srcdir);
+        free(safe_dstdir);
         return 1;
     }
+
+    srcdir = safe_srcdir;
+    dstdir = safe_dstdir;
 
     if (strcmp(dstdir, "-") == 0)
     {
@@ -709,14 +792,28 @@ int main(int argc, char *argv[])
 
     for (i = 3; i < argc; i++)
     {
-        if (!is_path_safe(argv[i])) {
+        char *safe_path = sanitize_path(argv[i]);
+        if (!safe_path)
+        {
             fprintf(stderr, "Invalid or unsafe input file path: %s\n", argv[i]);
+            free(safe_srcdir);
+            free(safe_dstdir);
             return 1;
         }
-        if (make_package(&db, argv[i]) != 0)
+
+        int result = make_package(&db, safe_path);
+        free(safe_path);
+
+        if (result != 0)
+        {
+            free(safe_srcdir);
+            free(safe_dstdir);
             return 1;
+        }
     }
     write_pkgdb(dbfile, &db);
 
+    free(safe_srcdir);
+    free(safe_dstdir);
     return 0;
 }
