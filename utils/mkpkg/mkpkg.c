@@ -69,7 +69,18 @@ int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int pr
 char *srcdir; // Source directory containing package files
 char *dstdir; // Destination directory for package output
 
-// Adds a new package to the database
+// Package database functions
+// -------------------------
+
+/**
+ * Adds a new package entry to the database.
+ * Creates a new package struct, initializes it with the given name,
+ * and adds it to the linked list maintained by the database.
+ *
+ * @param db   The package database to add to
+ * @param name The name of the new package
+ * @return     Pointer to the newly created package entry
+ */
 static struct pkg *add_package(struct pkgdb *db, char *name)
 {
     struct pkg *pkg = calloc(1, sizeof(struct pkg));
@@ -83,7 +94,14 @@ static struct pkg *add_package(struct pkgdb *db, char *name)
     return pkg;
 }
 
-// Searches for a package by name in the database
+/**
+ * Searches for a package by name in the database.
+ * Traverses the linked list of packages looking for a name match.
+ *
+ * @param db   The package database to search
+ * @param name The name of the package to find
+ * @return     Pointer to the matching package or NULL if not found
+ */
 static struct pkg *find_package(struct pkgdb *db, char *name)
 {
     struct pkg *pkg;
@@ -96,7 +114,14 @@ static struct pkg *find_package(struct pkgdb *db, char *name)
     return NULL;
 }
 
-// Reads package database from file
+/**
+ * Loads the package database from file.
+ * Each line contains tab-separated fields: name, info file, description, timestamp
+ *
+ * @param dbfile Path to the database file
+ * @param db     The package database structure to populate
+ * @return       0 on success, non-zero on error
+ */
 static int read_pkgdb(char *dbfile, struct pkgdb *db)
 {
     FILE *f;
@@ -133,7 +158,15 @@ static int read_pkgdb(char *dbfile, struct pkgdb *db)
     return 0;
 }
 
-// Writes package database to file
+/**
+ * Saves the package database to file.
+ * Writes each non-removed package as a tab-separated line.
+ * Creates or overwrites the database file.
+ *
+ * @param dbfile Path to save the database file
+ * @param db     The package database to save
+ * @return       0 on success, 1 on error
+ */
 static int write_pkgdb(char *dbfile, struct pkgdb *db)
 {
     FILE *f;
@@ -170,7 +203,16 @@ static int write_pkgdb(char *dbfile, struct pkgdb *db)
     return 0;
 }
 
-// Checks for directory traversal attempts in paths (e.g., "../")
+// Path safety functions
+// --------------------
+
+/**
+ * Checks for directory traversal attempts in a path.
+ * Looks for ".." path components that could escape the target directory.
+ *
+ * @param path The path to check
+ * @return     1 if path traversal detected, 0 if path is safe
+ */
 static int is_path_traversal(const char *path)
 {
     const char *p = path;
@@ -199,7 +241,13 @@ static int is_path_traversal(const char *path)
     return 0;
 }
 
-// Validates filename characters and checks for path traversal
+/**
+ * Validates filename characters and path traversal.
+ * Ensures filename contains only valid characters and no directory traversal.
+ *
+ * @param filename The filename to validate
+ * @return        1 if filename is valid, 0 if invalid
+ */
 int is_valid_filename(const char *filename)
 {
     if (!filename || !*filename)
@@ -216,7 +264,13 @@ int is_valid_filename(const char *filename)
     return !is_path_traversal(filename);
 }
 
-// Normalizes file paths by removing redundant separators
+/**
+ * Normalizes file paths by removing redundant separators.
+ * Converts multiple consecutive slashes to single slashes.
+ *
+ * @param path The path to canonicalize
+ * @return     Newly allocated string with canonicalized path, or NULL on error
+ */
 static char *canonicalize_path(const char *path)
 {
     char *canon = malloc(MAX_PATH_LEN);
@@ -393,7 +447,15 @@ static char *sanitize_path(const char *path)
     return clean;
 }
 
-// Safely joins directory and filename paths
+/**
+ * Safely joins a directory path and filename.
+ * Handles path separator normalization and length checks.
+ *
+ * @param dir      Base directory path
+ * @param filename File/directory name to append
+ * @param path     Buffer to store resulting path
+ * @return         Pointer to resulting path buffer
+ */
 char *joinpath(char *dir, char *filename, char *path)
 {
     if (strlen(dir) + strlen(filename) + 2 > MAX_PATH_LEN)
@@ -430,13 +492,26 @@ char *joinpath(char *dir, char *filename, char *path)
     return path;
 }
 
-// Internal function to add files and directories to the package archive
-// Parameters:
-//   archive: Target TAR archive file pointer
-//   srcfn: Source file/directory path
-//   dstfn: Destination path within the archive
-//   time: Pointer to timestamp for tracking newest file
-//   prebuilt: Flag indicating if file is prebuilt (uses provided timestamp)
+// Archive creation functions
+// ------------------------
+
+/**
+ * Internal function to add files/directories to archive.
+ * Handles both regular files and directories recursively.
+ * For regular files:
+ * - Creates TAR header with file metadata
+ * - Copies file content in TAR_BLKSIZ blocks
+ * - Updates package timestamp
+ * For directories:
+ * - Recursively processes all contained files
+ *
+ * @param archive  Output TAR archive file
+ * @param srcfn    Source file/directory path
+ * @param dstfn    Destination path in archive
+ * @param time     Pointer to package timestamp
+ * @param prebuilt Flag indicating if file is prebuilt
+ * @return         0 on success, 1 on error
+ */
 int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
 {
     struct stat st;
@@ -589,7 +664,26 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
     return ret;
 }
 
-// Main package creation function
+/**
+ * Creates a package archive from a manifest file
+ *
+ * This function reads a package manifest file and creates a .pkg archive containing
+ * all specified files. It handles both source files and prebuilt files, maintaining
+ * proper timestamps and directory structures.
+ *
+ * @param db        Pointer to package database structure
+ * @param inffn     Path to the package manifest (.inf) file
+ *
+ * @return 0 on success, 1 on error
+ *
+ * The function:
+ * - Reads and validates the package manifest
+ * - Creates package entry in database
+ * - Creates tar archive with specified files
+ * - Handles both source and prebuilt files
+ * - Updates package timestamps
+ * - Maintains package database integrity
+ */
 int make_package(struct pkgdb *db, char *inffn)
 {
     // Sanitize input filename
@@ -751,11 +845,18 @@ int make_package(struct pkgdb *db, char *inffn)
 }
 
 /**
- * main - Processes command line arguments and creates packages
- * @argc: The number of command line arguments
- * @argv: Array of argument strings
+ * Main program entry point.
+ * Processes command line arguments:
+ * argv[1]: Source directory containing files
+ * argv[2]: Destination directory for package output
+ * argv[3+]: Package manifest files to process
  *
- * Returns 0 on success or 1 on error.
+ * Creates package archives based on manifest files and
+ * maintains the package database.
+ *
+ * @param argc Argument count
+ * @param argv Argument array
+ * @return     0 on success, 1 on error
  */
 int main(int argc, char *argv[])
 {

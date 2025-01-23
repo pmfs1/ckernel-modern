@@ -61,6 +61,8 @@ static bool is_suppressed_warning(int severity);
 
 static void usage(void);
 
+static bool has_path_traversal(const char *str); // Add prototype here
+
 static int using_debug_info, opt_verbose_info;
 bool tasm_compatible_mode = false;
 int pass0, passn;
@@ -1149,7 +1151,17 @@ static void process_args(char *args)
 static void process_response_file(const char *file)
 {
     char str[2048];
-    FILE *f = fopen(file, "r");
+    FILE *f;
+
+    // Prevent path traversal attacks
+    if (has_path_traversal(file))
+    {
+        as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
+                 "invalid response file path '%s'", file);
+        return;
+    }
+
+    f = fopen(file, "r");
     if (!f)
     {
         perror(file);
@@ -2232,7 +2244,7 @@ static void no_pp_reset(char *file, int pass, ListGen *listgen,
 
     if (deplist)
     {
-        StrList *sl = as_malloc(strlen(file) + 1 + sizeof sl->next);
+        StrList *sl = as_malloc(sizeof(StrList) + strlen(file) + 1);
         sl->next = NULL;
         strcpy(sl->str, file);
         *deplist = sl;
