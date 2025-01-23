@@ -765,36 +765,48 @@ int main(int argc, char *argv[])
 
     memset(&db, 0, sizeof(struct pkgdb));
 
-    // Sanitize source and destination paths
+    // Sanitize and validate source directory path
     char *safe_srcdir = sanitize_path(argv[1]);
-    char *safe_dstdir = strcmp(argv[2], "-") == 0 ? strdup("-") : sanitize_path(argv[2]);
+    if (!safe_srcdir) {
+        fprintf(stderr, "Invalid or unsafe source directory path\n");
+        return 1;
+    }
 
-    if (!safe_srcdir || !safe_dstdir)
-    {
-        fprintf(stderr, "Invalid or unsafe source/destination directory\n");
+    // Special handling for "-" as destination, otherwise sanitize path
+    char *safe_dstdir;
+    if (strcmp(argv[2], "-") == 0) {
+        safe_dstdir = strdup("-");
+    } else {
+        safe_dstdir = sanitize_path(argv[2]);
+    }
+
+    if (!safe_dstdir) {
+        fprintf(stderr, "Invalid or unsafe destination directory path\n");
         free(safe_srcdir);
-        free(safe_dstdir);
         return 1;
     }
 
     srcdir = safe_srcdir;
     dstdir = safe_dstdir;
 
-    if (strcmp(dstdir, "-") == 0)
-    {
+    if (strcmp(dstdir, "-") == 0) {
         strcpy(dbfile, "db");
-    }
-    else
-    {
+    } else {
+        if (!is_path_safe("db")) {
+            fprintf(stderr, "Invalid database path\n");
+            free(safe_srcdir);
+            free(safe_dstdir);
+            return 1;
+        }
         joinpath(dstdir, "db", dbfile);
     }
+
     read_pkgdb(dbfile, &db);
 
-    for (i = 3; i < argc; i++)
-    {
+    // Process each input file with proper path sanitization
+    for (i = 3; i < argc; i++) {
         char *safe_path = sanitize_path(argv[i]);
-        if (!safe_path)
-        {
+        if (!safe_path) {
             fprintf(stderr, "Invalid or unsafe input file path: %s\n", argv[i]);
             free(safe_srcdir);
             free(safe_dstdir);
@@ -804,13 +816,13 @@ int main(int argc, char *argv[])
         int result = make_package(&db, safe_path);
         free(safe_path);
 
-        if (result != 0)
-        {
+        if (result != 0) {
             free(safe_srcdir);
             free(safe_dstdir);
             return 1;
         }
     }
+
     write_pkgdb(dbfile, &db);
 
     free(safe_srcdir);
