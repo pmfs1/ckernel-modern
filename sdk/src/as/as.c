@@ -922,7 +922,7 @@ static bool process_arg(char *p, char *q)
                 if (!as_stricmp(param, warnings[i].name))
                     break;
             if (i <= ERR_WARN_MAX)
-                warning_on_global[i] = do_warn;
+            warning_on_global[i] = do_warn;
             else if (!as_stricmp(param, "all"))
                 for (i = 1; i <= ERR_WARN_MAX; i++)
                     warning_on_global[i] = do_warn;
@@ -1174,8 +1174,7 @@ static void process_response_file(const char *file)
     fclose(f);
 }
 
-static bool has_path_traversal(const char *str)
-{
+static bool has_path_traversal(const char *str) {
     if (!str)
         return false;
     // Basic check for directory traversal patterns
