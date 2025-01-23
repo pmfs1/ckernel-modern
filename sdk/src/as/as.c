@@ -272,6 +272,12 @@ static void emit_dependencies(StrList *list)
 
     if (depend_file && strcmp(depend_file, "-"))
     {
+        if (has_path_traversal(depend_file))
+        {
+            as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
+                     "invalid dependency file path `%s'", depend_file);
+            return;
+        }
         int fd = open(depend_file, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
         if (fd < 0)
         {
