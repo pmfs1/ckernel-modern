@@ -922,7 +922,7 @@ static bool process_arg(char *p, char *q)
                 if (!as_stricmp(param, warnings[i].name))
                     break;
             if (i <= ERR_WARN_MAX)
-            warning_on_global[i] = do_warn;
+                warning_on_global[i] = do_warn;
             else if (!as_stricmp(param, "all"))
                 for (i = 1; i <= ERR_WARN_MAX; i++)
                     warning_on_global[i] = do_warn;
