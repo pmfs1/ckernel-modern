@@ -922,7 +922,7 @@ static bool process_arg(char *p, char *q)
                 if (!as_stricmp(param, warnings[i].name))
                     break;
             if (i <= ERR_WARN_MAX)
-                warning_on_global[i] = do_warn;
+            warning_on_global[i] = do_warn;
             else if (!as_stricmp(param, "all"))
                 for (i = 1; i <= ERR_WARN_MAX; i++)
                     warning_on_global[i] = do_warn;
@@ -2245,7 +2245,7 @@ static void no_pp_reset(char *file, int pass, ListGen *listgen,
 
     if (deplist)
     {
-        StrList *sl = as_malloc(strlen(file) + 1 + sizeof sl->next);
+        StrList *sl = as_malloc(sizeof(StrList) + strlen(file) + 1);
         sl->next = NULL;
         strcpy(sl->str, file);
         *deplist = sl;
