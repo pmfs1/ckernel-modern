@@ -73,7 +73,7 @@ TokenSym *tok_alloc_new(TokenSym **pts, const char *str, int len)
 }
 
 #define TOK_HASH_INIT 1
-#define TOK_HASH_FUNC(h, c) ((h) * 263 + (c))
+#define TOK_HASH_FUNC(h, c) ((h)*263 + (c))
 
 // Find a token and add it if not found
 TokenSym *tok_alloc(const char *str, int len)
@@ -234,6 +234,37 @@ char *get_tok_str(int v, CValue *cv)
     return cstr_buf.data;
 }
 
+static int is_path_safe(const char *filename)
+{
+    if (!filename || !*filename)
+        return 0;
+
+    // Don't allow absolute paths
+    if (filename[0] == '/' || filename[0] == '\\')
+        return 0;
+
+    // Check for path traversal attempts
+    const char *p = filename;
+    while (*p)
+    {
+        // Check for ".." path segments
+        if (p[0] == '.' && p[1] == '.' && (p[2] == '/' || p[2] == '\\' || p[2] == 0))
+        {
+            return 0;
+        }
+
+        // Move to next path segment
+        p = strchr(p, '/');
+        if (!p)
+            p = strchr(filename, '\\');
+        if (!p)
+            break;
+        p++;
+    }
+
+    return 1;
+}
+
 BufferedFile *cc_open(CCState *s1, const char *filename)
 {
     int fd;
@@ -246,6 +277,13 @@ BufferedFile *cc_open(CCState *s1, const char *filename)
     }
     else
     {
+        // Validate path before opening
+        if (!is_path_safe(filename))
+        {
+            error("unsafe file path '%s'", filename);
+            return NULL;
+        }
+
         fd = open(filename, O_RDONLY | O_BINARY);
     }
     if ((verbose == 2 && fd >= 0) || verbose == 3)
