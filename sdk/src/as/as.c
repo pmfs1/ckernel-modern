@@ -931,7 +931,6 @@ static bool process_arg(char *p, char *q)
                 as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
                          "invalid warning `%s'", param);
             break;
-
         case 'M':
             switch (p[2])
             {
@@ -1240,24 +1239,37 @@ static void parse_cmdline(int argc, char **argv)
 
     if (*errname)
     {
-        int fd = open(errname, O_WRONLY | O_CREAT | O_TRUNC, S_IWUSR | S_IRUSR);
-        if (fd < 0)
+        char resolved_errpath[FILENAME_MAX];
+
+        // Validate and canonicalize the error file path
+        if (!realpath(errname, resolved_errpath))
         {
-            error_file = stderr; /* Revert to default! */
+            error_file = stderr;
             as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
-                     "cannot open file `%s' for error messages",
-                     errname);
+                     "Invalid or unsafe error file path '%s'", errname);
         }
         else
         {
-            error_file = fdopen(fd, "w");
-            if (!error_file)
+            int fd = open(resolved_errpath, O_WRONLY | O_CREAT | O_TRUNC,
+                          S_IWUSR | S_IRUSR);
+            if (fd < 0)
             {
-                close(fd);
                 error_file = stderr; /* Revert to default! */
                 as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
                          "cannot open file `%s' for error messages",
-                         errname);
+                         resolved_errpath);
+            }
+            else
+            {
+                error_file = fdopen(fd, "w");
+                if (!error_file)
+                {
+                    close(fd);
+                    error_file = stderr; /* Revert to default! */
+                    as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
+                             "cannot open file `%s' for error messages",
+                             resolved_errpath);
+                }
             }
         }
     }
