@@ -262,6 +262,69 @@ static int is_valid_path(const char *path)
     return 1;
 }
 
+// Enhanced path validation including absolute path and special character checks
+static int is_path_safe(const char *path) {
+    if (!path || !*path || !is_valid_path(path)) {
+        return 0;
+    }
+
+    // No absolute paths
+    if (path[0] == '/') {
+        return 0;
+    }
+
+    // No drive letters (Windows)
+    if (isalpha(path[0]) && path[1] == ':') {
+        return 0;
+    }
+
+    // Check each component
+    const char *p = path;
+    const char *start = path;
+    size_t component_len = 0;
+
+    while (*p) {
+        if (*p == '/') {
+            // Check component length
+            component_len = p - start;
+            if (component_len == 0) {
+                return 0;  // Empty component
+            }
+            if (component_len > 255) {
+                return 0;  // Component too long
+            }
+            
+            // Validate component
+            char component[256];
+            strncpy(component, start, component_len);
+            component[component_len] = '\0';
+            
+            if (strcmp(component, ".") == 0 || 
+                strcmp(component, "..") == 0) {
+                return 0;
+            }
+            
+            start = p + 1;
+        }
+        p++;
+    }
+
+    // Check final component
+    component_len = p - start;
+    if (component_len > 0) {
+        char component[256];
+        strncpy(component, start, component_len);
+        component[component_len] = '\0';
+        
+        if (strcmp(component, ".") == 0 || 
+            strcmp(component, "..") == 0) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 // Safely joins directory and filename paths
 char *joinpath(char *dir, char *filename, char *path)
 {
@@ -461,10 +524,9 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
 // Main package creation function
 int make_package(struct pkgdb *db, char *inffn)
 {
-    // Add path validation at the start
-    if (!is_valid_path(inffn))
-    {
-        fprintf(stderr, "Invalid input file path\n");
+    // Strict path validation
+    if (!is_path_safe(inffn)) {
+        fprintf(stderr, "Invalid or unsafe input file path\n");
         return 1;
     }
 
@@ -539,18 +601,26 @@ int make_package(struct pkgdb *db, char *inffn)
         struct property *p;
         for (p = source->properties; p; p = p->next)
         {
-            // Validate property name before using as path
-            if (!is_valid_path(p->name))
-            {
-                fprintf(stderr, "Invalid source path in manifest\n");
+            if (!is_path_safe(p->name)) {
+                fprintf(stderr, "Invalid or unsafe source path in manifest: %s\n", p->name);
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
             }
-            joinpath(srcdir, p->name, srcfn);
-            rc = add_file(archive, srcfn, p->name, &pkg->time, 0);
-            if (rc != 0)
-            {
+            
+            char *safe_path = canonicalize_path(p->name);
+            if (!safe_path) {
+                fprintf(stderr, "Path canonicalization failed\n");
+                fclose(archive);
+                unlink(dstpkgfn);
+                return 1;
+            }
+            
+            joinpath(srcdir, safe_path, srcfn);
+            rc = add_file(archive, srcfn, safe_path, &pkg->time, 0);
+            free(safe_path);
+            
+            if (rc != 0) {
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
@@ -564,18 +634,26 @@ int make_package(struct pkgdb *db, char *inffn)
         struct property *p;
         for (p = prebuilt->properties; p; p = p->next)
         {
-            // Validate property name before using as path
-            if (!is_valid_path(p->name))
-            {
-                fprintf(stderr, "Invalid prebuilt path in manifest\n");
+            if (!is_path_safe(p->name)) {
+                fprintf(stderr, "Invalid or unsafe prebuilt path in manifest: %s\n", p->name);
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
             }
-            joinpath(srcdir, p->name, srcfn);
-            rc = add_file(archive, srcfn, p->name, &pkg->time, 1);
-            if (rc != 0)
-            {
+            
+            char *safe_path = canonicalize_path(p->name);
+            if (!safe_path) {
+                fprintf(stderr, "Path canonicalization failed\n");
+                fclose(archive);
+                unlink(dstpkgfn);
+                return 1;
+            }
+            
+            joinpath(srcdir, safe_path, srcfn);
+            rc = add_file(archive, srcfn, safe_path, &pkg->time, 1);
+            free(safe_path);
+            
+            if (rc != 0) {
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
@@ -611,10 +689,10 @@ int main(int argc, char *argv[])
     srcdir = argv[1];
     dstdir = argv[2];
 
-    // Validate input paths
-    if (!is_valid_path(argv[1]) || (strcmp(argv[2], "-") != 0 && !is_valid_path(argv[2])))
-    {
-        fprintf(stderr, "Invalid source or destination directory\n");
+    // Validate input paths with stricter checks
+    if (!is_path_safe(argv[1]) || 
+        (strcmp(argv[2], "-") != 0 && !is_path_safe(argv[2]))) {
+        fprintf(stderr, "Invalid or unsafe source/destination directory\n");
         return 1;
     }
 
@@ -630,13 +708,10 @@ int main(int argc, char *argv[])
 
     for (i = 3; i < argc; i++)
     {
-        // Validate input filenames
-        if (!is_valid_filename(argv[i]))
-        {
-            fprintf(stderr, "Invalid input file name: %s\n", argv[i]);
+        if (!is_path_safe(argv[i])) {
+            fprintf(stderr, "Invalid or unsafe input file path: %s\n", argv[i]);
             return 1;
         }
-        // printf("Generating package %s\n", argv[i]);
         if (make_package(&db, argv[i]) != 0)
             return 1;
     }
