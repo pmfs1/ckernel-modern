@@ -750,7 +750,13 @@ int make_package(struct pkgdb *db, char *inffn)
     return 0;
 }
 
-// Main function: Processes command line arguments and creates packages
+/**
+ * main - Processes command line arguments and creates packages
+ * @argc: The number of command line arguments
+ * @argv: Array of argument strings
+ *
+ * Returns 0 on success or 1 on error.
+ */
 int main(int argc, char *argv[])
 {
     int i;
@@ -767,20 +773,25 @@ int main(int argc, char *argv[])
 
     // Sanitize and validate source directory path
     char *safe_srcdir = sanitize_path(argv[1]);
-    if (!safe_srcdir) {
+    if (!safe_srcdir)
+    {
         fprintf(stderr, "Invalid or unsafe source directory path\n");
         return 1;
     }
 
     // Special handling for "-" as destination, otherwise sanitize path
     char *safe_dstdir;
-    if (strcmp(argv[2], "-") == 0) {
+    if (strcmp(argv[2], "-") == 0)
+    {
         safe_dstdir = strdup("-");
-    } else {
+    }
+    else
+    {
         safe_dstdir = sanitize_path(argv[2]);
     }
 
-    if (!safe_dstdir) {
+    if (!safe_dstdir)
+    {
         fprintf(stderr, "Invalid or unsafe destination directory path\n");
         free(safe_srcdir);
         return 1;
@@ -789,10 +800,14 @@ int main(int argc, char *argv[])
     srcdir = safe_srcdir;
     dstdir = safe_dstdir;
 
-    if (strcmp(dstdir, "-") == 0) {
+    if (strcmp(dstdir, "-") == 0)
+    {
         strcpy(dbfile, "db");
-    } else {
-        if (!is_path_safe("db")) {
+    }
+    else
+    {
+        if (!is_path_safe("db"))
+        {
             fprintf(stderr, "Invalid database path\n");
             free(safe_srcdir);
             free(safe_dstdir);
@@ -804,9 +819,11 @@ int main(int argc, char *argv[])
     read_pkgdb(dbfile, &db);
 
     // Process each input file with proper path sanitization
-    for (i = 3; i < argc; i++) {
+    for (i = 3; i < argc; i++)
+    {
         char *safe_path = sanitize_path(argv[i]);
-        if (!safe_path) {
+        if (!safe_path)
+        {
             fprintf(stderr, "Invalid or unsafe input file path: %s\n", argv[i]);
             free(safe_srcdir);
             free(safe_dstdir);
@@ -816,7 +833,8 @@ int main(int argc, char *argv[])
         int result = make_package(&db, safe_path);
         free(safe_path);
 
-        if (result != 0) {
+        if (result != 0)
+        {
             free(safe_srcdir);
             free(safe_dstdir);
             return 1;
