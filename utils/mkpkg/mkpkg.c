@@ -589,7 +589,26 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
     return ret;
 }
 
-// Main package creation function
+/**
+ * Creates a package archive from a manifest file
+ * 
+ * This function reads a package manifest file and creates a .pkg archive containing
+ * all specified files. It handles both source files and prebuilt files, maintaining
+ * proper timestamps and directory structures.
+ *
+ * @param db        Pointer to package database structure
+ * @param inffn     Path to the package manifest (.inf) file
+ *
+ * @return 0 on success, 1 on error
+ *
+ * The function:
+ * - Reads and validates the package manifest
+ * - Creates package entry in database
+ * - Creates tar archive with specified files
+ * - Handles both source and prebuilt files
+ * - Updates package timestamps
+ * - Maintains package database integrity
+ */
 int make_package(struct pkgdb *db, char *inffn)
 {
     // Sanitize input filename
