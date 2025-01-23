@@ -515,6 +515,74 @@ void usage()
     fprintf(stderr, "  -m            Add individual entries in input archives.\n");
 }
 
+int is_safe_filename(const char *filename)
+{
+    // Reject empty filenames
+    if (!filename || !*filename)
+        return 0;
+
+    // Reject absolute paths
+    if (filename[0] == '/' || filename[0] == '\\')
+        return 0;
+
+    // Maximum length check
+    if (strlen(filename) > 256)
+        return 0;
+
+    const char *p = filename;
+    int segment_length = 0;
+    int had_dot = 0;
+
+    while (*p)
+    {
+        char c = *p;
+
+        // Check for path traversal components
+        if (c == '.')
+        {
+            had_dot++;
+            if (had_dot > 2)
+                return 0;
+        }
+        else
+        {
+            had_dot = 0;
+        }
+
+        // Check for path separators
+        if (c == '/' || c == '\\')
+        {
+            // Reject empty segments
+            if (segment_length == 0)
+                return 0;
+
+            // Check if previous segment was ".."
+            if (had_dot == 2)
+                return 0;
+
+            segment_length = 0;
+            had_dot = 0;
+        }
+        else
+        {
+            segment_length++;
+        }
+
+        // Reject control characters and other dangerous characters
+        if (c < 32 || c == ':' || c == '*' || c == '?' || c == '"' ||
+            c == '<' || c == '>' || c == '|' || c == ';')
+            return 0;
+
+        p++;
+    }
+
+    // Check final segment
+    if (segment_length == 0 || (had_dot == 2))
+        return 0;
+
+    return 1;
+}
+
 int main(int argc, char *argv[])
 {
     int c, fd;
@@ -554,6 +622,15 @@ int main(int argc, char *argv[])
     {
         // Open next input file
         char *input_file = argv[optind++];
+
+        // Validate filename before processing
+        if (!is_safe_filename(input_file))
+        {
+            fprintf(stderr, "%s: Invalid filename\n", input_file);
+            free_archive(&ar);
+            return 1;
+        }
+
         fd = open(input_file, O_RDONLY | O_BINARY);
         if (fd < 0)
         {
