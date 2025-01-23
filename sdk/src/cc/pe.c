@@ -1519,22 +1519,66 @@ static void pe_print_section(FILE *f, Section *s)
     fprintf(f, "\n\n");
 }
 
+static int is_valid_path_char(char c)
+{
+    return (c >= 'a' && c <= 'z') ||
+           (c >= 'A' && c <= 'Z') ||
+           (c >= '0' && c <= '9') ||
+           c == '.' || c == '_' || c == '-';
+}
+
+static int is_safe_path(const char *path)
+{
+    const char *p;
+    if (!path || !*path)
+        return 0;
+
+    // Check for absolute paths
+    if (path[0] == '/' || path[0] == '\\')
+        return 0;
+
+    // Check for parent directory traversal
+    if (strstr(path, ".."))
+        return 0;
+
+    // Verify each character is safe
+    for (p = path; *p; p++)
+    {
+        if (!is_valid_path_char(*p))
+            return 0;
+    }
+
+    return 1;
+}
+
 static void pe_print_sections(CCState *s1, const char *fname)
 {
     Section *s;
     FILE *f;
     int i;
-    int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    if (fd < 0) {
-        // handle error
+
+    // Validate the filename
+    if (!fname || !is_safe_path(fname))
+    {
+        error_noabort("invalid map file path");
         return;
     }
-    f = fdopen(fd, "wt");
-    if (f == NULL) {
+
+    int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
+    if (fd < 0)
+    {
+        error_noabort("could not create map file '%s'", fname);
+        return;
+    }
+
+    f = fdopen(fd, "wb");
+    if (f == NULL)
+    {
         close(fd);
-        // handle error
+        error_noabort("could not open map file for writing");
         return;
     }
+
     for (i = 1; i < s1->nb_sections; ++i)
     {
         s = s1->sections[i];
