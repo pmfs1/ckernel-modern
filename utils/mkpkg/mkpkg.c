@@ -60,6 +60,10 @@ struct pkgdb
     int dirty;        // Flag indicating if database needs saving
 };
 
+// Function prototypes
+int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt);
+int add_file_internal(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt);
+
 // Global directory paths
 char *srcdir; // Source directory containing package files
 char *dstdir; // Destination directory for package output
