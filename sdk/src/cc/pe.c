@@ -1530,18 +1530,25 @@ static int is_valid_path_char(char c)
 static int is_safe_path(const char *path)
 {
     const char *p;
+    size_t len;
+
     if (!path || !*path)
         return 0;
 
+    len = strlen(path);
+    if (len > 260) // Max path length
+        return 0;
+
     // Check for absolute paths
-    if (path[0] == '/' || path[0] == '\\')
+    if (path[0] == '/' || path[0] == '\\' ||
+        (len > 2 && path[1] == ':'))
         return 0;
 
     // Check for parent directory traversal
     if (strstr(path, ".."))
         return 0;
 
-    // Verify each character is safe
+    // Check for spaces and other potentially unsafe chars
     for (p = path; *p; p++)
     {
         if (!is_valid_path_char(*p))
@@ -1556,18 +1563,30 @@ static void pe_print_sections(CCState *s1, const char *fname)
     Section *s;
     FILE *f;
     int i;
+    char safe_path[261];
 
-    // Validate the filename
-    if (!fname || !is_safe_path(fname))
+    // Early input validation
+    if (!fname)
     {
-        error_noabort("invalid map file path");
+        error_noabort("map file name is NULL");
         return;
     }
 
-    int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
+    // Copy to local buffer for safety
+    strncpy(safe_path, fname, sizeof(safe_path) - 1);
+    safe_path[sizeof(safe_path) - 1] = '\0';
+
+    // Validate the filename
+    if (!is_safe_path(safe_path))
+    {
+        error_noabort("invalid map file path: must be a simple filename");
+        return;
+    }
+
+    int fd = open(safe_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
     if (fd < 0)
     {
-        error_noabort("could not create map file '%s'", fname);
+        error_noabort("could not create map file '%s'", safe_path);
         return;
     }
 
