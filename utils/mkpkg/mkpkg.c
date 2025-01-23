@@ -9,7 +9,6 @@
 #include <dirent.h>
 #include <utime.h>
 #include <sys/stat.h>
-// #define _GNU_SOURCE
 #include <fcntl.h>
 #include "inifile.h"
 
