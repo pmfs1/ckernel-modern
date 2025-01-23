@@ -1228,6 +1228,10 @@ static void parse_cmdline(int argc, char **argv)
                 fprintf(stderr, "Invalid response file path: %s\n", argv[0] + 1);
                 return;
             }
+            if (has_path_traversal(argv[0] + 1)) {
+                fprintf(stderr, "Invalid response file path: %s\n", argv[0] + 1);
+                return;
+            }
             process_response_file(argv[0] + 1);
             argc--;
             argv++;
