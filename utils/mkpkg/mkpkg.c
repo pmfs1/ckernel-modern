@@ -10,6 +10,7 @@
 #include <utime.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <ctype.h>
 #include "inifile.h"
 
 // TAR file block size (512 bytes - standard tar format)
