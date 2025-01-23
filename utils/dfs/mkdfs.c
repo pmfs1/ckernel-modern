@@ -400,6 +400,59 @@ void transfer_files(char *dstdir, char *srcdir)
 
 #endif
 
+char *sanitize_path(const char *path)
+{
+    char *clean_path = malloc(strlen(path) + 1);
+    char *out = clean_path;
+    const char *in = path;
+    int up_count = 0;
+
+    if (!clean_path)
+        return NULL;
+
+    // Skip leading slashes and dots
+    while (*in == '/' || *in == '.' || *in == '\\')
+        in++;
+
+    while (*in)
+    {
+        // Convert backslash to forward slash
+        if (*in == '\\')
+        {
+            *out++ = '/';
+            in++;
+            continue;
+        }
+
+        // Handle . and ..
+        if (*in == '.' && (in[1] == '/' || in[1] == '\\' || in[1] == '\0'))
+        {
+            in += (in[1] ? 2 : 1);
+            continue;
+        }
+        if (*in == '.' && in[1] == '.' && (in[2] == '/' || in[2] == '\\' || in[2] == '\0'))
+        {
+            in += (in[2] ? 3 : 2);
+            up_count++;
+            continue;
+        }
+
+        // Copy regular characters
+        *out++ = *in++;
+    }
+
+    *out = '\0';
+
+    // If path would escape root directory, return NULL
+    if (up_count > 0)
+    {
+        free(clean_path);
+        return NULL;
+    }
+
+    return clean_path;
+}
+
 void process_filelist(FILE *f)
 {
     char line[1024];
@@ -407,6 +460,8 @@ void process_filelist(FILE *f)
     char *src;
     char *dst;
     char *altsrc;
+    char *safe_dst;
+    char *safe_src;
 
     while (fgets(line, sizeof line, f))
     {
@@ -448,20 +503,40 @@ void process_filelist(FILE *f)
         if (altfile && altsrc && *altsrc)
             src = altsrc;
 
+        // Sanitize paths
+        safe_dst = sanitize_path(dst);
+        if (!safe_dst)
+        {
+            printf("Warning: Skipping suspicious path: %s\n", dst);
+            continue;
+        }
+
         if (!src || !*src)
         {
-            make_directory(dst);
+            make_directory(safe_dst);
         }
         else
         {
-            if (isdir(src))
+            safe_src = sanitize_path(src);
+            if (!safe_src)
             {
-                make_directory(dst);
-                transfer_files(dst, src);
+                printf("Warning: Skipping suspicious path: %s\n", src);
+                free(safe_dst);
+                continue;
+            }
+
+            if (isdir(safe_src))
+            {
+                make_directory(safe_dst);
+                transfer_files(safe_dst, safe_src);
             }
             else
-                transfer_file(dst, src);
+            {
+                transfer_file(safe_dst, safe_src);
+            }
+            free(safe_src);
         }
+        free(safe_dst);
     }
 }
 
