@@ -61,6 +61,8 @@ static bool is_suppressed_warning(int severity);
 
 static void usage(void);
 
+static bool has_path_traversal(const char *str); // Add prototype here
+
 static int using_debug_info, opt_verbose_info;
 bool tasm_compatible_mode = false;
 int pass0, passn;
@@ -920,7 +922,7 @@ static bool process_arg(char *p, char *q)
                 if (!as_stricmp(param, warnings[i].name))
                     break;
             if (i <= ERR_WARN_MAX)
-            warning_on_global[i] = do_warn;
+                warning_on_global[i] = do_warn;
             else if (!as_stricmp(param, "all"))
                 for (i = 1; i <= ERR_WARN_MAX; i++)
                     warning_on_global[i] = do_warn;
@@ -1149,7 +1151,17 @@ static void process_args(char *args)
 static void process_response_file(const char *file)
 {
     char str[2048];
-    FILE *f = fopen(file, "r");
+    FILE *f;
+
+    // Prevent path traversal attacks
+    if (has_path_traversal(file))
+    {
+        as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
+                 "invalid response file path '%s'", file);
+        return;
+    }
+
+    f = fopen(file, "r");
     if (!f)
     {
         perror(file);
@@ -1162,7 +1174,8 @@ static void process_response_file(const char *file)
     fclose(f);
 }
 
-static bool has_path_traversal(const char *str) {
+static bool has_path_traversal(const char *str)
+{
     if (!str)
         return false;
     // Basic check for directory traversal patterns
