@@ -73,7 +73,7 @@ TokenSym *tok_alloc_new(TokenSym **pts, const char *str, int len)
 }
 
 #define TOK_HASH_INIT 1
-#define TOK_HASH_FUNC(h, c) ((h) * 263 + (c))
+#define TOK_HASH_FUNC(h, c) ((h)*263 + (c))
 
 // Find a token and add it if not found
 TokenSym *tok_alloc(const char *str, int len)
@@ -713,94 +713,93 @@ void preprocess_skip(void)
 
     p = file->buf_ptr;
     a = 0;
-    while (1)
+redo_start:
+    start_of_line = 1;
+    in_warn_or_error = 0;
+    for (;;)
     {
-        start_of_line = 1;
-        in_warn_or_error = 0;
-        while (1)
+    redo_no_start:
+        c = *p;
+        switch (c)
         {
-            c = *p;
-            switch (c)
+        case ' ':
+        case '\t':
+        case '\f':
+        case '\v':
+        case '\r':
+            p++;
+            goto redo_no_start;
+        case '\n':
+            file->line_num++;
+            p++;
+            goto redo_start;
+        case '\\':
+            file->buf_ptr = p;
+            c = handle_eob();
+            if (c == CH_EOF)
             {
-            case ' ':
-            case '\t':
-            case '\f':
-            case '\v':
-            case '\r':
-                p++;
-                continue;
-            case '\n':
-                file->line_num++;
-                p++;
-                start_of_line = 1;
-                continue;
-            case '\\':
-                file->buf_ptr = p;
-                c = handle_eob();
-                if (c == CH_EOF)
-                {
-                    expect("#endif");
-                }
-                else if (c == '\\')
-                {
-                    ch = file->buf_ptr[0];
-                    handle_stray_noerror();
-                }
-                p = file->buf_ptr;
-                continue;
-                // Skip strings
-            case '\"':
-            case '\'':
-                if (in_warn_or_error)
-                    break;
-                p = parse_pp_string(p, c, NULL);
-                break;
-                // Skip comments
-            case '/':
-                if (in_warn_or_error)
-                    break;
-                file->buf_ptr = p;
-                ch = *p;
-                minp();
-                p = file->buf_ptr;
-                if (ch == '*')
-                {
-                    p = parse_comment(p);
-                }
-                else if (ch == '/')
-                {
-                    p = parse_line_comment(p);
-                }
-                break;
-            case '#':
-                p++;
-                if (start_of_line)
-                {
-                    file->buf_ptr = p;
-                    next_nomacro();
-                    p = file->buf_ptr;
-                    if (a == 0 && (tok == TOK_ELSE || tok == TOK_ELIF || tok == TOK_ENDIF))
-                        goto done;
-                    if (tok == TOK_IF || tok == TOK_IFDEF || tok == TOK_IFNDEF)
-                    {
-                        a++;
-                    }
-                    else if (tok == TOK_ENDIF)
-                    {
-                        a--;
-                    }
-                    else if (tok == TOK_ERROR || tok == TOK_WARNING)
-                    {
-                        in_warn_or_error = 1;
-                    }
-                }
-                break;
-            default:
-                p++;
-                break;
+                expect("#endif");
             }
-            start_of_line = 0;
+            else if (c == '\\')
+            {
+                ch = file->buf_ptr[0];
+                handle_stray_noerror();
+            }
+            p = file->buf_ptr;
+            goto redo_no_start;
+            // Skip strings
+        case '\"':
+        case '\'':
+            if (in_warn_or_error)
+                goto _default;
+            p = parse_pp_string(p, c, NULL);
+            break;
+            // Skip comments
+        case '/':
+            if (in_warn_or_error)
+                goto _default;
+            file->buf_ptr = p;
+            ch = *p;
+            minp();
+            p = file->buf_ptr;
+            if (ch == '*')
+            {
+                p = parse_comment(p);
+            }
+            else if (ch == '/')
+            {
+                p = parse_line_comment(p);
+            }
+            break;
+        case '#':
+            p++;
+            if (start_of_line)
+            {
+                file->buf_ptr = p;
+                next_nomacro();
+                p = file->buf_ptr;
+                if (a == 0 && (tok == TOK_ELSE || tok == TOK_ELIF || tok == TOK_ENDIF))
+                    goto done;
+                if (tok == TOK_IF || tok == TOK_IFDEF || tok == TOK_IFNDEF)
+                {
+                    a++;
+                }
+                else if (tok == TOK_ENDIF)
+                {
+                    a--;
+                }
+                else if (tok == TOK_ERROR || tok == TOK_WARNING)
+                {
+                    in_warn_or_error = 1;
+                }
+            }
+            break;
+        _default:
+        default:
+            p++;
+            break;
         }
+        start_of_line = 0;
     }
 
 done:
@@ -1341,216 +1340,322 @@ void preprocess(int is_bof)
     saved_parse_flags = parse_flags;
     parse_flags = PARSE_FLAG_PREPROCESS | PARSE_FLAG_TOK_NUM | PARSE_FLAG_LINEFEED;
     next_nomacro();
-
-    while (1)
+redo:
+    switch (tok)
     {
-        switch (tok)
+    case TOK_DEFINE:
+        next_nomacro();
+        parse_define();
+        break;
+    case TOK_UNDEF:
+        next_nomacro();
+        s = define_find(tok);
+        // Undefine symbol by putting an invalid name
+        if (s)
+            define_undef(s);
+        break;
+    case TOK_INCLUDE:
+    case TOK_INCLUDE_NEXT:
+        ch = file->buf_ptr[0];
+        // TODO: incorrect if comments: use next_nomacro with a special mode
+        skip_spaces();
+        if (ch == '<')
         {
-        case TOK_DEFINE:
-            next_nomacro();
-            parse_define();
-            break;
-
-        case TOK_UNDEF:
-            next_nomacro();
-            s = define_find(tok);
-            // Undefine symbol by putting an invalid name
-            if (s)
-                define_undef(s);
-            break;
-
-        case TOK_INCLUDE:
-        case TOK_INCLUDE_NEXT:
+            c = '>';
+            goto read_name;
+        }
+        else if (ch == '\"')
         {
-            int should_continue = 0;
-            ch = file->buf_ptr[0];
-            // TODO: incorrect with comments
-            skip_spaces();
-            if (ch == '<')
+            c = ch;
+        read_name:
+            finp();
+            q = buf;
+            while (ch != c && ch != '\n' && ch != CH_EOF)
             {
-                c = '>';
-                should_continue = 1;
-            }
-            else if (ch == '\"')
-            {
-                c = ch;
-                should_continue = 1;
-            }
-
-            if (should_continue)
-            {
-                finp();
-                q = buf;
-                while (ch != c && ch != '\n' && ch != CH_EOF)
+                if ((q - buf) < sizeof(buf) - 1)
+                    *q++ = ch;
+                if (ch == '\\')
                 {
-                    if ((q - buf) < sizeof(buf) - 1)
-                        *q++ = ch;
-                    if (ch == '\\')
-                    {
-                        if (handle_stray_noerror() == 0)
-                            --q;
-                    }
-                    else
-                    {
-                        finp();
-                    }
-                }
-                *q = '\0';
-                minp();
-            }
-            else
-            {
-                // Computed #include: either we have only strings or we have anything enclosed in '<>'
-                next();
-                buf[0] = '\0';
-                if (tok == TOK_STR)
-                {
-                    while (tok != TOK_LINEFEED)
-                    {
-                        if (tok != TOK_STR)
-                        {
-                            error("'#include' expects \"FILENAME\" or <FILENAME>");
-                        }
-                        pstrcat(buf, sizeof(buf), (char *)tokc.cstr->data);
-                        next();
-                    }
-                    c = '\"';
+                    if (handle_stray_noerror() == 0)
+                        --q;
                 }
                 else
                 {
-                    int len;
-                    while (tok != TOK_LINEFEED)
+                    finp();
+                }
+            }
+            *q = '\0';
+            minp();
+        }
+        else
+        {
+            // Computed #include: either we have only strings or we have anything enclosed in '<>'
+            next();
+            buf[0] = '\0';
+            if (tok == TOK_STR)
+            {
+                while (tok != TOK_LINEFEED)
+                {
+                    if (tok != TOK_STR)
                     {
-                        pstrcat(buf, sizeof(buf), get_tok_str(tok, &tokc));
-                        next();
-                    }
-                    len = strlen(buf);
-                    // Check syntax and remove '<>'
-                    if (len < 2 || buf[0] != '<' || buf[len - 1] != '>')
+                    include_syntax:
                         error("'#include' expects \"FILENAME\" or <FILENAME>");
-                    memmove(buf, buf + 1, len - 2);
-                    buf[len - 2] = '\0';
-                    c = '>';
+                    }
+                    pstrcat(buf, sizeof(buf), (char *)tokc.cstr->data);
+                    next();
                 }
-            }
-
-            e = search_cached_include(s1, c, buf);
-            if (e && define_find(e->ifndef_macro))
-            {
-                // No need to parse the include because the 'ifndef macro' is defined
-#ifdef INC_DEBUG
-                printf("%s: skipping %s\n", file->filename, buf);
-#endif
+                c = '\"';
             }
             else
             {
-                if (s1->include_stack_ptr >= s1->include_stack + INCLUDE_STACK_SIZE)
+                int len;
+                while (tok != TOK_LINEFEED)
                 {
-                    error("#include recursion too deep");
+                    pstrcat(buf, sizeof(buf), get_tok_str(tok, &tokc));
+                    next();
                 }
+                len = strlen(buf);
+                // Check syntax and remove '<>'
+                if (len < 2 || buf[0] != '<' || buf[len - 1] != '>')
+                    goto include_syntax;
+                memmove(buf, buf + 1, len - 2);
+                buf[len - 2] = '\0';
+                c = '>';
+            }
+        }
 
-                // Push current file onto stack
-                // TODO: fix current line init
-                *s1->include_stack_ptr++ = file;
-
-                f = NULL;
-                if (c == '\"')
-                {
-                    // First search in current dir if "header.h"
-                    size = cc_basename(file->filename) - file->filename;
-                    if (size > sizeof(buf1) - 1)
-                        size = sizeof(buf1) - 1;
-                    memcpy(buf1, file->filename, size);
-                    buf1[size] = '\0';
-                    pstrcat(buf1, sizeof(buf1), buf);
-                    f = cc_open(s1, buf1);
-
-                    if (f && tok == TOK_INCLUDE_NEXT)
-                    {
-                        cc_close(f);
-                        f = NULL;
-                    }
-                }
-
-                if (!f)
-                {
-                    // Now search in all the include paths
-                    n = s1->nb_include_paths + s1->nb_sysinclude_paths;
-                    for (i = 0; i < n && !f; i++)
-                    {
-                        const char *path;
-                        if (i < s1->nb_include_paths)
-                        {
-                            path = s1->include_paths[i];
-                        }
-                        else
-                        {
-                            path = s1->sysinclude_paths[i - s1->nb_include_paths];
-                        }
-                        pstrcpy(buf1, sizeof(buf1), path);
-                        pstrcat(buf1, sizeof(buf1), "/");
-                        pstrcat(buf1, sizeof(buf1), buf);
-                        f = cc_open(s1, buf1);
-                        if (f && tok == TOK_INCLUDE_NEXT)
-                        {
-                            cc_close(f);
-                            f = NULL;
-                        }
-                    }
-                }
-
-                if (!f)
-                {
-                    --s1->include_stack_ptr;
-                    error("include file '%s' not found", buf);
-                    break;
-                }
-
+        e = search_cached_include(s1, c, buf);
+        if (e && define_find(e->ifndef_macro))
+        {
+            // No need to parse the include because the 'ifndef macro' is defined
 #ifdef INC_DEBUG
-                printf("%s: including %s\n", file->filename, buf1);
+            printf("%s: skipping %s\n", file->filename, buf);
 #endif
-                f->inc_type = c;
-                pstrcpy(f->inc_filename, sizeof(f->inc_filename), buf);
-                file = f;
-
-                // Add include file debug info
-                if (do_debug)
-                {
-                    put_stabs(file->filename, N_BINCL, 0, 0, 0);
-                }
-                tok_flags |= TOK_FLAG_BOF | TOK_FLAG_BOL;
-                ch = file->buf_ptr[0];
-                parse_flags = saved_parse_flags;
-                return;
-            }
-            break;
         }
-
-            // ... existing switch cases for other preprocessor directives ...
-
-        default:
-            if (tok == TOK_LINEFEED || tok == '!' || tok == TOK_CINT)
+        else
+        {
+            if (s1->include_stack_ptr >= s1->include_stack + INCLUDE_STACK_SIZE)
             {
-                // '!' is ignored to allow C scripts. numbers are ignored
-                // to emulate cpp behaviour
+                error("#include recursion too deep");
             }
-            else
+
+            // Push current file onto stack
+            // TODO: fix current line init
+            *s1->include_stack_ptr++ = file;
+            if (c == '\"')
             {
-                if (!(saved_parse_flags & PARSE_FLAG_ASM_COMMENTS))
+                // First search in current dir if "header.h"
+                size = cc_basename(file->filename) - file->filename;
+                if (size > sizeof(buf1) - 1)
+                    size = sizeof(buf1) - 1;
+                memcpy(buf1, file->filename, size);
+                buf1[size] = '\0';
+                pstrcat(buf1, sizeof(buf1), buf);
+                f = cc_open(s1, buf1);
+                if (f)
                 {
-                    warning("Ignoring unknown preprocessing directive #%s", get_tok_str(tok, &tokc));
+                    if (tok == TOK_INCLUDE_NEXT)
+                    {
+                        tok = TOK_INCLUDE;
+                    }
+                    else
+                    {
+                        goto found;
+                    }
                 }
             }
+
+            // Now search in all the include paths
+            n = s1->nb_include_paths + s1->nb_sysinclude_paths;
+            for (i = 0; i < n; i++)
+            {
+                const char *path;
+                if (i < s1->nb_include_paths)
+                {
+                    path = s1->include_paths[i];
+                }
+                else
+                {
+                    path = s1->sysinclude_paths[i - s1->nb_include_paths];
+                }
+                pstrcpy(buf1, sizeof(buf1), path);
+                pstrcat(buf1, sizeof(buf1), "/");
+                pstrcat(buf1, sizeof(buf1), buf);
+                f = cc_open(s1, buf1);
+                if (f)
+                {
+                    if (tok == TOK_INCLUDE_NEXT)
+                    {
+                        tok = TOK_INCLUDE;
+                    }
+                    else
+                    {
+                        goto found;
+                    }
+                }
+            }
+            --s1->include_stack_ptr;
+            error("include file '%s' not found", buf);
             break;
+        found:
+#ifdef INC_DEBUG
+            printf("%s: including %s\n", file->filename, buf1);
+#endif
+            f->inc_type = c;
+            pstrcpy(f->inc_filename, sizeof(f->inc_filename), buf);
+            file = f;
+
+            // Add include file debug info
+            if (do_debug)
+            {
+                put_stabs(file->filename, N_BINCL, 0, 0, 0);
+            }
+            tok_flags |= TOK_FLAG_BOF | TOK_FLAG_BOL;
+            ch = file->buf_ptr[0];
+            goto done;
         }
-
-        // Ignore other preprocess commands or #! for C scripts
-        while (tok != TOK_LINEFEED)
-            next_nomacro();
-
+        break;
+    case TOK_IFNDEF:
+        c = 1;
+        goto do_ifdef;
+    case TOK_IF:
+        c = expr_preprocess();
+        goto do_if;
+    case TOK_IFDEF:
+        c = 0;
+    do_ifdef:
         next_nomacro();
+        if (tok < TOK_IDENT)
+            error("invalid argument for '#if%sdef'", c ? "n" : "");
+        if (is_bof)
+        {
+            if (c)
+            {
+#ifdef INC_DEBUG
+                printf("#ifndef %s\n", get_tok_str(tok, NULL));
+#endif
+                file->ifndef_macro = tok;
+            }
+        }
+        c = (define_find(tok) != 0) ^ c;
+    do_if:
+        if (s1->ifdef_stack_ptr >= s1->ifdef_stack + IFDEF_STACK_SIZE)
+            error("memory full");
+        *s1->ifdef_stack_ptr++ = c;
+        goto test_skip;
+    case TOK_ELSE:
+        if (s1->ifdef_stack_ptr == s1->ifdef_stack)
+            error("#else without matching #if");
+        if (s1->ifdef_stack_ptr[-1] & 2)
+            error("#else after #else");
+        c = (s1->ifdef_stack_ptr[-1] ^= 3);
+        goto test_skip;
+    case TOK_ELIF:
+        if (s1->ifdef_stack_ptr == s1->ifdef_stack)
+            error("#elif without matching #if");
+        c = s1->ifdef_stack_ptr[-1];
+        if (c > 1)
+            error("#elif after #else");
+        // Last #if/#elif expression was true; skip
+        if (c == 1)
+            goto skip;
+        c = expr_preprocess();
+        s1->ifdef_stack_ptr[-1] = c;
+    test_skip:
+        if (!(c & 1))
+        {
+        skip:
+            preprocess_skip();
+            is_bof = 0;
+            goto redo;
+        }
+        break;
+    case TOK_ENDIF:
+        if (s1->ifdef_stack_ptr <= file->ifdef_stack_ptr)
+            error("#endif without matching #if");
+        s1->ifdef_stack_ptr--;
+        // '#ifndef macro' was at the start of file. Now we check if
+        // an '#endif' is exactly at the end of file
+        if (file->ifndef_macro &&
+            s1->ifdef_stack_ptr == file->ifdef_stack_ptr)
+        {
+            file->ifndef_macro_saved = file->ifndef_macro;
+            //  Need to set to zero to avoid false matches if another
+            // #ifndef at middle of file
+            file->ifndef_macro = 0;
+            while (tok != TOK_LINEFEED)
+                next_nomacro();
+            tok_flags |= TOK_FLAG_ENDIF;
+            goto done;
+        }
+        break;
+    case TOK_LINE:
+        next();
+        if (tok != TOK_CINT)
+            error("#line");
+        file->line_num = tokc.i - 1; // The line number will be incremented after
+        next();
+        if (tok != TOK_LINEFEED)
+        {
+            if (tok != TOK_STR)
+                error("#line");
+            pstrcpy(file->filename, sizeof(file->filename), (char *)tokc.cstr->data);
+        }
+        break;
+    case TOK_ERROR:
+    case TOK_WARNING:
+        c = tok;
+        ch = file->buf_ptr[0];
+        skip_spaces();
+        q = buf;
+        while (ch != '\n' && ch != CH_EOF)
+        {
+            if ((q - buf) < sizeof(buf) - 1)
+                *q++ = ch;
+            if (ch == '\\')
+            {
+                if (handle_stray_noerror() == 0)
+                    --q;
+            }
+            else
+            {
+                finp();
+            }
+        }
+        *q = '\0';
+        if (c == TOK_ERROR)
+        {
+            error("#error %s", buf);
+        }
+        else
+        {
+            warning("#warning %s", buf);
+        }
+        break;
+    case TOK_PRAGMA:
+        pragma_parse(s1);
+        break;
+    default:
+        if (tok == TOK_LINEFEED || tok == '!' || tok == TOK_CINT)
+        {
+            // '!' is ignored to allow C scripts. numbers are ignored
+            // to emulate cpp behaviour
+        }
+        else
+        {
+            if (!(saved_parse_flags & PARSE_FLAG_ASM_COMMENTS))
+            {
+                warning("Ignoring unknown preprocessing directive #%s", get_tok_str(tok, &tokc));
+            }
+        }
+        break;
     }
 
+    // Ignore other preprocess commands or #! for C scripts
+    while (tok != TOK_LINEFEED)
+        next_nomacro();
+
+done:
     parse_flags = saved_parse_flags;
 }
 
