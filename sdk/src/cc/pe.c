@@ -1400,11 +1400,11 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
 
 static void pe_print_section(FILE *f, Section *s)
 {
-    BYTE *p, *e, b;
+    BYTE *data_ptr, *e, b;  // Changed p to data_ptr
     int i, n, l, m;
-    p = s->data;
+    data_ptr = s->data;     // Use renamed variable
     e = s->data + s->data_offset;
-    l = e - p;
+    l = e - data_ptr;       // Use renamed variable
 
     fprintf(f, "section  \"%s\"", s->name);
     if (s->link)
@@ -1442,21 +1442,21 @@ static void pe_print_section(FILE *f, Section *s)
     {
         static const char *fields1[] = {"  name", "     value", "  size", "  bind", "  type", " other", " shndx", NULL};
         static const char *fields2[] = {"  offs", "  type", "  symb", NULL};
-        const char **p;
+        const char **field_names;   // Changed p to field_names
 
         if (s->sh_type == SHT_SYMTAB)
         {
-            p = fields1;
+            field_names = fields1;  // Use renamed variable
             n = 110;
         }
         else
         {
-            p = fields2;
+            field_names = fields2;  // Use renamed variable
             n = 58;
         }
 
-        for (i = 0; p[i]; ++i)
-            fprintf(f, "%s", p[i]);
+        for (i = 0; field_names[i]; ++i)  // Use renamed variable
+            fprintf(f, "%s", field_names[i]);
         fprintf(f, "  symbol");
     }
 
@@ -1472,7 +1472,7 @@ static void pe_print_section(FILE *f, Section *s)
         {
             if (n + i < l)
             {
-                fprintf(f, " %02X", p[i + n]);
+                fprintf(f, " %02X", data_ptr[i + n]);  // Use renamed variable
             }
             else
             {
@@ -1482,7 +1482,7 @@ static void pe_print_section(FILE *f, Section *s)
 
         if (s->sh_type == SHT_SYMTAB)
         {
-            Elf32_Sym *sym = (Elf32_Sym *)(p + i);
+            Elf32_Sym *sym = (Elf32_Sym *)(data_ptr + i);  // Use renamed variable
             const char *name = s->link->data + sym->st_name;
             fprintf(f, "  %04X  %08X  %04X   %02X    %02X    %02X   %04X  \"%s\"",
                     sym->st_name,
@@ -1494,7 +1494,7 @@ static void pe_print_section(FILE *f, Section *s)
         }
         else if (s->sh_type == SHT_REL)
         {
-            Elf32_Rel *rel = (Elf32_Rel *)(p + i);
+            Elf32_Rel *rel = (Elf32_Rel *)(data_ptr + i);  // Use renamed variable
             Elf32_Sym *sym = (Elf32_Sym *)s->link->data + ELF32_R_SYM(rel->r_info);
             const char *name = s->link->link->data + sym->st_name;
             fprintf(f, "  %04X   %02X   %04X  \"%s\"",
@@ -1509,7 +1509,7 @@ static void pe_print_section(FILE *f, Section *s)
             {
                 if (n + i < l)
                 {
-                    b = p[i + n];
+                    b = data_ptr[i + n];  // Use renamed variable
                     if (b < 32 || b >= 127)
                         b = '.';
                     fprintf(f, "%c", b);
