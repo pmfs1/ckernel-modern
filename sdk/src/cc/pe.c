@@ -1403,11 +1403,11 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
 
 static void pe_print_section(FILE *f, Section *s)
 {
-    BYTE *data_ptr, *e, b; // Changed p to data_ptr
+    BYTE *data_ptr, *e, b; 
     int i, n, l, m;
-    data_ptr = s->data; // Use renamed variable
+    data_ptr = s->data;
     e = s->data + s->data_offset;
-    l = e - data_ptr; // Use renamed variable
+    l = (e > data_ptr) ? (int)(e - data_ptr) : 0;
 
     fprintf(f, "section  \"%s\"", s->name);
     if (s->link)
