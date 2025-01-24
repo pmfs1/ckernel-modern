@@ -1,5 +1,6 @@
 #include "cc.h"
 #include <sys/stat.h>
+#include <stddef.h>
 
 #define PE_MERGE_DATA
 
@@ -1716,10 +1717,9 @@ int pe_load_def_file(CCState *s1, int fd)
 
         case 2:
         {
-            size_t dllname_len = strlen(dllname) + 1;
-            dllref = cc_malloc(sizeof(DLLReference) + dllname_len);
-            strncpy(dllref->name, dllname, dllname_len - 1);
-            dllref->name[dllname_len - 1] = '\0';
+            // Calculate proper size for DLLReference structure including name buffer
+            dllref = cc_malloc(offsetof(DLLReference, name) + strlen(dllname) + 1);
+            strcpy(dllref->name, dllname);
             dllref->level = 0;
             dynarray_add((void ***)&s1->loaded_dlls, &s1->nb_loaded_dlls, dllref);
             ++state;
