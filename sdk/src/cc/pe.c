@@ -563,7 +563,7 @@ static int pe_write(struct pe_info *pe)
     char *stub;
     int stub_size;
     DWORD file_offset, r;
-    Section *s;
+    Section *sect;
     size_t dos_header_size = sizeof(IMAGE_DOS_HEADER);
 
     if (pe->stub)
@@ -689,14 +689,14 @@ static int pe_write(struct pe_info *pe)
         if (si->sh_size)
         {
             psh->PointerToRawData = r = file_offset;
-            for (s = si->first; s; s = s->next)
+            for (sect = si->first; sect; sect = sect->next)
             {
-                if (s->sh_type != SHT_NOBITS)
+                if (sect->sh_type != SHT_NOBITS)
                 {
-                    file_offset = align(file_offset, s->sh_addralign);
+                    file_offset = align(file_offset, sect->sh_addralign);
                     pe_fpad(op, file_offset, si->cls == sec_text ? 0x90 : 0x00);
-                    fwrite(s->data, 1, s->data_offset, op);
-                    file_offset += s->data_offset;
+                    fwrite(sect->data, 1, sect->data_offset, op);
+                    file_offset += sect->data_offset;
                 }
             }
             file_offset = pe_file_align(pe, file_offset);
@@ -982,7 +982,7 @@ static void pe_build_reloc(struct pe_info *pe)
     DWORD offset, block_ptr, addr;
     int count, i;
     Elf32_Rel *rel, *rel_end;
-    Section *s = NULL, *sr;
+    Section *sect = NULL, *sr;
 
     offset = addr = block_ptr = count = i = 0;
     rel = rel_end = NULL;
@@ -992,7 +992,7 @@ static void pe_build_reloc(struct pe_info *pe)
         if (rel < rel_end)
         {
             int type = ELF32_R_TYPE(rel->r_info);
-            addr = rel->r_offset + s->sh_addr;
+            addr = rel->r_offset + sect->sh_addr;
             rel++;
             if (type != R_386_32)
                 continue;
@@ -1015,13 +1015,13 @@ static void pe_build_reloc(struct pe_info *pe)
         }
         else
         {
-            if (s)
-                s = s->next;
-            if (!s && i < pe->sec_count)
-                s = pe->sec_info[i++].first;
-            if (s)
+            if (sect)
+                sect = sect->next;
+            if (!sect && i < pe->sec_count)
+                sect = pe->sec_info[i++].first;
+            if (sect)
             {
-                sr = s->reloc;
+                sr = sect->reloc;
                 if (sr)
                 {
                     rel = (Elf32_Rel *)sr->data;
@@ -1061,7 +1061,7 @@ static int pe_assign_addresses(struct pe_info *pe)
     struct section_info *si;
     struct section_info *merged_text;
     struct section_info *merged_data;
-    Section *s;
+    Section *sect;
 
     // pe->thunk = new_section(pe->s1, ".iedat", SHT_PROGBITS, SHF_ALLOC);
     section_order = cc_malloc(pe->s1->nb_sections * sizeof(int));
@@ -1069,10 +1069,10 @@ static int pe_assign_addresses(struct pe_info *pe)
     {
         for (i = 1; i < pe->s1->nb_sections; ++i)
         {
-            s = pe->s1->sections[i];
-            if (k == pe_section_class(s))
+            sect = pe->s1->sections[i];
+            if (k == pe_section_class(sect))
             {
-                s->sh_addr = pe->imagebase;
+                sect->sh_addr = pe->imagebase;
                 section_order[o++] = i;
             }
         }
@@ -1086,8 +1086,8 @@ static int pe_assign_addresses(struct pe_info *pe)
     for (i = 0; i < o; ++i)
     {
         k = section_order[i];
-        s = pe->s1->sections[k];
-        c = pe_section_class(s);
+        sect = pe->s1->sections[k];
+        c = pe_section_class(sect);
         si = &pe->sec_info[pe->sec_count];
 
 #ifdef PE_MERGE_DATA
@@ -1098,27 +1098,27 @@ static int pe_assign_addresses(struct pe_info *pe)
         if (c == sec_bss && merged_data != NULL)
         {
             // Append .bss to .data
-            s->sh_addr = addr = ((addr - 1) | 15) + 1;
-            addr += s->data_offset;
+            sect->sh_addr = addr = ((addr - 1) | 15) + 1;
+            addr += sect->data_offset;
             merged_data->sh_size = addr - merged_data->sh_addr;
-            merged_data->last->next = s;
-            merged_data->last = s;
+            merged_data->last->next = sect;
+            merged_data->last = sect;
             continue;
         }
 #endif
 
         if (c == sec_text)
         {
-            if (s->unused)
+            if (sect->unused)
                 continue;
             if (merged_text)
             {
-                merged_text->sh_size = align(merged_text->sh_size, s->sh_addralign);
-                s->sh_addr = merged_text->sh_addr + merged_text->sh_size;
-                merged_text->sh_size += s->data_offset;
+                merged_text->sh_size = align(merged_text->sh_size, sect->sh_addralign);
+                sect->sh_addr = merged_text->sh_addr + merged_text->sh_size;
+                merged_text->sh_size += sect->data_offset;
                 addr = merged_text->sh_addr + merged_text->sh_size;
-                merged_text->last->next = s;
-                merged_text->last = s;
+                merged_text->last->next = sect;
+                merged_text->last = sect;
                 continue;
             }
             else
@@ -1127,19 +1127,19 @@ static int pe_assign_addresses(struct pe_info *pe)
             }
         }
 
-        strcpy(si->name, c == sec_text ? ".text" : s->name);
+        strcpy(si->name, c == sec_text ? ".text" : sect->name);
         si->cls = c;
         si->ord = k;
-        si->sh_addr = s->sh_addr = addr = pe_virtual_align(addr);
-        si->sh_flags = s->sh_flags;
-        si->first = si->last = s;
+        si->sh_addr = sect->sh_addr = addr = pe_virtual_align(addr);
+        si->sh_flags = sect->sh_flags;
+        si->first = si->last = sect;
 
         if (c == sec_data && pe->thunk == NULL)
         {
-            pe->thunk = s;
+            pe->thunk = sect;
         }
 
-        if (s == pe->thunk)
+        if (sect == pe->thunk)
         {
             pe_build_imports(pe);
             pe_build_exports(pe);
@@ -1150,10 +1150,10 @@ static int pe_assign_addresses(struct pe_info *pe)
             pe_build_reloc(pe);
         }
 
-        if (s->data_offset)
+        if (sect->data_offset)
         {
-            si->sh_size = s->data_offset;
-            addr += s->data_offset;
+            si->sh_size = sect->data_offset;
+            addr += sect->data_offset;
             pe->sec_count++;
         }
     }
@@ -1267,7 +1267,7 @@ static int pe_check_symbols(struct pe_info *pe)
 
 static void pe_eliminate_unused_sections(struct pe_info *pe)
 {
-    Section *s, *sr;
+    Section *sect, *sr;
     Elf32_Sym *sym;
     Elf32_Rel *rel, *rel_end;
     int i, again, sym_index, sym_end;
@@ -1275,12 +1275,12 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
     // First mark all function text sections as unused.
     for (i = 1; i < pe->s1->nb_sections; ++i)
     {
-        s = pe->s1->sections[i];
-        if (s->sh_type == SHT_PROGBITS &&
-            (s->sh_flags & SHF_EXECINSTR) &&
-            strcmp(s->name, ".text") != 0)
+        sect = pe->s1->sections[i];
+        if (sect->sh_type == SHT_PROGBITS &&
+            (sect->sh_flags & SHF_EXECINSTR) &&
+            strcmp(sect->name, ".text") != 0)
         {
-            s->unused = 1;
+            sect->unused = 1;
         }
     }
 
@@ -1291,10 +1291,10 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
         sym = (Elf32_Sym *)symtab_section->data + sym_index;
         if (sym->st_other & 1)
         {
-            s = pe->s1->sections[sym->st_shndx];
-            s->unused = 0;
+            sect = pe->s1->sections[sym->st_shndx];
+            sect->unused = 0;
             if (verbose == 3)
-                printf("export section %s used\n", s->name);
+                printf("export section %s used\n", sect->name);
         }
         if (sym->st_shndx == SHN_UNDEF)
             sym->st_other |= 4;
@@ -1302,11 +1302,11 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
 
     // Mark section for entry point as used.
     sym = &((Elf32_Sym *)symtab_section->data)[pe->start_sym_index];
-    s = pe->s1->sections[sym->st_shndx];
-    s->unused = 0;
+    sect = pe->s1->sections[sym->st_shndx];
+    sect->unused = 0;
     sym->st_other &= ~4;
     if (verbose == 3)
-        printf("entry section %s used\n", s->name);
+        printf("entry section %s used\n", sect->name);
 
     // Keep marking sections until no more can be added.
     do
@@ -1314,11 +1314,11 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
         again = 0;
         for (i = 1; i < pe->s1->nb_sections; ++i)
         {
-            s = pe->s1->sections[i];
-            if (s->unused)
+            sect = pe->s1->sections[i];
+            if (sect->unused)
                 continue;
 
-            sr = s->reloc;
+            sr = sect->reloc;
             if (!sr)
                 continue;
 
@@ -1330,13 +1330,13 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
                 sym = &((Elf32_Sym *)symtab_section->data)[sym_index];
                 if (sym->st_shndx != SHN_UNDEF)
                 {
-                    s = pe->s1->sections[sym->st_shndx];
-                    if (s->unused)
+                    sect = pe->s1->sections[sym->st_shndx];
+                    if (sect->unused)
                     {
-                        s->unused = 0;
+                        sect->unused = 0;
                         again = 1;
                         if (verbose == 3)
-                            printf("section %s used\n", s->name);
+                            printf("section %s used\n", sect->name);
                     }
                 }
                 rel++;
@@ -1347,9 +1347,9 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
     // Find all used symbols.
     for (i = 1; i < pe->s1->nb_sections; ++i)
     {
-        s = pe->s1->sections[i];
-        sr = s->reloc;
-        if (!sr || s->unused)
+        sect = pe->s1->sections[i];
+        sr = sect->reloc;
+        if (!sr || sect->unused)
             continue;
         rel = (Elf32_Rel *)sr->data;
         rel_end = (Elf32_Rel *)(sr->data + sr->data_offset);
@@ -1384,11 +1384,11 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
         int unused_bytes = 0;
         for (i = 1; i < pe->s1->nb_sections; ++i)
         {
-            s = pe->s1->sections[i];
-            if (s->unused)
+            sect = pe->s1->sections[i];
+            if (sect->unused)
             {
-                printf("%s unused\n", s->name);
-                unused_bytes += s->data_offset;
+                printf("%s unused\n", sect->name);
+                unused_bytes += sect->data_offset;
             }
         }
         if (unused_bytes > 0)
@@ -1562,7 +1562,7 @@ static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
 
 static void pe_print_sections(CCState *s1, const char *fname)
 {
-    Section *s;
+    Section *sect;
     FILE *f;
     int i;
     char errbuf[256];
@@ -1582,8 +1582,8 @@ static void pe_print_sections(CCState *s1, const char *fname)
 
     for (i = 1; i < s1->nb_sections; ++i)
     {
-        s = s1->sections[i];
-        pe_print_section(f, s);
+        sect = s1->sections[i];
+        pe_print_section(f, sect);
     }
     pe_print_section(f, s1->dynsymtab_section);
     fclose(f);
