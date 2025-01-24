@@ -1520,14 +1520,6 @@ static void pe_print_section(FILE *f, Section *s)
     fprintf(f, "\n\n");
 }
 
-static int is_valid_path_char(char c)
-{
-    return (c >= 'a' && c <= 'z') ||
-           (c >= 'A' && c <= 'Z') ||
-           (c >= '0' && c <= '9') ||
-           c == '.' || c == '_' || c == '-';
-}
-
 static int is_safe_path(const char *path)
 {
     const char *p;
@@ -1552,7 +1544,7 @@ static int is_safe_path(const char *path)
     // Check for spaces and other potentially unsafe chars
     for (p = path; *p; p++)
     {
-        if (!is_valid_path_char(*p))
+        if (!isalnum(*p) && *p != '.' && *p != '_' && *p != '-')
             return 0;
     }
 
