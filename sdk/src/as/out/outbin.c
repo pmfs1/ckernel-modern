@@ -47,6 +47,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include <unistd.h>
 
 #include "as.h"
 #include "aslib.h"

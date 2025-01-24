@@ -12,6 +12,7 @@
 #include <inttypes.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include "as.h"
 #include "aslib.h"

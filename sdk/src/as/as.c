@@ -12,6 +12,7 @@
 #include <inttypes.h>
 #include <limits.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "as.h"
 #include "aslib.h"
