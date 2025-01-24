@@ -24,10 +24,10 @@ jobs:
       shell: bash
       run: |
         make cdrom
-    - name: 'BUILD (FLOPPY)'
-      shell: bash
-      run: |
-        make floppy
+    # - name: 'BUILD (FLOPPY)'
+    #   shell: bash
+    #   run: |
+    #     make floppy
     - name: 'BUILD (VMDK)'
       shell: bash
       run: |

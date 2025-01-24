@@ -766,10 +766,10 @@ bin/img/krlean.vmdk: krlean
 	mv db $(PKGDIR)
 	$(MKDFS) -v -d bin/img/krlean.vmdk -t vmdk -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 200M -i -f -S bin/install -T /
 
-floppy: bin/img/krlean.flp
+# floppy: bin/img/krlean.flp
 
-bin/img/krlean.flp: krlean
-	$(MKDFS) -v -d bin/img/krlean.flp -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 1440 -i -f -S bin/install -F floppy.lst
+# bin/img/krlean.flp: krlean
+# 	$(MKDFS) -v -d bin/img/krlean.flp -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 1440 -i -f -S bin/install -F floppy.lst
 
 cdrom: bin/img/krlean.iso
 
