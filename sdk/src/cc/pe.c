@@ -564,6 +564,7 @@ static int pe_write(struct pe_info *pe)
     int stub_size;
     DWORD file_offset, r;
     Section *s;
+    size_t dos_header_size = sizeof(IMAGE_DOS_HEADER);
 
     if (pe->stub)
     {
@@ -591,10 +592,10 @@ static int pe_write(struct pe_info *pe)
     }
     else
     {
-        stub_size = DOSSTUB_SIZE + sizeof(IMAGE_DOS_HEADER);
+        stub_size = DOSSTUB_SIZE + dos_header_size;
         stub = cc_malloc(stub_size);
-        memcpy(stub, &pe_doshdr, sizeof(IMAGE_DOS_HEADER));
-        memcpy(stub + sizeof(IMAGE_DOS_HEADER), pe_dosstub, DOSSTUB_SIZE);
+        memcpy(stub, &pe_doshdr, dos_header_size);
+        memcpy(stub + dos_header_size, pe_dosstub, DOSSTUB_SIZE);
     }
     ((PIMAGE_DOS_HEADER)stub)->e_lfanew = stub_size;
 
@@ -1649,27 +1650,31 @@ static char *trimfront(char *p)
 
 static char *trimback(char *a, char *e)
 {
-    // Safety check to ensure e is not before a
+    // Safety check to ensure e is not before a 
     if (!e || e < a)
         e = a;
 
+    // Prevent underflow by checking lower bound
     while (e > a && (unsigned char)e[-1] <= ' ')
         --e;
-    *e = 0;
+    *e = 0; 
     return a;
 }
 
 static char *get_line(char *line, int size, FILE *fp)
 {
-    char *p;
+    if (!line || size <= 0) return NULL;
 
     if (fgets(line, size, fp) == NULL)
         return NULL;
 
-    // Find end of string or end of buffer
-    p = strchr(line, 0);
-    if (!p)
-        p = line + size - 1;
+    // Find end of string safely within buffer bounds
+    char *p = line;
+    int remaining = size;
+    while (--remaining > 0 && *p) p++;
+
+    // p now points to null terminator or end of buffer
+    if (remaining <= 0) p = line + size - 1;
 
     trimback(line, p);
     return trimfront(line);
