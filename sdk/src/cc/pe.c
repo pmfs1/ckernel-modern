@@ -928,34 +928,26 @@ static void pe_build_exports(struct pe_info *pe)
 
     if (pe->def != NULL)
     {
-        // Validate the def file name
-        if (strstr(pe->def, "..") || strchr(pe->def, '/') || strchr(pe->def, '\\'))
+        // Write exports to .def file
+        int fd = open(pe->def, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
+        if (fd < 0)
         {
-            error_noabort("invalid def file name: '%s'", pe->def);
+            error_noabort("could not create '%s': %s", pe->def, strerror(errno));
         }
         else
         {
-            // Write exports to .def file
-            int fd = open(pe->def, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
-            if (fd < 0)
+            op = fdopen(fd, "w");
+            if (op == NULL)
             {
+                close(fd);
                 error_noabort("could not create '%s': %s", pe->def, strerror(errno));
             }
             else
             {
-                op = fdopen(fd, "w");
-                if (op == NULL)
+                fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
+                if (verbose)
                 {
-                    close(fd);
-                    error_noabort("could not create '%s': %s", pe->def, strerror(errno));
-                }
-                else
-                {
-                    fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
-                    if (verbose)
-                    {
-                        printf("<- %s (%d symbols)\n", buf, sym_count);
-                    }
+                    printf("<- %s (%d symbols)\n", buf, sym_count);
                 }
             }
         }
@@ -1531,27 +1523,12 @@ static void pe_print_section(FILE *f, Section *s)
 
 static int is_valid_map_path(const char *path)
 {
-    const char *p;
-
     if (!path || !*path)
         return 0;
 
-    // Only allow paths without directory traversal
-    if (strchr(path, '/') || strchr(path, '\\'))
+    // Only check for path traversal attempts
+    if (strstr(path, ".."))
         return 0;
-
-    // Check for absolute paths
-    if (path[0] == '/' || path[0] == '\\')
-        return 0;
-    if (strlen(path) >= 2 && path[1] == ':')
-        return 0;
-
-    // Verify filename contains only safe chars
-    for (p = path; *p; p++)
-    {
-        if (!isalnum(*p) && *p != '.' && *p != '_' && *p != '-')
-            return 0;
-    }
 
     return 1;
 }
