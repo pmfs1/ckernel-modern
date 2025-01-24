@@ -155,7 +155,7 @@ static void no_pp_reset(char *, int, ListGen *, StrList **);
 
 static char *no_pp_getline(void);
 
-static void no_pp_cleanup(int pass __attribute__((unused)));
+static void no_pp_cleanup(int);
 
 static Preproc no_pp = {
     no_pp_reset,
@@ -1181,8 +1181,7 @@ static void process_response_file(const char *file)
     fclose(f);
 }
 
-static bool has_path_traversal(const char *str)
-{
+static bool has_path_traversal(const char *str) {
     if (!str)
         return false;
     // Basic check for directory traversal patterns
@@ -1226,13 +1225,11 @@ static void parse_cmdline(int argc, char **argv)
              * different to the -@resp file processing below for regular
              * AS.
              */
-            if (has_path_traversal(argv[0] + 1))
-            {
+            if (has_path_traversal(argv[0] + 1)) {
                 fprintf(stderr, "Invalid response file path: %s\n", argv[0] + 1);
                 return;
             }
-            if (has_path_traversal(argv[0] + 1))
-            {
+            if (has_path_traversal(argv[0] + 1)) {
                 fprintf(stderr, "Invalid response file path: %s\n", argv[0] + 1);
                 return;
             }
@@ -2236,15 +2233,8 @@ static FILE *no_pp_fp;
 static ListGen *no_pp_list;
 static int32_t no_pp_lineinc;
 
-/**
- * Reset the non-preprocessing input
- * @param file Input file to process
- * @param pass Assembly pass number (unused)
- * @param listgen List generator
- * @param deplist Dependency list
- */
-static void no_pp_reset(char *file, int pass __attribute__((unused)),
-                        ListGen *listgen, StrList **deplist)
+static void no_pp_reset(char *file, int pass, ListGen *listgen,
+                        StrList **deplist)
 {
     src_set_fname(as_strdup(file));
     src_set_linnum(0);
@@ -2254,6 +2244,7 @@ static void no_pp_reset(char *file, int pass __attribute__((unused)),
         as_error(ERR_FATAL | ERR_NOFILE,
                  "unable to open input file `%s'", file);
     no_pp_list = listgen;
+    (void)pass; /* placate compilers */
 
     if (deplist)
     {
@@ -2329,12 +2320,9 @@ static char *no_pp_getline(void)
     return buffer;
 }
 
-/**
- * Clean up non-preprocessing input
- * @param pass Assembly pass number (unused)
- */
-static void no_pp_cleanup(int pass __attribute__((unused)))
+static void no_pp_cleanup(int pass)
 {
+    (void)pass; /* placate GCC */
     if (no_pp_fp)
     {
         fclose(no_pp_fp);
