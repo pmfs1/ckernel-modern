@@ -928,26 +928,34 @@ static void pe_build_exports(struct pe_info *pe)
 
     if (pe->def != NULL)
     {
-        // Write exports to .def file
-        int fd = open(pe->def, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
-        if (fd < 0)
+        // Validate the def file name
+        if (strstr(pe->def, "..") || strchr(pe->def, '/') || strchr(pe->def, '\\'))
         {
-            error_noabort("could not create '%s': %s", pe->def, strerror(errno));
+            error_noabort("invalid def file name: '%s'", pe->def);
         }
         else
         {
-            op = fdopen(fd, "w");
-            if (op == NULL)
+            // Write exports to .def file
+            int fd = open(pe->def, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
+            if (fd < 0)
             {
-                close(fd);
                 error_noabort("could not create '%s': %s", pe->def, strerror(errno));
             }
             else
             {
-                fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
-                if (verbose)
+                op = fdopen(fd, "w");
+                if (op == NULL)
                 {
-                    printf("<- %s (%d symbols)\n", buf, sym_count);
+                    close(fd);
+                    error_noabort("could not create '%s': %s", pe->def, strerror(errno));
+                }
+                else
+                {
+                    fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
+                    if (verbose)
+                    {
+                        printf("<- %s (%d symbols)\n", buf, sym_count);
+                    }
                 }
             }
         }
