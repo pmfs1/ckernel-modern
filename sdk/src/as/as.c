@@ -13,6 +13,9 @@
 #include <limits.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include "as.h"
 #include "aslib.h"
@@ -28,8 +31,6 @@
 #include "labels.h"
 #include "out/outform.h"
 #include "listing.h"
-#include <sys/stat.h>
-#include <fcntl.h>
 
 /*
  * This is the maximum number of optimization passes to do.  If we ever

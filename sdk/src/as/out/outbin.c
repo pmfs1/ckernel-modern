@@ -48,6 +48,9 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include "as.h"
 #include "aslib.h"
@@ -57,8 +60,6 @@
 #include "eval.h"
 #include "out/outform.h"
 #include "out/outlib.h"
-#include <fcntl.h>
-#include <sys/stat.h>
 
 #ifdef OF_BIN
 

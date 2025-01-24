@@ -10,9 +10,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <inttypes.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 #include "as.h"
 #include "aslib.h"
