@@ -1564,7 +1564,9 @@ static void pe_print_sections(CCState *s1, const char *fname)
     Section *s;
     FILE *f;
     int i;
-    char safe_path[261];
+    char safe_path[PATH_MAX];
+    const char *baseDir = "/home/user/public/";
+    char *resolvedPath;
 
     // Early input validation
     if (!fname)
@@ -1577,14 +1579,23 @@ static void pe_print_sections(CCState *s1, const char *fname)
     strncpy(safe_path, fname, sizeof(safe_path) - 1);
     safe_path[sizeof(safe_path) - 1] = '\0';
 
-    // Validate the filename
-    if (!is_safe_path(safe_path))
+    // Resolve the absolute path
+    resolvedPath = realpath(safe_path, NULL);
+    if (resolvedPath == NULL)
     {
-        error_noabort("invalid map file path: must be a simple filename");
+        error_noabort("Error resolving path");
         return;
     }
 
-    int fd = open(safe_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
+    // Check if the resolved path starts with the base directory
+    if (strncmp(baseDir, resolvedPath, strlen(baseDir)) != 0)
+    {
+        free(resolvedPath);
+        error_noabort("invalid map file path: must be within the public directory");
+        return;
+    }
+
+    int fd = open(resolvedPath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
     if (fd < 0)
     {
         error_noabort("could not create map file '%s'", safe_path);
