@@ -482,14 +482,16 @@ static DWORD umax(DWORD a, DWORD b)
     return a < b ? b : a;
 }
 
-static void pe_fpad(FILE *fp, DWORD new_pos, char fill)
+static int pe_fpad(FILE *fp, DWORD new_pos, char fill)
 {
     DWORD pos = ftell(fp);
-    while (pos < new_pos)
-    {
-        fputc(fill, fp);
+    while (pos < new_pos) {
+        if (fputc(fill, fp) == EOF) {
+            return -1;
+        }
         pos++;
     }
+    return 0;
 }
 
 static DWORD align(DWORD n, DWORD a)
@@ -619,7 +621,10 @@ static int pe_write(struct pe_info *pe)
                           pe->sec_count * sizeof(IMAGE_SECTION_HEADER));
 
     file_offset = pe->sizeofheaders;
-    pe_fpad(op, file_offset, 0);
+    if (pe_fpad(op, file_offset, 0) < 0) {
+        error_noabort("error writing section padding");
+        return 1;
+    }
 
     if (verbose == 2)
     {
@@ -697,14 +702,20 @@ static int pe_write(struct pe_info *pe)
                 if (sect->sh_type != SHT_NOBITS)
                 {
                     file_offset = align(file_offset, sect->sh_addralign);
-                    pe_fpad(op, file_offset, si->cls == sec_text ? 0x90 : 0x00);
+                    if (pe_fpad(op, file_offset, si->cls == sec_text ? 0x90 : 0x00) < 0) {
+                        error_noabort("error writing section padding");
+                        return 1;
+                    }
                     fwrite(sect->data, 1, sect->data_offset, op);
                     file_offset += sect->data_offset;
                 }
             }
             file_offset = pe_file_align(pe, file_offset);
             psh->SizeOfRawData = file_offset - r;
-            pe_fpad(op, file_offset, 0);
+            if (pe_fpad(op, file_offset, 0) < 0) {
+                error_noabort("error writing section padding");
+                return 1;
+            }
         }
     }
 
@@ -1618,7 +1629,7 @@ int pe_test_res_file(void *v, int size)
 
 static int read_n(int fd, void *ptr, unsigned size)
 {
-    return read(fd, ptr, size) == size;
+    return read(fd, ptr, siz ptr,e) == size;
 }
 
 int pe_load_res_file(CCState *s1, int fd)
