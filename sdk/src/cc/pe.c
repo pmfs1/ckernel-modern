@@ -1401,27 +1401,29 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
     }
 }
 
-static void pe_print_section(FILE *f, Section *s)
-{
+static int pe_print_section(FILE *f, Section *s) {
     BYTE *data_ptr, *e, b; 
     int i, n, l, m;
+    
+    if (!f || !s) return -1;
+
     data_ptr = s->data;
     e = s->data + s->data_offset;
     l = (e > data_ptr) ? (int)(e - data_ptr) : 0;
 
-    fprintf(f, "section  \"%s\"", s->name);
+    if (fprintf(f, "section  \"%s\"", s->name) < 0) return -1;
     if (s->link)
-        fprintf(f, "\nlink     \"%s\"", s->link->name);
+        if (fprintf(f, "\nlink     \"%s\"", s->link->name) < 0) return -1;
     if (s->reloc)
-        fprintf(f, "\nreloc    \"%s\"", s->reloc->name);
-    fprintf(f, "\nv_addr   %08X", s->sh_addr);
-    fprintf(f, "\ncontents %08X", l);
-    fprintf(f, "\n\n");
+        if (fprintf(f, "\nreloc    \"%s\"", s->reloc->name) < 0) return -1;
+    if (fprintf(f, "\nv_addr   %08X", s->sh_addr) < 0) return -1;
+    if (fprintf(f, "\ncontents %08X", l) < 0) return -1;
+    if (fprintf(f, "\n\n") < 0) return -1;
 
     if (s->sh_type == SHT_NOBITS)
-        return;
+        return 0;
     if (l == 0)
-        return;
+        return 0;
 
     if (s->sh_type == SHT_SYMTAB)
     {
@@ -1436,9 +1438,9 @@ static void pe_print_section(FILE *f, Section *s)
         m = 16;
     }
 
-    fprintf(f, "%-8s", "offset");
+    if (fprintf(f, "%-8s", "offset") < 0) return -1;
     for (i = 0; i < m; ++i)
-        fprintf(f, " %02x", i);
+        if (fprintf(f, " %02x", i) < 0) return -1;
     n = 56;
 
     if (s->sh_type == SHT_SYMTAB || s->sh_type == SHT_REL)
@@ -1459,27 +1461,27 @@ static void pe_print_section(FILE *f, Section *s)
         }
 
         for (i = 0; field_names[i]; ++i) // Use renamed variable
-            fprintf(f, "%s", field_names[i]);
-        fprintf(f, "  symbol");
+            if (fprintf(f, "%s", field_names[i]) < 0) return -1;
+        if (fprintf(f, "  symbol") < 0) return -1;
     }
 
-    fprintf(f, "\n");
+    if (fprintf(f, "\n") < 0) return -1;
     for (i = 0; i < n; ++i)
-        fprintf(f, "-");
-    fprintf(f, "\n");
+        if (fprintf(f, "-") < 0) return -1;
+    if (fprintf(f, "\n") < 0) return -1;
 
     for (i = 0; i < l;)
     {
-        fprintf(f, "%08X", i);
+        if (fprintf(f, "%08X", i) < 0) return -1;
         for (n = 0; n < m; ++n)
         {
             if (n + i < l)
             {
-                fprintf(f, " %02X", data_ptr[i + n]); // Use renamed variable
+                if (fprintf(f, " %02X", data_ptr[i + n]) < 0) return -1; // Use renamed variable
             }
             else
             {
-                fprintf(f, "   ");
+                if (fprintf(f, "   ") < 0) return -1;
             }
         }
 
@@ -1487,27 +1489,27 @@ static void pe_print_section(FILE *f, Section *s)
         {
             Elf32_Sym *sym = (Elf32_Sym *)(data_ptr + i); // Use renamed variable
             const char *name = s->link->data + sym->st_name;
-            fprintf(f, "  %04X  %08X  %04X   %02X    %02X    %02X   %04X  \"%s\"",
+            if (fprintf(f, "  %04X  %08X  %04X   %02X    %02X    %02X   %04X  \"%s\"",
                     sym->st_name,
                     sym->st_value,
                     sym->st_size,
                     ELF32_ST_BIND(sym->st_info),
                     ELF32_ST_TYPE(sym->st_info),
-                    sym->st_other, sym->st_shndx, name);
+                    sym->st_other, sym->st_shndx, name) < 0) return -1;
         }
         else if (s->sh_type == SHT_REL)
         {
             Elf32_Rel *rel = (Elf32_Rel *)(data_ptr + i); // Use renamed variable
             Elf32_Sym *sym = (Elf32_Sym *)s->link->data + ELF32_R_SYM(rel->r_info);
             const char *name = s->link->link->data + sym->st_name;
-            fprintf(f, "  %04X   %02X   %04X  \"%s\"",
+            if (fprintf(f, "  %04X   %02X   %04X  \"%s\"",
                     rel->r_offset,
                     ELF32_R_TYPE(rel->r_info),
-                    ELF32_R_SYM(rel->r_info), name);
+                    ELF32_R_SYM(rel->r_info), name) < 0) return -1;
         }
         else
         {
-            fprintf(f, "   ");
+            if (fprintf(f, "   ") < 0) return -1;
             for (n = 0; n < m; ++n)
             {
                 if (n + i < l)
@@ -1515,14 +1517,15 @@ static void pe_print_section(FILE *f, Section *s)
                     b = data_ptr[i + n]; // Use renamed variable
                     if (b < 32 || b >= 127)
                         b = '.';
-                    fprintf(f, "%c", b);
+                    if (fprintf(f, "%c", b) < 0) return -1;
                 }
             }
         }
         i += m;
-        fprintf(f, "\n");
+        if (fprintf(f, "\n") < 0) return -1;
     }
-    fprintf(f, "\n\n");
+    if (fprintf(f, "\n\n") < 0) return -1;
+    return 0;
 }
 
 static int is_valid_map_path(const char *path)
@@ -1567,28 +1570,36 @@ static void pe_print_sections(CCState *s1, const char *fname)
 {
     Section *sect;
     FILE *f;
-    int i;
+    int i, ret;
     char errbuf[256];
 
-    if (!fname)
-    {
+    if (!fname) {
         error_noabort("map file name is NULL");
         return;
     }
 
     f = open_map_file(fname, errbuf, sizeof(errbuf));
-    if (!f)
-    {
+    if (!f) {
         error_noabort("%s", errbuf);
         return;
     }
 
-    for (i = 1; i < s1->nb_sections; ++i)
-    {
+    for (i = 1; i < s1->nb_sections; ++i) {
         sect = s1->sections[i];
-        pe_print_section(f, sect);
+        ret = pe_print_section(f, sect);
+        if (ret < 0) {
+            error_noabort("error writing section %d to map file", i);
+            goto error;
+        }
     }
-    pe_print_section(f, s1->dynsymtab_section);
+
+    ret = pe_print_section(f, s1->dynsymtab_section);
+    if (ret < 0) {
+        error_noabort("error writing dynsym section to map file");
+        goto error;
+    }
+
+error:
     fclose(f);
 }
 
