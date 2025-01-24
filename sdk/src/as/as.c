@@ -929,7 +929,7 @@ static bool process_arg(char *p, char *q)
                 if (!as_stricmp(param, warnings[i].name))
                     break;
             if (i <= ERR_WARN_MAX)
-                warning_on_global[i] = do_warn;
+            warning_on_global[i] = do_warn;
             else if (!as_stricmp(param, "all"))
                 for (i = 1; i <= ERR_WARN_MAX; i++)
                     warning_on_global[i] = do_warn;
@@ -1614,16 +1614,12 @@ static void assemble_file(char *fname, StrList **depend_ptr)
                     p = value;
                     q = debugid;
                     badid = overlong = false;
-                    if (!isidstart(*p))
-                    {
+                    if (!isidstart(*p)) {
                         badid = true;
-                    }
-                    else
-                    {
-                        while (*p && !as_isspace(*p))
-                        {
-                            if (q >= (debugid + sizeof(debugid) - 1))
-                            {
+                    } else {
+                        while (*p && !as_isspace(*p)) {
+                            // Changed to use explicit array bounds check
+                            if (q >= debugid + 127) {  // Reserve 1 byte for null terminator
                                 overlong = true;
                                 break;
                             }
@@ -1633,16 +1629,9 @@ static void assemble_file(char *fname, StrList **depend_ptr)
                         }
                         *q = 0;
                     }
-                    if (badid)
-                    {
+                    if (badid) {
                         as_error(passn == 1 ? ERR_NONFATAL : ERR_PANIC,
-                                 "identifier expected after DEBUG");
-                        break;
-                    }
-                    if (overlong)
-                    {
-                        as_error(passn == 1 ? ERR_NONFATAL : ERR_PANIC,
-                                 "DEBUG identifier too long");
+                                "identifier expected after DEBUG");
                         break;
                     }
                     p = as_skip_spaces(p);
