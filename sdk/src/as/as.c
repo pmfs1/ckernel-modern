@@ -1619,7 +1619,7 @@ static void assemble_file(char *fname, StrList **depend_ptr)
                     {
                         while (*p && !as_isspace(*p))
                         {
-                            if (q >= debugid + sizeof debugid - 1)
+                            if (q >= (debugid + sizeof(debugid) - 1))
                             {
                                 overlong = true;
                                 break;
