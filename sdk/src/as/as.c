@@ -155,7 +155,7 @@ static void no_pp_reset(char *, int, ListGen *, StrList **);
 
 static char *no_pp_getline(void);
 
-static void no_pp_cleanup(int);
+static void no_pp_cleanup(int pass __attribute__((unused)));
 
 static Preproc no_pp = {
     no_pp_reset,
@@ -929,7 +929,7 @@ static bool process_arg(char *p, char *q)
                 if (!as_stricmp(param, warnings[i].name))
                     break;
             if (i <= ERR_WARN_MAX)
-            warning_on_global[i] = do_warn;
+                warning_on_global[i] = do_warn;
             else if (!as_stricmp(param, "all"))
                 for (i = 1; i <= ERR_WARN_MAX; i++)
                     warning_on_global[i] = do_warn;
@@ -1181,7 +1181,8 @@ static void process_response_file(const char *file)
     fclose(f);
 }
 
-static bool has_path_traversal(const char *str) {
+static bool has_path_traversal(const char *str)
+{
     if (!str)
         return false;
     // Basic check for directory traversal patterns
@@ -1225,11 +1226,13 @@ static void parse_cmdline(int argc, char **argv)
              * different to the -@resp file processing below for regular
              * AS.
              */
-            if (has_path_traversal(argv[0] + 1)) {
+            if (has_path_traversal(argv[0] + 1))
+            {
                 fprintf(stderr, "Invalid response file path: %s\n", argv[0] + 1);
                 return;
             }
-            if (has_path_traversal(argv[0] + 1)) {
+            if (has_path_traversal(argv[0] + 1))
+            {
                 fprintf(stderr, "Invalid response file path: %s\n", argv[0] + 1);
                 return;
             }
@@ -2244,8 +2247,15 @@ static FILE *no_pp_fp;
 static ListGen *no_pp_list;
 static int32_t no_pp_lineinc;
 
-static void no_pp_reset(char *file, int pass, ListGen *listgen,
-                        StrList **deplist)
+/**
+ * Reset the non-preprocessing input
+ * @param file Input file to process
+ * @param pass Assembly pass number (unused)
+ * @param listgen List generator
+ * @param deplist Dependency list
+ */
+static void no_pp_reset(char *file, int pass __attribute__((unused)),
+                        ListGen *listgen, StrList **deplist)
 {
     src_set_fname(as_strdup(file));
     src_set_linnum(0);
@@ -2255,7 +2265,6 @@ static void no_pp_reset(char *file, int pass, ListGen *listgen,
         as_error(ERR_FATAL | ERR_NOFILE,
                  "unable to open input file `%s'", file);
     no_pp_list = listgen;
-    (void)pass; /* placate compilers */
 
     if (deplist)
     {
@@ -2331,9 +2340,12 @@ static char *no_pp_getline(void)
     return buffer;
 }
 
-static void no_pp_cleanup(int pass)
+/**
+ * Clean up non-preprocessing input
+ * @param pass Assembly pass number (unused)
+ */
+static void no_pp_cleanup(int pass __attribute__((unused)))
 {
-    (void)pass; /* placate GCC */
     if (no_pp_fp)
     {
         fclose(no_pp_fp);
