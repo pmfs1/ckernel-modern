@@ -485,7 +485,8 @@ static DWORD umax(DWORD a, DWORD b)
 static void pe_fpad(FILE *fp, DWORD new_pos, char fill)
 {
     DWORD pos = ftell(fp);
-    while (pos < new_pos) {
+    while (pos < new_pos)
+    {
         fputc(fill, fp);
         pos++;
     }
@@ -508,9 +509,9 @@ static DWORD pe_virtual_align(DWORD n)
 
 static void pe_align_section(Section *s, int a)
 {
-    int i = s->data_offset & (a - 1);
-    if (i)
-        section_ptr_add(s, a - i);
+    int padding = ((a - (s->data_offset & (a - 1))) & (a - 1));
+    if (padding)
+        section_ptr_add(s, padding);
 }
 
 static void pe_set_datadir(int dir, DWORD addr, DWORD size)
@@ -1402,11 +1403,11 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
 
 static void pe_print_section(FILE *f, Section *s)
 {
-    BYTE *data_ptr, *e, b;  // Changed p to data_ptr
+    BYTE *data_ptr, *e, b; // Changed p to data_ptr
     int i, n, l, m;
-    data_ptr = s->data;     // Use renamed variable
+    data_ptr = s->data; // Use renamed variable
     e = s->data + s->data_offset;
-    l = e - data_ptr;       // Use renamed variable
+    l = e - data_ptr; // Use renamed variable
 
     fprintf(f, "section  \"%s\"", s->name);
     if (s->link)
@@ -1444,20 +1445,20 @@ static void pe_print_section(FILE *f, Section *s)
     {
         static const char *fields1[] = {"  name", "     value", "  size", "  bind", "  type", " other", " shndx", NULL};
         static const char *fields2[] = {"  offs", "  type", "  symb", NULL};
-        const char **field_names;   // Changed p to field_names
+        const char **field_names; // Changed p to field_names
 
         if (s->sh_type == SHT_SYMTAB)
         {
-            field_names = fields1;  // Use renamed variable
+            field_names = fields1; // Use renamed variable
             n = 110;
         }
         else
         {
-            field_names = fields2;  // Use renamed variable
+            field_names = fields2; // Use renamed variable
             n = 58;
         }
 
-        for (i = 0; field_names[i]; ++i)  // Use renamed variable
+        for (i = 0; field_names[i]; ++i) // Use renamed variable
             fprintf(f, "%s", field_names[i]);
         fprintf(f, "  symbol");
     }
@@ -1474,7 +1475,7 @@ static void pe_print_section(FILE *f, Section *s)
         {
             if (n + i < l)
             {
-                fprintf(f, " %02X", data_ptr[i + n]);  // Use renamed variable
+                fprintf(f, " %02X", data_ptr[i + n]); // Use renamed variable
             }
             else
             {
@@ -1484,7 +1485,7 @@ static void pe_print_section(FILE *f, Section *s)
 
         if (s->sh_type == SHT_SYMTAB)
         {
-            Elf32_Sym *sym = (Elf32_Sym *)(data_ptr + i);  // Use renamed variable
+            Elf32_Sym *sym = (Elf32_Sym *)(data_ptr + i); // Use renamed variable
             const char *name = s->link->data + sym->st_name;
             fprintf(f, "  %04X  %08X  %04X   %02X    %02X    %02X   %04X  \"%s\"",
                     sym->st_name,
@@ -1496,7 +1497,7 @@ static void pe_print_section(FILE *f, Section *s)
         }
         else if (s->sh_type == SHT_REL)
         {
-            Elf32_Rel *rel = (Elf32_Rel *)(data_ptr + i);  // Use renamed variable
+            Elf32_Rel *rel = (Elf32_Rel *)(data_ptr + i); // Use renamed variable
             Elf32_Sym *sym = (Elf32_Sym *)s->link->data + ELF32_R_SYM(rel->r_info);
             const char *name = s->link->link->data + sym->st_name;
             fprintf(f, "  %04X   %02X   %04X  \"%s\"",
@@ -1511,7 +1512,7 @@ static void pe_print_section(FILE *f, Section *s)
             {
                 if (n + i < l)
                 {
-                    b = data_ptr[i + n];  // Use renamed variable
+                    b = data_ptr[i + n]; // Use renamed variable
                     if (b < 32 || b >= 127)
                         b = '.';
                     fprintf(f, "%c", b);
@@ -1652,20 +1653,21 @@ static char *trimfront(char *p)
 
 static char *trimback(char *a, char *e)
 {
-    // Safety check to ensure e is not before a 
+    // Safety check to ensure e is not before a
     if (!e || e < a)
         e = a;
 
     // Prevent underflow by checking lower bound
     while (e > a && (unsigned char)e[-1] <= ' ')
         --e;
-    *e = 0; 
+    *e = 0;
     return a;
 }
 
 static char *get_line(char *line, int size, FILE *fp)
 {
-    if (!line || size <= 0) return NULL;
+    if (!line || size <= 0)
+        return NULL;
 
     if (fgets(line, size, fp) == NULL)
         return NULL;
@@ -1673,10 +1675,12 @@ static char *get_line(char *line, int size, FILE *fp)
     // Find end of string safely within buffer bounds
     char *p = line;
     int remaining = size;
-    while (--remaining > 0 && *p) p++;
+    while (--remaining > 0 && *p)
+        p++;
 
     // p now points to null terminator or end of buffer
-    if (remaining <= 0) p = line + size - 1;
+    if (remaining <= 0)
+        p = line + size - 1;
 
     trimback(line, p);
     return trimfront(line);
