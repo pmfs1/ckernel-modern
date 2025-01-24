@@ -809,10 +809,10 @@ static void pe_build_imports(struct pe_info *pe)
         struct pe_import_header *hdr;
         int k, n, v;
         struct pe_import_info *p = pe->imp_info[i];
-        const char *name = pe->s1->loaded_dlls[p->dll_index - 1]->name;
+        const char *dll_name = pe->s1->loaded_dlls[p->dll_index - 1]->name;
 
         // Put the DLL name into the import header
-        v = put_elf_str(pe->thunk, name);
+        v = put_elf_str(pe->thunk, dll_name);
 
         hdr = (struct pe_import_header *)(pe->thunk->data + dll_ptr);
         hdr->first_thunk = thk_ptr + rva_base;
@@ -827,13 +827,13 @@ static void pe_build_imports(struct pe_info *pe)
                 int sym_index = p->symbols[k]->sym_index;
                 Elf32_Sym *imp_sym = (Elf32_Sym *)pe->s1->dynsymtab_section->data + sym_index;
                 Elf32_Sym *org_sym = (Elf32_Sym *)symtab_section->data + iat_index;
-                const char *name = pe->s1->dynsymtab_section->link->data + imp_sym->st_name;
+                const char *sym_name = pe->s1->dynsymtab_section->link->data + imp_sym->st_name;
 
                 org_sym->st_value = thk_ptr;
                 org_sym->st_shndx = pe->thunk->sh_num;
                 v = pe->thunk->data_offset + rva_base;
                 *(WORD *)section_ptr_add(pe->thunk, sizeof(WORD)) = imp_sym->st_other; // Hint
-                put_elf_str(pe->thunk, name);
+                put_elf_str(pe->thunk, sym_name);
             }
             else
             {
