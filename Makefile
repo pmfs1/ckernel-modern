@@ -764,17 +764,17 @@ vmdk: bin/img/krlean.vmdk
 bin/img/krlean.vmdk: krlean
 	$(MKPKG) bin/install - $(PKGDIR)/*.inf
 	mv db $(PKGDIR)
-	$(MKDFS) -d bin/img/krlean.vmdk -t vmdk -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 200M -i -f -S bin/install -T /
+	$(MKDFS) -v -d bin/img/krlean.vmdk -t vmdk -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 200M -i -f -S bin/install -T /
 
 floppy: bin/img/krlean.flp
 
 bin/img/krlean.flp: krlean
-	$(MKDFS) -d bin/img/krlean.flp -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 1440 -i -f -S bin/install -F floppy.lst
+	$(MKDFS) -v -d bin/img/krlean.flp -b bin/install/boot/boot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 1440 -i -f -S bin/install -F floppy.lst
 
 cdrom: bin/img/krlean.iso
 
 bin/img/krlean.iso: krlean
-	$(MKDFS) -d bin/install/BOOTIMG.BIN -b bin/install/boot/cdemboot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 512 -C 1440 -I 8192 -i -f -K rootdev=cd0,rootfs=cdfs
+	$(MKDFS) -v -d bin/install/BOOTIMG.BIN -b bin/install/boot/cdemboot -l bin/install/boot/osldr.dll -k bin/install/boot/krnl.dll -c 512 -C 1440 -I 8192 -i -f -K rootdev=cd0,rootfs=cdfs
 	genisoimage -J -f -c BOOTCAT.BIN -b BOOTIMG.BIN -o bin/img/krlean.iso bin/install
 	rm bin/install/BOOTIMG.BIN
 
