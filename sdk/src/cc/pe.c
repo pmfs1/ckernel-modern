@@ -1593,10 +1593,12 @@ static void pe_print_sections(CCState *s1, const char *fname)
         }
     }
 
-    ret = pe_print_section(f, s1->dynsymtab_section);
-    if (ret < 0) {
-        error_noabort("error writing dynsym section to map file");
-        goto error;
+    if (s1->dynsymtab_section) {
+        ret = pe_print_section(f, s1->dynsymtab_section);
+        if (ret < 0) {
+            error_noabort("error writing dynsym section to map file");
+            goto error;
+        }
     }
 
 error:
