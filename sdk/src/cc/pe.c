@@ -1523,13 +1523,27 @@ static void pe_print_section(FILE *f, Section *s)
 
 static int is_valid_map_path(const char *path)
 {
+    const char *p;
+
     if (!path || !*path)
         return 0;
 
-    // Only check for path traversal attempts
-    if (strstr(path, ".."))
+    // Only allow paths without directory traversal
+    if (strchr(path, '/') || strchr(path, '\\'))
         return 0;
 
+    // Check for absolute paths
+    if (path[0] == '/' || path[0] == '\\')
+        return 0;
+    if (strlen(path) >= 2 && path[1] == ':')
+        return 0;
+
+    // Verify filename contains only safe chars
+    for (p = path; *p; p++)
+    {
+        if (!isalnum(*p) && *p != '.' && *p != '_' && *p != '-')
+            return 0;
+    }
     return 1;
 }
 
