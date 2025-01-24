@@ -1544,7 +1544,6 @@ static int is_valid_map_path(const char *path)
         if (!isalnum(*p) && *p != '.' && *p != '_' && *p != '-')
             return 0;
     }
-
     return 1;
 }
 
