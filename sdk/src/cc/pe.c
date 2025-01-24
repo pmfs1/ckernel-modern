@@ -485,8 +485,10 @@ static DWORD umax(DWORD a, DWORD b)
 static void pe_fpad(FILE *fp, DWORD new_pos, char fill)
 {
     DWORD pos = ftell(fp);
-    while (++pos <= new_pos)
+    while (pos < new_pos) {
         fputc(fill, fp);
+        pos++;
+    }
 }
 
 static DWORD align(DWORD n, DWORD a)
