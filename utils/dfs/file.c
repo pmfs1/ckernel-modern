@@ -414,7 +414,7 @@ vfs_loff_t dfs_lseek(struct file *filp, vfs_loff_t offset, int origin)
         offset += filp->pos;
     }
 
-    if (offset < 0 || offset > inode->desc->size)
+    if (offset > inode->desc->size)
         return -1;
 
     filp->pos = offset;
@@ -429,7 +429,7 @@ int dfs_chsize(struct file *filp, vfs_loff_t size)
 
     inode = (struct inode *)filp->data;
 
-    if (size < 0 || size > inode->desc->size)
+    if (size > inode->desc->size)
         return -1;
 
     inode->desc->size = size;
