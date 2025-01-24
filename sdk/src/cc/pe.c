@@ -1,5 +1,7 @@
 #include "cc.h"
 #include <sys/stat.h>
+#include <stddef.h>
+#include <ctype.h>
 
 #define PE_MERGE_DATA
 
@@ -1283,7 +1285,7 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
 
     // Mark sections for exported functions as used
     sym_end = symtab_section->data_offset / sizeof(Elf32_Sym);
-    for (sym_index = 1; sym_index < sym_end; sym_index++)
+    for (sym_index = 1; sym_index < sym_end; ++sym_index)
     {
         sym = (Elf32_Sym *)symtab_section->data + sym_index;
         if (sym->st_other & 1)
@@ -1519,22 +1521,79 @@ static void pe_print_section(FILE *f, Section *s)
     fprintf(f, "\n\n");
 }
 
+static int is_valid_map_path(const char *path)
+{
+    const char *p;
+
+    if (!path || !*path)
+        return 0;
+
+    // Only allow paths without directory traversal
+    if (strchr(path, '/') || strchr(path, '\\'))
+        return 0;
+
+    // Check for absolute paths
+    if (path[0] == '/' || path[0] == '\\')
+        return 0;
+    if (strlen(path) >= 2 && path[1] == ':')
+        return 0;
+
+    // Verify filename contains only safe chars
+    for (p = path; *p; p++)
+    {
+        if (!isalnum(*p) && *p != '.' && *p != '_' && *p != '-')
+            return 0;
+    }
+
+    return 1;
+}
+
+static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
+{
+    if (!is_valid_map_path(fname))
+    {
+        snprintf(errbuf, errsize, "invalid map filename '%s'", fname);
+        return NULL;
+    }
+
+    int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
+    if (fd < 0)
+    {
+        snprintf(errbuf, errsize, "could not create '%s': %s", fname, strerror(errno));
+        return NULL;
+    }
+
+    FILE *f = fdopen(fd, "wb");
+    if (!f)
+    {
+        close(fd);
+        snprintf(errbuf, errsize, "could not open '%s' for writing", fname);
+        return NULL;
+    }
+
+    return f;
+}
+
 static void pe_print_sections(CCState *s1, const char *fname)
 {
     Section *s;
     FILE *f;
     int i;
-    int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-    if (fd < 0) {
-        // handle error
+    char errbuf[256];
+
+    if (!fname)
+    {
+        error_noabort("map file name is NULL");
         return;
     }
-    f = fdopen(fd, "wt");
-    if (f == NULL) {
-        close(fd);
-        // handle error
+
+    f = open_map_file(fname, errbuf, sizeof(errbuf));
+    if (!f)
+    {
+        error_noabort("%s", errbuf);
         return;
     }
+
     for (i = 1; i < s1->nb_sections; ++i)
     {
         s = s1->sections[i];
@@ -1605,6 +1664,10 @@ static char *trimfront(char *p)
 
 static char *trimback(char *a, char *e)
 {
+    // Safety check to ensure e is not before a
+    if (!e || e < a)
+        e = a;
+
     while (e > a && (unsigned char)e[-1] <= ' ')
         --e;
     *e = 0;
@@ -1613,9 +1676,17 @@ static char *trimback(char *a, char *e)
 
 static char *get_line(char *line, int size, FILE *fp)
 {
+    char *p;
+
     if (fgets(line, size, fp) == NULL)
         return NULL;
-    trimback(line, strchr(line, 0));
+
+    // Find end of string or end of buffer
+    p = strchr(line, 0);
+    if (!p)
+        p = line + size - 1;
+
+    trimback(line, p);
     return trimfront(line);
 }
 
@@ -1640,8 +1711,8 @@ int pe_load_def_file(CCState *s1, int fd)
         case 0:
             if (strncasecmp(p, "LIBRARY", 7) != 0)
                 goto quit;
-            strncpy(dllname, trimfront(p + 7), sizeof(dllname) - 1);
-            dllname[sizeof(dllname) - 1] = '\0';
+            p = trimfront(p + 7);
+            snprintf(dllname, sizeof(dllname), "%s", p);
             ++state;
             continue;
 
@@ -1653,10 +1724,9 @@ int pe_load_def_file(CCState *s1, int fd)
 
         case 2:
         {
-            size_t dllname_len = strlen(dllname) + 1;
-            dllref = cc_malloc(sizeof(DLLReference) + dllname_len);
-            strncpy(dllref->name, dllname, dllname_len - 1);
-            dllref->name[dllname_len - 1] = '\0';
+            dllref = cc_malloc(sizeof(DLLReference) + strlen(dllname));
+            strncpy(dllref->name, dllname, sizeof(dllref->name) - 1);
+            dllref->name[sizeof(dllref->name) - 1] = '\0';
             dllref->level = 0;
             dynarray_add((void ***)&s1->loaded_dlls, &s1->nb_loaded_dlls, dllref);
             ++state;

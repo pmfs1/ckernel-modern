@@ -1716,6 +1716,44 @@ static bool in_list(const StrList *list, const char *str)
 }
 
 /*
+ * Check if a path is safe from directory traversal attempts by ensuring:
+ * - It does not contain ".." sequences
+ * - It does not start with "/" or "\" (absolute paths)
+ * - It does not contain suspicious patterns
+ * Returns true if path is safe, false otherwise
+ */
+static bool is_safe_path(const char *path)
+{
+    const char *p;
+
+    if (!path)
+        return false;
+
+    /* No absolute paths */
+    if (path[0] == '/' || path[0] == '\\')
+        return false;
+
+    /* Check for .. sequences */
+    if (strstr(path, ".."))
+        return false;
+
+    /* Check for suspicious patterns */
+    p = path;
+    while (*p)
+    {
+        /* No null bytes or other control chars */
+        if (*p < 32)
+            return false;
+        /* No alternate data streams */
+        if (*p == ':')
+            return false;
+        p++;
+    }
+
+    return true;
+}
+
+/*
  * Open an include file. This routine must always return a valid
  * file pointer if it returns - it's responsible for throwing an
  * ERR_FATAL and bombing out completely if not. It should also try
@@ -1731,6 +1769,12 @@ static FILE *inc_fopen(const char *file, StrList **dhead, StrList ***dtail,
     int len = strlen(file);
     size_t prefix_len = 0;
     StrList *sl;
+
+    if (!is_safe_path(file))
+    {
+        error(ERR_FATAL, "invalid or unsafe include path `%s'", file);
+        return NULL;
+    }
 
     while (1)
     {
