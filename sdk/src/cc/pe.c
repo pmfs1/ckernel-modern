@@ -1724,9 +1724,9 @@ int pe_load_def_file(CCState *s1, int fd)
 
         case 2:
         {
-            // Calculate proper size for DLLReference structure including name buffer
-            dllref = cc_malloc(offsetof(DLLReference, name) + strlen(dllname) + 1);
-            strcpy(dllref->name, dllname);
+            dllref = cc_malloc(sizeof(DLLReference) + strlen(dllname));
+            strncpy(dllref->name, dllname, strlen(dllname));
+            dllref->name[strlen(dllname)] = '\0';
             dllref->level = 0;
             dynarray_add((void ***)&s1->loaded_dlls, &s1->nb_loaded_dlls, dllref);
             ++state;
