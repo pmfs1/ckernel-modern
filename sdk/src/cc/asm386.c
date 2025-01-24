@@ -999,7 +999,7 @@ void asm_opcode(CCState *s1, int opcode)
         g(seg_prefix);
 
     v = pa->opcode;
-    if ((v == 0x69) != 0)
+    if (v == 0x69 != 0)
     {
         // Kludge for imul $im, %reg
         nb_ops = 3;
@@ -1136,18 +1136,7 @@ void asm_opcode(CCState *s1, int opcode)
                 goto modrm_found;
         }
         // Then if not found, a register or indirection (shift instructions)
-for (i = 0; i < nb_ops; i++)
-        {
-            if (op_type[i] & (OP_REG | OP_MMX | OP_SSE | OP_INDIR | OP_FAR))
-                goto modrm_found;
-        }
-#ifdef ASM_DEBUG
-        error("bad op table");
-#endif
-    modrm_found:
-        modrm_index = i;
-        // If a register is used in another operand then it is used instead of group
-for (i = 0; i < nb_ops; i++)
+        for (i = 0; i < nb_ops; i++)
         {
             if (op_type[i] & (OP_REG | OP_MMX | OP_SSE | OP_INDIR | OP_FAR))
                 goto modrm_found;
