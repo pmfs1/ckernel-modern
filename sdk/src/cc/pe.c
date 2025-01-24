@@ -511,23 +511,23 @@ static DWORD pe_virtual_align(DWORD n)
     return align(n, 0x1000);
 }
 
-static void pe_align_section(Section *s, int a)
+static int pe_align_section(Section *s, int a)
 {
     int padding;
     char *pad;
 
     if (!s || a <= 0)
-        return;
+        return -1;
 
     padding = ((a - (s->data_offset & (a - 1))) & (a - 1));
     if (padding > 0)
     {
         pad = section_ptr_add(s, padding);
-        if (pad)
-        {
-            memset(pad, 0, padding);
-        }
+        if (!pad)
+            return -1;
+        memset(pad, 0, padding);
     }
+    return 0;
 }
 
 static void pe_set_datadir(int dir, DWORD addr, DWORD size)
@@ -824,7 +824,11 @@ static void pe_build_imports(struct pe_info *pe)
     if (sym_cnt == 0)
         return;
 
-    pe_align_section(pe->thunk, 16);
+    if (pe_align_section(pe->thunk, 16) < 0)
+    {
+        error_noabort("Failed to align import section");
+        return;
+    }
 
     pe->imp_offs = dll_ptr = pe->thunk->data_offset;
     pe->imp_size = (ndlls + 1) * sizeof(struct pe_import_header);
@@ -938,7 +942,12 @@ static void pe_build_exports(struct pe_info *pe)
     sym_count /= 2;
 
     qsort(sorted, sym_count, 2 * sizeof(sorted[0]), sym_cmp);
-    pe_align_section(pe->thunk, 16);
+    if (pe_align_section(pe->thunk, 16) < 0)
+    {
+        error_noabort("Failed to align export section");
+        cc_free(sorted);
+        return;
+    }
     dllname = cc_basename(pe->filename);
 
     pe->exp_offs = pe->thunk->data_offset;
@@ -1220,7 +1229,11 @@ static int pe_check_symbols(struct pe_info *pe)
     int sym_index, sym_end;
     int ret = 0;
 
-    pe_align_section(text_section, 8);
+    if (pe_align_section(text_section, 8) < 0)
+    {
+        error_noabort("Failed to align text section");
+        return -1;
+    }
 
     sym_end = symtab_section->data_offset / sizeof(Elf32_Sym);
     for (sym_index = 1; sym_index < sym_end; ++sym_index)
@@ -1497,6 +1510,12 @@ static int pe_print_section(FILE *f, Section *s)
             field_names = fields2; // Use renamed variable
             n = 58;
         }
+
+        for (i = 0; i < n; ++i)
+            if (fprintf(f, "-") < 0)
+                return -1;
+        if (fprintf(f, "\n") < 0)
+            return -1;
 
         for (i = 0; field_names[i]; ++i) // Use renamed variable
             if (fprintf(f, "%s", field_names[i]) < 0)
