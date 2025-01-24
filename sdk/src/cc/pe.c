@@ -1521,37 +1521,6 @@ static void pe_print_section(FILE *f, Section *s)
     fprintf(f, "\n\n");
 }
 
-static int is_safe_path(const char *path)
-{
-    const char *p;
-    size_t len;
-
-    if (!path || !*path)
-        return 0;
-
-    len = strlen(path);
-    if (len > 260) // Max path length
-        return 0;
-
-    // Check for absolute paths
-    if (path[0] == '/' || path[0] == '\\' ||
-        (len > 2 && path[1] == ':'))
-        return 0;
-
-    // Check for parent directory traversal
-    if (strstr(path, ".."))
-        return 0;
-
-    // Check for spaces and other potentially unsafe chars
-    for (p = path; *p; p++)
-    {
-        if (!isalnum(*p) && *p != '.' && *p != '_' && *p != '-')
-            return 0;
-    }
-
-    return 1;
-}
-
 static int is_valid_map_path(const char *path)
 {
     const char *p;
