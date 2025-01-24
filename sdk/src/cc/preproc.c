@@ -2230,70 +2230,7 @@ void parse_number(const char *p)
         }                          \
         break;
 
-static int handle_eof(void)
-{
-    CCState *s1 = cc_state;
-    if ((parse_flags & PARSE_FLAG_LINEFEED) && !(tok_flags & TOK_FLAG_EOF)) {
-        tok_flags |= TOK_FLAG_EOF;
-        tok = TOK_LINEFEED;
-        return 1;
-    } else if (s1->include_stack_ptr == s1->include_stack || !(parse_flags & PARSE_FLAG_PREPROCESS)) {
-        // No include left; end of file
-        tok = TOK_EOF;
-        return 1;
-    } else {
-        tok_flags &= ~TOK_FLAG_EOF;
-        // Test if previous '#endif' was after a #ifdef at start of file
-        if (tok_flags & TOK_FLAG_ENDIF) {
-#ifdef INC_DEBUG
-            printf("#endif %s\n", get_tok_str(file->ifndef_macro_saved, NULL));
-#endif
-            add_cached_include(s1, file->inc_type, file->inc_filename, file->ifndef_macro_saved);
-        }
-
-        // Add end of include file debug info
-        if (do_debug) {
-            put_stabd(N_EINCL, 0, 0);
-        }
-
-        // Pop include stack
-        cc_close(file);
-        s1->include_stack_ptr--;
-        file = *s1->include_stack_ptr;
-        return 0;
-    }
-}
-
-static int handle_line_start(uint8_t **pp)
-{
-    CCState *s1 = cc_state;
-    uint8_t *p = *pp;
-    int c;
-
-    PEEKC(c, p);
-    if ((tok_flags & TOK_FLAG_BOL) && (parse_flags & PARSE_FLAG_PREPROCESS)) {
-        file->buf_ptr = p;
-        preprocess(tok_flags & TOK_FLAG_BOF);
-        p = file->buf_ptr;
-        *pp = p;
-        return 1;
-    } else {
-        if (c == '#') {
-            p++;
-            tok = TOK_TWOSHARPS;
-        } else {
-            if (parse_flags & PARSE_FLAG_ASM_COMMENTS) {
-                p = parse_line_comment(p - 1);
-                *pp = p;
-                return 1;
-            } else {
-                tok = '#';
-            }
-        }
-    }
-    return 0;
-}
-
+// Return next token without macro substitution
 void next_nomacro1(void)
 {
     int t, c, is_long;
@@ -2302,502 +2239,571 @@ void next_nomacro1(void)
     unsigned int h;
 
     p = file->buf_ptr;
-    
-    while (1) {
-        c = *p;
-        switch (c) {
-        case ' ':
-        case '\t':
-        case '\f':
-        case '\v':
-        case '\r':
-            p++;
-            continue;
+redo_no_start:
+    c = *p;
+    switch (c)
+    {
+    case ' ':
+    case '\t':
+    case '\f':
+    case '\v':
+    case '\r':
+        p++;
+        goto redo_no_start;
 
-        case '\\':
-            // First look if it is in fact an end of buffer
-            if (p >= file->buf_end) {
-                file->buf_ptr = p;
-                handle_eob();
-                p = file->buf_ptr;
-                if (p >= file->buf_end) {
-                    if (handle_eof()) {
-                        file->buf_ptr = p;
-                        return;
-                    }
-                }
-                continue;
-            } else {
-                file->buf_ptr = p;
-                ch = *p;
-                handle_stray();
-                p = file->buf_ptr;
-                continue;
-            }
-
-        case '\n':
-            file->line_num++;
-            tok_flags |= TOK_FLAG_BOL;
-            p++;
-            if (!(parse_flags & PARSE_FLAG_LINEFEED)) {
-                continue;
-            }
-            tok = TOK_LINEFEED;
+    case '\\':
+        // First look if it is in fact an end of buffer
+        if (p >= file->buf_end)
+        {
             file->buf_ptr = p;
-            return;
-
-        case '#':
-            if (handle_line_start(&p)) {
-                continue;
+            handle_eob();
+            p = file->buf_ptr;
+            if (p >= file->buf_end)
+            {
+                goto parse_eof;
             }
-            break;
+            else
+            {
+                goto redo_no_start;
+            }
+        }
+        else
+        {
+            file->buf_ptr = p;
+            ch = *p;
+            handle_stray();
+            p = file->buf_ptr;
+            goto redo_no_start;
+        }
+    parse_eof:
+    {
+        CCState *s1 = cc_state;
+        if ((parse_flags & PARSE_FLAG_LINEFEED) && !(tok_flags & TOK_FLAG_EOF))
+        {
+            tok_flags |= TOK_FLAG_EOF;
+            tok = TOK_LINEFEED;
+            goto keep_tok_flags;
+        }
+        else if (s1->include_stack_ptr == s1->include_stack || !(parse_flags & PARSE_FLAG_PREPROCESS))
+        {
+            // No include left; end of file
+            tok = TOK_EOF;
+        }
+        else
+        {
+            tok_flags &= ~TOK_FLAG_EOF;
+            // Pop include file
 
-        case 'a':
-        case 'b':
-        case 'c':
-        case 'd':
-        case 'e':
-        case 'f':
-        case 'g':
-        case 'h':
-        case 'i':
-        case 'j':
-        case 'k':
-        case 'l':
-        case 'm':
-        case 'n':
-        case 'o':
-        case 'p':
-        case 'q':
-        case 'r':
-        case 's':
-        case 't':
-        case 'u':
-        case 'v':
-        case 'w':
-        case 'x':
-        case 'y':
-        case 'z':
-        case 'A':
-        case 'B':
-        case 'C':
-        case 'D':
-        case 'E':
-        case 'F':
-        case 'G':
-        case 'H':
-        case 'I':
-        case 'J':
-        case 'K':
-        case 'M':
-        case 'N':
-        case 'O':
-        case 'P':
-        case 'Q':
-        case 'R':
-        case 'S':
-        case 'T':
-        case 'U':
-        case 'V':
-        case 'W':
-        case 'X':
-        case 'Y':
-        case 'Z':
-        case '_':
-        parse_ident_fast:
-            p1 = p;
-            h = TOK_HASH_INIT;
+            // Test if previous '#endif' was after a #ifdef at start of file
+            if (tok_flags & TOK_FLAG_ENDIF)
+            {
+#ifdef INC_DEBUG
+                printf("#endif %s\n", get_tok_str(file->ifndef_macro_saved, NULL));
+#endif
+                add_cached_include(s1, file->inc_type, file->inc_filename, file->ifndef_macro_saved);
+            }
+
+            // Add end of include file debug info
+            if (do_debug)
+            {
+                put_stabd(N_EINCL, 0, 0);
+            }
+
+            // Pop include stack
+            cc_close(file);
+            s1->include_stack_ptr--;
+            file = *s1->include_stack_ptr;
+            p = file->buf_ptr;
+            goto redo_no_start;
+        }
+    }
+    break;
+
+    case '\n':
+        file->line_num++;
+        tok_flags |= TOK_FLAG_BOL;
+        p++;
+        if ((parse_flags & PARSE_FLAG_LINEFEED) == 0)
+            goto redo_no_start;
+        tok = TOK_LINEFEED;
+        goto keep_tok_flags;
+
+    case '#':
+        // TODO: simplify
+        PEEKC(c, p)
+        if ((tok_flags & TOK_FLAG_BOL) && (parse_flags & PARSE_FLAG_PREPROCESS))
+        {
+            file->buf_ptr = p;
+            preprocess(tok_flags & TOK_FLAG_BOF);
+            p = file->buf_ptr;
+            goto redo_no_start;
+        }
+        else
+        {
+            if (c == '#')
+            {
+                p++;
+                tok = TOK_TWOSHARPS;
+            }
+            else
+            {
+                if (parse_flags & PARSE_FLAG_ASM_COMMENTS)
+                {
+                    p = parse_line_comment(p - 1);
+                    goto redo_no_start;
+                }
+                else
+                {
+                    tok = '#';
+                }
+            }
+        }
+        break;
+
+    case 'a':
+    case 'b':
+    case 'c':
+    case 'd':
+    case 'e':
+    case 'f':
+    case 'g':
+    case 'h':
+    case 'i':
+    case 'j':
+    case 'k':
+    case 'l':
+    case 'm':
+    case 'n':
+    case 'o':
+    case 'p':
+    case 'q':
+    case 'r':
+    case 's':
+    case 't':
+    case 'u':
+    case 'v':
+    case 'w':
+    case 'x':
+    case 'y':
+    case 'z':
+    case 'A':
+    case 'B':
+    case 'C':
+    case 'D':
+    case 'E':
+    case 'F':
+    case 'G':
+    case 'H':
+    case 'I':
+    case 'J':
+    case 'K':
+    case 'M':
+    case 'N':
+    case 'O':
+    case 'P':
+    case 'Q':
+    case 'R':
+    case 'S':
+    case 'T':
+    case 'U':
+    case 'V':
+    case 'W':
+    case 'X':
+    case 'Y':
+    case 'Z':
+    case '_':
+    parse_ident_fast:
+        p1 = p;
+        h = TOK_HASH_INIT;
+        h = TOK_HASH_FUNC(h, c);
+        p++;
+        for (;;)
+        {
+            c = *p;
+            if (!is_idnum(c))
+                break;
             h = TOK_HASH_FUNC(h, c);
             p++;
+        }
+        if (c != '\\')
+        {
+            TokenSym **pts;
+            int len;
+
+            // Fast case: no stray found, so we have the full token and we have already hashed it
+            len = p - p1;
+            h &= (TOK_HASH_SIZE - 1);
+            pts = &hash_ident[h];
             for (;;)
             {
-                c = *p;
-                if (!is_idnum(c))
+                ts = *pts;
+                if (!ts)
                     break;
-                h = TOK_HASH_FUNC(h, c);
-                p++;
+                if (ts->len == len && !memcmp(ts->str, p1, len))
+                    goto token_found;
+                pts = &(ts->hash_next);
             }
-            if (c != '\\')
-            {
-                TokenSym **pts;
-                int len;
-
-                // Fast case: no stray found, so we have the full token and we have already hashed it
-                len = p - p1;
-                h &= (TOK_HASH_SIZE - 1);
-                pts = &hash_ident[h];
-                for (;;)
-                {
-                    ts = *pts;
-                    if (!ts)
-                        break;
-                    if (ts->len == len && !memcmp(ts->str, p1, len))
-                        goto token_found;
-                    pts = &(ts->hash_next);
-                }
-                ts = tok_alloc_new(pts, p1, len);
-            token_found:;
-            }
-            else
-            {
-                // Slower case
-                cstr_reset(&tokcstr);
-                while (p1 < p)
-                {
-                    cstr_ccat(&tokcstr, *p1);
-                    p1++;
-                }
-                p--;
-                PEEKC(c, p)
-            parse_ident_slow:
-                while (is_idnum(c))
-                {
-                    cstr_ccat(&tokcstr, c);
-                    PEEKC(c, p)
-                }
-                ts = tok_alloc(tokcstr.data, tokcstr.size);
-            }
-            tok = ts->tok;
-            break;
-
-        case 'L':
-            t = p[1];
-            if (t != '\\' && t != '\'' && t != '\"')
-            {
-                // Fast case
-                goto parse_ident_fast;
-            }
-            else
-            {
-                PEEKC(c, p)
-                if (c == '\'' || c == '\"')
-                {
-                    is_long = 1;
-                    goto str_const;
-                }
-                else
-                {
-                    cstr_reset(&tokcstr);
-                    cstr_ccat(&tokcstr, 'L');
-                    goto parse_ident_slow;
-                }
-            }
-            break;
-
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
+            ts = tok_alloc_new(pts, p1, len);
+        token_found:;
+        }
+        else
+        {
+            // Slower case
             cstr_reset(&tokcstr);
-            // After the first digit, accept digits, alpha, '.' or sign if prefixed by 'eEpP'
-        parse_num:
-            for (;;)
+            while (p1 < p)
             {
-                t = c;
+                cstr_ccat(&tokcstr, *p1);
+                p1++;
+            }
+            p--;
+            PEEKC(c, p)
+        parse_ident_slow:
+            while (is_idnum(c))
+            {
                 cstr_ccat(&tokcstr, c);
                 PEEKC(c, p)
-                if (!(is_num(c) || is_id(c) || c == '.' ||
-                      ((c == '+' || c == '-') &&
-                       (t == 'e' || t == 'E' || t == 'p' || t == 'P'))))
-                {
-                    break;
-                }
             }
+            ts = tok_alloc(tokcstr.data, tokcstr.size);
+        }
+        tok = ts->tok;
+        break;
 
-            // Add a trailing '\0' to ease parsing
-            cstr_ccat(&tokcstr, '\0');
-            tokc.cstr = &tokcstr;
-            tok = TOK_PPNUM;
-            break;
-
-        case '.':
-            // Special dot handling because it can also start a number
+    case 'L':
+        t = p[1];
+        if (t != '\\' && t != '\'' && t != '\"')
+        {
+            // Fast case
+            goto parse_ident_fast;
+        }
+        else
+        {
             PEEKC(c, p)
-            if (is_num(c))
+            if (c == '\'' || c == '\"')
+            {
+                is_long = 1;
+                goto str_const;
+            }
+            else
             {
                 cstr_reset(&tokcstr);
-                cstr_ccat(&tokcstr, '.');
-                goto parse_num;
+                cstr_ccat(&tokcstr, 'L');
+                goto parse_ident_slow;
             }
-            else if (c == '.')
-            {
-                PEEKC(c, p)
-                if (c != '.')
-                    expect("'.'");
-                PEEKC(c, p)
-                tok = TOK_DOTS;
-            }
-            else
-            {
-                tok = '.';
-            }
-            break;
+        }
+        break;
 
-        case '\'':
-        case '\"':
-            is_long = 0;
-        str_const:
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+        cstr_reset(&tokcstr);
+        // After the first digit, accept digits, alpha, '.' or sign if prefixed by 'eEpP'
+    parse_num:
+        for (;;)
         {
-            CString str;
-            int sep;
-
-            sep = c;
-
-            // Parse the string
-            cstr_new(&str);
-            p = parse_pp_string(p, sep, &str);
-            cstr_ccat(&str, '\0');
-
-            // Evaluate the escape (should be done as TOK_PPNUM)
-            cstr_reset(&tokcstr);
-            parse_escape_string(&tokcstr, str.data, is_long);
-            cstr_free(&str);
-
-            if (sep == '\'')
+            t = c;
+            cstr_ccat(&tokcstr, c);
+            PEEKC(c, p)
+            if (!(is_num(c) || is_id(c) || c == '.' ||
+                  ((c == '+' || c == '-') &&
+                   (t == 'e' || t == 'E' || t == 'p' || t == 'P'))))
             {
-                int char_size;
-                // TODO: make it portable
-                if (!is_long)
-                {
-                    char_size = 1;
-                }
-                else
-                {
-                    char_size = sizeof(nwchar_t);
-                }
-
-                if (tokcstr.size <= char_size)
-                    error("empty character constant");
-
-                if (!is_long)
-                {
-                    if (tokcstr.size > 2)
-                    {
-                        // Multi-character character constant (MSVC extension)
-                        unsigned char *p = tokcstr.data;
-                        tokc.i = 0;
-                        while (*p)
-                            tokc.i = tokc.i << 8 | *p++;
-                    }
-                    else
-                    {
-                        tokc.i = *(int8_t *)tokcstr.data;
-                    }
-                    tok = TOK_CCHAR;
-                }
-                else
-                {
-                    if (tokcstr.size > 2 * sizeof(nwchar_t))
-                        warning("multi-character character constant");
-                    tokc.i = *(nwchar_t *)tokcstr.data;
-                    tok = TOK_LCHAR;
-                }
+                break;
             }
-            else
-            {
-                tokc.cstr = &tokcstr;
-                if (!is_long)
-                {
-                    tok = TOK_STR;
-                }
-                else
-                {
-                    tok = TOK_LSTR;
-                }
-            }
-            break;
         }
 
-        case '<':
+        // Add a trailing '\0' to ease parsing
+        cstr_ccat(&tokcstr, '\0');
+        tokc.cstr = &tokcstr;
+        tok = TOK_PPNUM;
+        break;
+
+    case '.':
+        // Special dot handling because it can also start a number
+        PEEKC(c, p)
+        if (is_num(c))
+        {
+            cstr_reset(&tokcstr);
+            cstr_ccat(&tokcstr, '.');
+            goto parse_num;
+        }
+        else if (c == '.')
+        {
             PEEKC(c, p)
-            if (c == '=')
+            if (c != '.')
+                expect("'.'");
+            PEEKC(c, p)
+            tok = TOK_DOTS;
+        }
+        else
+        {
+            tok = '.';
+        }
+        break;
+
+    case '\'':
+    case '\"':
+        is_long = 0;
+    str_const:
+    {
+        CString str;
+        int sep;
+
+        sep = c;
+
+        // Parse the string
+        cstr_new(&str);
+        p = parse_pp_string(p, sep, &str);
+        cstr_ccat(&str, '\0');
+
+        // Evaluate the escape (should be done as TOK_PPNUM)
+        cstr_reset(&tokcstr);
+        parse_escape_string(&tokcstr, str.data, is_long);
+        cstr_free(&str);
+
+        if (sep == '\'')
+        {
+            int char_size;
+            // TODO: make it portable
+            if (!is_long)
             {
-                p++;
-                tok = TOK_LE;
+                char_size = 1;
             }
-            else if (c == '<')
+            else
             {
-                PEEKC(c, p)
-                if (c == '=')
+                char_size = sizeof(nwchar_t);
+            }
+
+            if (tokcstr.size <= char_size)
+                error("empty character constant");
+
+            if (!is_long)
+            {
+                if (tokcstr.size > 2)
                 {
-                    p++;
-                    tok = TOK_A_SHL;
+                    // Multi-character character constant (MSVC extension)
+                    unsigned char *p = tokcstr.data;
+                    tokc.i = 0;
+                    while (*p)
+                        tokc.i = tokc.i << 8 | *p++;
                 }
                 else
                 {
-                    tok = TOK_SHL;
+                    tokc.i = *(int8_t *)tokcstr.data;
                 }
+                tok = TOK_CCHAR;
             }
             else
             {
-                tok = TOK_LT;
+                if (tokcstr.size > 2 * sizeof(nwchar_t))
+                    warning("multi-character character constant");
+                tokc.i = *(nwchar_t *)tokcstr.data;
+                tok = TOK_LCHAR;
             }
-            break;
-
-        case '>':
-            PEEKC(c, p)
-            if (c == '=')
+        }
+        else
+        {
+            tokc.cstr = &tokcstr;
+            if (!is_long)
             {
-                p++;
-                tok = TOK_GE;
-            }
-            else if (c == '>')
-            {
-                PEEKC(c, p)
-                if (c == '=')
-                {
-                    p++;
-                    tok = TOK_A_SAR;
-                }
-                else
-                {
-                    tok = TOK_SAR;
-                }
+                tok = TOK_STR;
             }
             else
             {
-                tok = TOK_GT;
+                tok = TOK_LSTR;
             }
-            break;
-
-        case '&':
-            PEEKC(c, p)
-            if (c == '&')
-            {
-                p++;
-                tok = TOK_LAND;
-            }
-            else if (c == '=')
-            {
-                p++;
-                tok = TOK_A_AND;
-            }
-            else
-            {
-                tok = '&';
-            }
-            break;
-
-        case '|':
-            PEEKC(c, p)
-            if (c == '|')
-            {
-                p++;
-                tok = TOK_LOR;
-            }
-            else if (c == '=')
-            {
-                p++;
-                tok = TOK_A_OR;
-            }
-            else
-            {
-                tok = '|';
-            }
-            break;
-
-        case '+':
-            PEEKC(c, p)
-            if (c == '+')
-            {
-                p++;
-                tok = TOK_INC;
-            }
-            else if (c == '=')
-            {
-                p++;
-                tok = TOK_A_ADD;
-            }
-            else
-            {
-                tok = '+';
-            }
-            break;
-
-        case '-':
-            PEEKC(c, p)
-            if (c == '-')
-            {
-                p++;
-                tok = TOK_DEC;
-            }
-            else if (c == '=')
-            {
-                p++;
-                tok = TOK_A_SUB;
-            }
-            else if (c == '>')
-            {
-                p++;
-                tok = TOK_ARROW;
-            }
-            else
-            {
-                tok = '-';
-            }
-            break;
-
-            PARSE2('!', '!', '=', TOK_NE)
-            PARSE2('=', '=', '=', TOK_EQ)
-            PARSE2('*', '*', '=', TOK_A_MUL)
-            PARSE2('%', '%', '=', TOK_A_MOD)
-            PARSE2('^', '^', '=', TOK_A_XOR)
-
-        case '/':
-            // Comment or operator
-            PEEKC(c, p)
-            if (c == '*')
-            {
-                p = parse_comment(p);
-                continue;
-            }
-            else if (c == '/')
-            {
-                p = parse_line_comment(p);
-                continue;
-            }
-            else if (c == '=')
-            {
-                p++;
-                tok = TOK_A_DIV;
-            }
-            else
-            {
-                tok = '/';
-            }
-            break;
-
-        case '(':
-        case ')':
-        case '[':
-        case ']':
-        case '{':
-        case '}':
-        case ',':
-        case ';':
-        case ':':
-        case '?':
-        case '~':
-        case '$':
-        case '@': // Only used in assembler
-            // Simple token
-            tok = c;
-            p++;
-            break;
-
-        default:
-            error("unrecognized character \\x%02x", c);
         }
         break;
     }
 
+    case '<':
+        PEEKC(c, p)
+        if (c == '=')
+        {
+            p++;
+            tok = TOK_LE;
+        }
+        else if (c == '<')
+        {
+            PEEKC(c, p)
+            if (c == '=')
+            {
+                p++;
+                tok = TOK_A_SHL;
+            }
+            else
+            {
+                tok = TOK_SHL;
+            }
+        }
+        else
+        {
+            tok = TOK_LT;
+        }
+        break;
+
+    case '>':
+        PEEKC(c, p)
+        if (c == '=')
+        {
+            p++;
+            tok = TOK_GE;
+        }
+        else if (c == '>')
+        {
+            PEEKC(c, p)
+            if (c == '=')
+            {
+                p++;
+                tok = TOK_A_SAR;
+            }
+            else
+            {
+                tok = TOK_SAR;
+            }
+        }
+        else
+        {
+            tok = TOK_GT;
+        }
+        break;
+
+    case '&':
+        PEEKC(c, p)
+        if (c == '&')
+        {
+            p++;
+            tok = TOK_LAND;
+        }
+        else if (c == '=')
+        {
+            p++;
+            tok = TOK_A_AND;
+        }
+        else
+        {
+            tok = '&';
+        }
+        break;
+
+    case '|':
+        PEEKC(c, p)
+        if (c == '|')
+        {
+            p++;
+            tok = TOK_LOR;
+        }
+        else if (c == '=')
+        {
+            p++;
+            tok = TOK_A_OR;
+        }
+        else
+        {
+            tok = '|';
+        }
+        break;
+
+    case '+':
+        PEEKC(c, p)
+        if (c == '+')
+        {
+            p++;
+            tok = TOK_INC;
+        }
+        else if (c == '=')
+        {
+            p++;
+            tok = TOK_A_ADD;
+        }
+        else
+        {
+            tok = '+';
+        }
+        break;
+
+    case '-':
+        PEEKC(c, p)
+        if (c == '-')
+        {
+            p++;
+            tok = TOK_DEC;
+        }
+        else if (c == '=')
+        {
+            p++;
+            tok = TOK_A_SUB;
+        }
+        else if (c == '>')
+        {
+            p++;
+            tok = TOK_ARROW;
+        }
+        else
+        {
+            tok = '-';
+        }
+        break;
+
+        PARSE2('!', '!', '=', TOK_NE)
+        PARSE2('=', '=', '=', TOK_EQ)
+        PARSE2('*', '*', '=', TOK_A_MUL)
+        PARSE2('%', '%', '=', TOK_A_MOD)
+        PARSE2('^', '^', '=', TOK_A_XOR)
+
+    case '/':
+        // Comment or operator
+        PEEKC(c, p)
+        if (c == '*')
+        {
+            p = parse_comment(p);
+            goto redo_no_start;
+        }
+        else if (c == '/')
+        {
+            p = parse_line_comment(p);
+            goto redo_no_start;
+        }
+        else if (c == '=')
+        {
+            p++;
+            tok = TOK_A_DIV;
+        }
+        else
+        {
+            tok = '/';
+        }
+        break;
+
+    case '(':
+    case ')':
+    case '[':
+    case ']':
+    case '{':
+    case '}':
+    case ',':
+    case ';':
+    case ':':
+    case '?':
+    case '~':
+    case '$':
+    case '@': // Only used in assembler
+        // Simple token
+        tok = c;
+        p++;
+        break;
+
+    default:
+        error("unrecognized character \\x%02x", c);
+    }
     tok_flags = 0;
+keep_tok_flags:
     file->buf_ptr = p;
 #if defined(PARSE_DEBUG)
     printf("token = %s\n", get_tok_str(tok, &tokc));
