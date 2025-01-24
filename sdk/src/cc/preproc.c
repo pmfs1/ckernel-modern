@@ -708,18 +708,21 @@ uint8_t *parse_pp_string(uint8_t *p, int sep, CString *str)
 // Skip block of text until #else, #elif or #endif. skip also pairs of #if/#endif
 void preprocess_skip(void)
 {
-    int a, start_of_line, c, in_warn_or_error;
-    uint8_t *p;
-
-    p = file->buf_ptr;
+    int a, c;
+    int start_of_line = 1;
+    int in_warn_or_error = 0;
+    uint8_t *p = file->buf_ptr;
     a = 0;
+
     while (1)
     {
         start_of_line = 1;
         in_warn_or_error = 0;
+
         while (1)
         {
             c = *p;
+
             switch (c)
             {
             case ' ':
@@ -729,11 +732,13 @@ void preprocess_skip(void)
             case '\r':
                 p++;
                 continue;
+
             case '\n':
                 file->line_num++;
                 p++;
                 start_of_line = 1;
                 continue;
+
             case '\\':
                 file->buf_ptr = p;
                 c = handle_eob();
@@ -748,30 +753,41 @@ void preprocess_skip(void)
                 }
                 p = file->buf_ptr;
                 continue;
-                // Skip strings
+
             case '\"':
             case '\'':
-                if (in_warn_or_error)
-                    break;
-                p = parse_pp_string(p, c, NULL);
+                if (!in_warn_or_error)
+                {
+                    p = parse_pp_string(p, c, NULL);
+                }
+                else
+                {
+                    p++;
+                }
                 break;
-                // Skip comments
+
             case '/':
-                if (in_warn_or_error)
-                    break;
-                file->buf_ptr = p;
-                ch = *p;
-                minp();
-                p = file->buf_ptr;
-                if (ch == '*')
+                if (!in_warn_or_error)
                 {
-                    p = parse_comment(p);
+                    file->buf_ptr = p;
+                    ch = *p;
+                    minp();
+                    p = file->buf_ptr;
+                    if (ch == '*')
+                    {
+                        p = parse_comment(p);
+                    }
+                    else if (ch == '/')
+                    {
+                        p = parse_line_comment(p);
+                    }
                 }
-                else if (ch == '/')
+                else
                 {
-                    p = parse_line_comment(p);
+                    p++;
                 }
                 break;
+
             case '#':
                 p++;
                 if (start_of_line)
@@ -779,8 +795,13 @@ void preprocess_skip(void)
                     file->buf_ptr = p;
                     next_nomacro();
                     p = file->buf_ptr;
+                    
                     if (a == 0 && (tok == TOK_ELSE || tok == TOK_ELIF || tok == TOK_ENDIF))
-                        goto done;
+                    {
+                        file->buf_ptr = p;
+                        return;
+                    }
+                    
                     if (tok == TOK_IF || tok == TOK_IFDEF || tok == TOK_IFNDEF)
                     {
                         a++;
@@ -795,16 +816,15 @@ void preprocess_skip(void)
                     }
                 }
                 break;
+
             default:
                 p++;
                 break;
             }
+
             start_of_line = 0;
         }
     }
-
-done:
-    file->buf_ptr = p;
 }
 
 // ParseState handling
