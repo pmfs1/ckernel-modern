@@ -81,7 +81,7 @@ static struct bin_label
 {
     char *name;
     struct bin_label *next;
-} *no_seg_labels, **nsl_tail;
+} * no_seg_labels, **nsl_tail;
 
 static struct Section
 {
@@ -113,7 +113,7 @@ static struct Section
      * any other good way for us to handle that label.
      */
 
-} *sections, *last_section;
+} * sections, *last_section;
 
 static struct Reloc
 {
@@ -123,7 +123,7 @@ static struct Reloc
     int32_t secref;
     int32_t secrel;
     struct Section *target;
-} *relocs, **reloctail;
+} * relocs, **reloctail;
 
 static uint64_t origin;
 static int origin_defined;
@@ -189,7 +189,7 @@ static struct Section *create_section(char *name)
     return last_section;
 }
 
-static void bin_cleanup(void)
+static void bin_cleanup(int debuginfo)
 {
     struct Section *g, **gp;
     struct Section *gs = NULL, **gsp;
@@ -201,10 +201,12 @@ static void bin_cleanup(void)
     uint64_t pend;
     int h;
 
+    (void)debuginfo; /* placate optimizers */
+
 #ifdef DEBUG
     as_error(ERR_DEBUG,
              "bin_cleanup: Sections were initially referenced in this order:\n");
-    for (h = 0, s = sections; h++, s = s->next)
+    for (h = 0, s = sections; s; h++, s = s->next)
         fprintf(stdout, "%i. %s\n", h, s->name);
 #endif
 
