@@ -1751,7 +1751,6 @@ quit:
 static void pe_add_runtime_ex(CCState *s1, struct pe_info *pe)
 {
     const char *start_symbol;
-    unsigned long addr = 0;
     int pe_type = 0;
     int start_sym_index;
 
