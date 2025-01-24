@@ -1559,43 +1559,76 @@ static int is_safe_path(const char *path)
     return 1;
 }
 
+static int is_valid_map_path(const char *path)
+{
+    const char *p;
+
+    if (!path || !*path)
+        return 0;
+
+    // Only allow paths without directory traversal
+    if (strchr(path, '/') || strchr(path, '\\'))
+        return 0;
+
+    // Check for absolute paths
+    if (path[0] == '/' || path[0] == '\\')
+        return 0;
+    if (strlen(path) >= 2 && path[1] == ':')
+        return 0;
+
+    // Verify filename contains only safe chars
+    for (p = path; *p; p++)
+    {
+        if (!isalnum(*p) && *p != '.' && *p != '_' && *p != '-')
+            return 0;
+    }
+
+    return 1;
+}
+
+static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
+{
+    if (!is_valid_map_path(fname))
+    {
+        snprintf(errbuf, errsize, "invalid map filename '%s'", fname);
+        return NULL;
+    }
+
+    int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
+    if (fd < 0)
+    {
+        snprintf(errbuf, errsize, "could not create '%s': %s", fname, strerror(errno));
+        return NULL;
+    }
+
+    FILE *f = fdopen(fd, "wb");
+    if (!f)
+    {
+        close(fd);
+        snprintf(errbuf, errsize, "could not open '%s' for writing", fname);
+        return NULL;
+    }
+
+    return f;
+}
+
 static void pe_print_sections(CCState *s1, const char *fname)
 {
     Section *s;
     FILE *f;
     int i;
-    char safe_path[261];
+    char errbuf[256];
 
-    // Early input validation
     if (!fname)
     {
         error_noabort("map file name is NULL");
         return;
     }
 
-    // Copy to local buffer for safety
-    strncpy(safe_path, fname, sizeof(safe_path) - 1);
-    safe_path[sizeof(safe_path) - 1] = '\0';
-
-    // Validate the filename
-    if (!is_safe_path(safe_path))
+    f = open_map_file(fname, errbuf, sizeof(errbuf));
+    if (!f)
     {
-        error_noabort("invalid map file path: must be a simple filename");
-        return;
-    }
-
-    int fd = open(safe_path, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
-    if (fd < 0)
-    {
-        error_noabort("could not create map file '%s'", safe_path);
-        return;
-    }
-
-    f = fdopen(fd, "wb");
-    if (f == NULL)
-    {
-        close(fd);
-        error_noabort("could not open map file for writing");
+        error_noabort("%s", errbuf);
         return;
     }
 
@@ -1670,8 +1703,9 @@ static char *trimfront(char *p)
 static char *trimback(char *a, char *e)
 {
     // Safety check to ensure e is not before a
-    if (!e || e < a) e = a;
-    
+    if (!e || e < a)
+        e = a;
+
     while (e > a && (unsigned char)e[-1] <= ' ')
         --e;
     *e = 0;
@@ -1681,14 +1715,15 @@ static char *trimback(char *a, char *e)
 static char *get_line(char *line, int size, FILE *fp)
 {
     char *p;
-    
+
     if (fgets(line, size, fp) == NULL)
         return NULL;
-    
+
     // Find end of string or end of buffer
     p = strchr(line, 0);
-    if (!p) p = line + size - 1;
-    
+    if (!p)
+        p = line + size - 1;
+
     trimback(line, p);
     return trimfront(line);
 }
