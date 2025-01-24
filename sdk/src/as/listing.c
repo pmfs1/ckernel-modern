@@ -146,14 +146,19 @@ static void list_cleanup(void)
 
 static void list_out(int32_t offset, char *str)
 {
-    if (strlen(listdata) + strlen(str) > LIST_HEXBIT)
+    size_t current_len = strlen(listdata);
+    size_t str_len = strlen(str);
+    
+    if (current_len + str_len > LIST_HEXBIT)
     {
-        strcat(listdata, "-");
+        size_t remaining = sizeof(listdata) - current_len - 1;
+        strncat(listdata, "-", remaining);
         list_emit();
     }
     if (!listdata[0])
         listoffset = offset;
-    strcat(listdata, str);
+    size_t remaining = sizeof(listdata) - strlen(listdata) - 1;
+    strncat(listdata, str, remaining);
 }
 
 static void list_address(int32_t offset, const char *brackets,
