@@ -1647,7 +1647,7 @@ int pe_test_res_file(void *v, int size)
 
 static int read_n(int fd, void *ptr, unsigned size)
 {
-    return read(fd, size) == size;
+    return read(fd, ptr, size) == size;
 }
 
 int pe_load_res_file(CCState *s1, int fd)
