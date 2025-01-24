@@ -1284,7 +1284,7 @@ static void pe_eliminate_unused_sections(struct pe_info *pe)
 
     // Mark sections for exported functions as used
     sym_end = symtab_section->data_offset / sizeof(Elf32_Sym);
-    for (sym_index = 1; sym_index < sym_end; sym_index++)
+    for (sym_index = 1; sym_index < sym_end; ++sym_index)
     {
         sym = (Elf32_Sym *)symtab_section->data + sym_index;
         if (sym->st_other & 1)
@@ -1669,6 +1669,9 @@ static char *trimfront(char *p)
 
 static char *trimback(char *a, char *e)
 {
+    // Safety check to ensure e is not before a
+    if (!e || e < a) e = a;
+    
     while (e > a && (unsigned char)e[-1] <= ' ')
         --e;
     *e = 0;
@@ -1677,9 +1680,16 @@ static char *trimback(char *a, char *e)
 
 static char *get_line(char *line, int size, FILE *fp)
 {
+    char *p;
+    
     if (fgets(line, size, fp) == NULL)
         return NULL;
-    trimback(line, strchr(line, 0));
+    
+    // Find end of string or end of buffer
+    p = strchr(line, 0);
+    if (!p) p = line + size - 1;
+    
+    trimback(line, p);
     return trimfront(line);
 }
 
