@@ -271,9 +271,9 @@ void install_kernel()
     close(fd);
 }
 
-void make_directory(char *dirname)
+int make_directory(char *dirname)
 {
-    vfs_mkdir(dirname, 0755);
+    return vfs_mkdir(dirname, 0755);
 }
 
 void transfer_file(char *dstfn, char *srcfn)
@@ -349,7 +349,10 @@ void transfer_files(char *dstdir, char *srcdir)
         {
             if (strcmp(finddata.cFileName, ".") != 0 && strcmp(finddata.cFileName, "..") != 0)
             {
-                make_directory(dstfn);
+                if (make_directory(dstfn) < 0) {
+                    printf("Warning: Failed to create directory: %s\n", dstfn);
+                    continue;
+                }
                 transfer_files(dstfn, srcfn);
             }
         }
@@ -388,7 +391,10 @@ void transfer_files(char *dstdir, char *srcdir)
         {
             if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
             {
-                make_directory(dstfn);
+                if (make_directory(dstfn) < 0) {
+                    printf("Warning: Failed to create directory: %s\n", dstfn);
+                    continue;
+                }
                 transfer_files(dstfn, srcfn);
             }
         }
@@ -513,7 +519,12 @@ void process_filelist(FILE *f)
 
         if (!src || !*src)
         {
-            make_directory(safe_dst);
+            if (make_directory(safe_dst) < 0)
+            {
+                printf("Warning: Failed to create directory: %s\n", safe_dst);
+                free(safe_dst);
+                continue;
+            }
         }
         else
         {
@@ -527,7 +538,13 @@ void process_filelist(FILE *f)
 
             if (isdir(safe_src))
             {
-                make_directory(safe_dst);
+                if (make_directory(safe_dst) < 0)
+                {
+                    printf("Warning: Failed to create directory: %s\n", safe_dst);
+                    free(safe_src);
+                    free(safe_dst);
+                    continue;
+                }
                 transfer_files(safe_dst, safe_src);
             }
             else
@@ -766,7 +783,7 @@ int main(int argc, char **argv)
         if (!f)
         {
             perror(filelist);
-            return;
+            return -1;
         }
         else
         {

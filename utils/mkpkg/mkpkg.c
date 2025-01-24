@@ -668,28 +668,33 @@ int add_file(FILE *archive, char *srcfn, char *dstfn, int *time, int prebuilt)
  * Creates a package archive from a manifest file
  *
  * This function reads a package manifest file and creates a .pkg archive containing
- * all specified files. It handles both source files and prebuilt files, maintaining
- * proper timestamps and directory structures.
+ * all specified files. It processes both source files and prebuilt binaries according
+ * to the manifest sections.
  *
  * @param db        Pointer to package database structure
  * @param inffn     Path to the package manifest (.inf) file
+ * @return          0 on success, 1 on error
  *
- * @return 0 on success, 1 on error
+ * The manifest file format:
+ * - [package] section: Contains name and description
+ * - [source] section: Lists source files to include
+ * - [prebuilt] section: Lists precompiled files to include
  *
- * The function:
- * - Reads and validates the package manifest
- * - Creates package entry in database
- * - Creates tar archive with specified files
- * - Handles both source and prebuilt files
- * - Updates package timestamps
- * - Maintains package database integrity
+ * Process flow:
+ * 1. Sanitize and validate input paths
+ * 2. Read and parse manifest file
+ * 3. Create/update package database entry
+ * 4. Create tar archive:
+ *    - Add manifest file itself
+ *    - Process [source] section files
+ *    - Process [prebuilt] section files
+ * 5. Finalize archive with proper timestamps
  */
 int make_package(struct pkgdb *db, char *inffn)
 {
-    // Sanitize input filename
+    // Sanitize and validate input filename for security
     char *safe_inffn = sanitize_path(inffn);
-    if (!safe_inffn)
-    {
+    if (!safe_inffn) {
         fprintf(stderr, "Invalid or unsafe input file path\n");
         return 1;
     }
@@ -708,21 +713,24 @@ int make_package(struct pkgdb *db, char *inffn)
     FILE *archive;
     int rc;
 
+    // Read package manifest file
     manifest = read_properties(safe_inffn);
-    if (!manifest)
-    {
+    if (!manifest) {
         fprintf(stderr, "Error reading manifest from %s\n", safe_inffn);
         free(safe_inffn);
         return 1;
     }
 
+    // Extract package metadata from manifest
     pkgname = get_property(manifest, "package", "name", NULL);
     description = get_property(manifest, "package", "description", NULL);
 
+    // Construct destination paths
     strcpy(dstinffn, "/usr/share/pkg/");
     strncat(dstinffn, pkgname, STRLEN - strlen(dstinffn) - 1);
     strncat(dstinffn, ".inf", STRLEN - strlen(dstinffn) - 1);
 
+    // Create or update package database entry
     pkg = find_package(db, pkgname);
     if (!pkg)
         pkg = add_package(db, pkgname);
@@ -734,49 +742,48 @@ int make_package(struct pkgdb *db, char *inffn)
     pkg->time = 0;
     db->dirty = 1;
 
+    // Handle special case where only database update is needed
     if (strcmp(dstdir, "-") == 0)
         return 0;
 
+    // Create package archive file
     joinpath(dstdir, pkgname, dstpkgfn);
     strcat(dstpkgfn, ".pkg");
 
+    // Open archive file with proper permissions
     int fd = open(dstpkgfn, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
-    if (fd < 0)
-    {
-        // handle error
+    if (fd < 0) {
         return 1;
     }
     archive = fdopen(fd, "w");
-    if (archive == NULL)
-    {
+    if (archive == NULL) {
         close(fd);
-        // handle error
         return 1;
     }
-    if (add_file(archive, inffn, pkg->inffile, &pkg->time, 0) != 0)
-    {
+
+    // Add manifest file to archive
+    if (add_file(archive, inffn, pkg->inffile, &pkg->time, 0) != 0) {
         fclose(archive);
         unlink(dstpkgfn);
         return 1;
     }
 
+    // Process source files section
     source = find_section(pkg->manifest, "source");
-    if (source)
-    {
+    if (source) {
         struct property *p;
-        for (p = source->properties; p; p = p->next)
-        {
-            if (!is_path_safe(p->name))
-            {
+        for (p = source->properties; p; p = p->next) {
+            // Validate source file paths
+            if (!is_path_safe(p->name)) {
                 fprintf(stderr, "Invalid or unsafe source path in manifest: %s\n", p->name);
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
             }
 
+            // Canonicalize and process each source file
             char *safe_path = canonicalize_path(p->name);
-            if (!safe_path)
-            {
+            if (!safe_path) {
                 fprintf(stderr, "Path canonicalization failed\n");
                 fclose(archive);
                 unlink(dstpkgfn);
@@ -787,8 +794,7 @@ int make_package(struct pkgdb *db, char *inffn)
             rc = add_file(archive, srcfn, safe_path, &pkg->time, 0);
             free(safe_path);
 
-            if (rc != 0)
-            {
+            if (rc != 0) {
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
@@ -796,23 +802,22 @@ int make_package(struct pkgdb *db, char *inffn)
         }
     }
 
+    // Process prebuilt files section
     prebuilt = find_section(pkg->manifest, "prebuilt");
-    if (prebuilt)
-    {
+    if (prebuilt) {
         struct property *p;
-        for (p = prebuilt->properties; p; p = p->next)
-        {
-            if (!is_path_safe(p->name))
-            {
+        for (p = prebuilt->properties; p; p = p->next) {
+            // Validate prebuilt file paths
+            if (!is_path_safe(p->name)) {
                 fprintf(stderr, "Invalid or unsafe prebuilt path in manifest: %s\n", p->name);
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
             }
 
+            // Canonicalize and process each prebuilt file
             char *safe_path = canonicalize_path(p->name);
-            if (!safe_path)
-            {
+            if (!safe_path) {
                 fprintf(stderr, "Path canonicalization failed\n");
                 fclose(archive);
                 unlink(dstpkgfn);
@@ -823,8 +828,7 @@ int make_package(struct pkgdb *db, char *inffn)
             rc = add_file(archive, srcfn, safe_path, &pkg->time, 1);
             free(safe_path);
 
-            if (rc != 0)
-            {
+            if (rc != 0) {
                 fclose(archive);
                 unlink(dstpkgfn);
                 return 1;
@@ -832,11 +836,13 @@ int make_package(struct pkgdb *db, char *inffn)
         }
     }
 
+    // Finalize archive with proper padding
     memset(zero, 0, TAR_BLKSIZ);
     fwrite(zero, 1, TAR_BLKSIZ, archive);
     fwrite(zero, 1, TAR_BLKSIZ, archive);
     fclose(archive);
 
+    // Set archive timestamp
     times.actime = times.modtime = pkg->time;
     utime(dstpkgfn, &times);
 

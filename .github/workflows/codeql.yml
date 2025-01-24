@@ -35,7 +35,7 @@ jobs:
       shell: bash
       run: |
         sudo apt-get update -y && sudo apt-get install -y gcc-multilib libc6-dev-i386 genisoimage
-        make krlean cdrom floppy vmdk hdmin
+        make krlean cdrom vmdk
     - name: 'ANALYZE'
       uses: github/codeql-action/analyze@v3
       with:

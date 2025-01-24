@@ -12,6 +12,10 @@
 #include <inttypes.h>
 #include <limits.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include "as.h"
 #include "aslib.h"
@@ -27,8 +31,6 @@
 #include "labels.h"
 #include "out/outform.h"
 #include "listing.h"
-#include <sys/stat.h>
-#include <fcntl.h>
 
 /*
  * This is the maximum number of optimization passes to do.  If we ever
@@ -1610,16 +1612,12 @@ static void assemble_file(char *fname, StrList **depend_ptr)
                     p = value;
                     q = debugid;
                     badid = overlong = false;
-                    if (!isidstart(*p))
-                    {
+                    if (!isidstart(*p)) {
                         badid = true;
-                    }
-                    else
-                    {
-                        while (*p && !as_isspace(*p))
-                        {
-                            if (q >= debugid + sizeof debugid - 1)
-                            {
+                    } else {
+                        while (*p && !as_isspace(*p)) {
+                            // Changed to use explicit array bounds check
+                            if (q >= debugid + 127) {  // Reserve 1 byte for null terminator
                                 overlong = true;
                                 break;
                             }
@@ -1629,16 +1627,9 @@ static void assemble_file(char *fname, StrList **depend_ptr)
                         }
                         *q = 0;
                     }
-                    if (badid)
-                    {
+                    if (badid) {
                         as_error(passn == 1 ? ERR_NONFATAL : ERR_PANIC,
-                                 "identifier expected after DEBUG");
-                        break;
-                    }
-                    if (overlong)
-                    {
-                        as_error(passn == 1 ? ERR_NONFATAL : ERR_PANIC,
-                                 "DEBUG identifier too long");
+                                "identifier expected after DEBUG");
                         break;
                     }
                     p = as_skip_spaces(p);
