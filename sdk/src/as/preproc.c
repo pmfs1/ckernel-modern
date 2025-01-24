@@ -2518,7 +2518,7 @@ static int do_directive(Token *tline)
      * since they are known to be buggy at moment, we need to fix them
      * in future release
      */
-    if (i == PP_RMACRO != 0 || i == PP_EXITMACRO)
+    if ((i == PP_RMACRO) || (i == PP_EXITMACRO))
     {
         error(ERR_NONFATAL, "unknown preprocessor directive `%s'",
               tline->text);
