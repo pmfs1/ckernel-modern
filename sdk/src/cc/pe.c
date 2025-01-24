@@ -1712,8 +1712,7 @@ int pe_load_def_file(CCState *s1, int fd)
             if (strncasecmp(p, "LIBRARY", 7) != 0)
                 goto quit;
             p = trimfront(p + 7);
-            strncpy(dllname, p, sizeof(dllname) - 1);
-            dllname[sizeof(dllname) - 1] = '\0'; // Ensure null termination
+            snprintf(dllname, sizeof(dllname), "%s", p);
             ++state;
             continue;
 
