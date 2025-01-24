@@ -999,7 +999,7 @@ void asm_opcode(CCState *s1, int opcode)
         g(seg_prefix);
 
     v = pa->opcode;
-    if (v == 0x69 != 0)
+    if ((v == 0x69) != 0)
     {
         // Kludge for imul $im, %reg
         nb_ops = 3;
