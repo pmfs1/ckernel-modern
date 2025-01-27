@@ -229,7 +229,7 @@ static bool ieee_flconvert(const char *string, fp_limb *mant,
             else
             {
                 started = true;
-                if (p < digits + sizeof(digits))
+                if (p < digits + MANT_DIGITS)
                 {
                     *p++ = *string - '0';
                 }
