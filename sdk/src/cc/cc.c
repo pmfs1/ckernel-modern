@@ -480,7 +480,7 @@ int main(int argc, char **argv)
     int i;
     CCState *s;
     int nb_objfiles, ret, oind;
-    char objfilename[1024];
+    char *alloc_outfile = NULL; // Add this to track allocated filename
     int64_t start_time = 0;
     char *alt_lib_path;
 
@@ -543,8 +543,10 @@ int main(int argc, char **argv)
             // Compute default outfile name
             char *ext;
             const char *name = strcmp(files[0], "-") == 0 ? "a" : cc_basename(files[0]);
-            pstrcpy(objfilename, sizeof(objfilename), name);
-            ext = cc_fileextension(objfilename);
+            // Allocate memory instead of using stack buffer
+            alloc_outfile = cc_malloc(1024);
+            pstrcpy(alloc_outfile, 1024, name);
+            ext = cc_fileextension(alloc_outfile);
 
             if (output_type == CC_OUTPUT_DLL)
             {
@@ -560,9 +562,9 @@ int main(int argc, char **argv)
             }
             else
             {
-                pstrcpy(objfilename, sizeof(objfilename), "a.out");
+                pstrcpy(alloc_outfile, 1024, "a.out");
             }
-            outfile = objfilename;
+            outfile = alloc_outfile;
         }
     }
 
@@ -633,6 +635,7 @@ int main(int argc, char **argv)
 
 cleanup:
     cc_delete(s);
+    if (alloc_outfile) cc_free(alloc_outfile);
 
 #ifdef MEM_DEBUG
     if (do_bench)

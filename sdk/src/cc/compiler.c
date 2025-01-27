@@ -3920,40 +3920,69 @@ int cc_add_library_path(CCState *s, const char *pathname)
 // TODO: add '-rpath' option support?
 int cc_add_dll(CCState *s, const char *filename, int flags)
 {
-    char buf[1024];
-    int i;
+    char *buf;
+    int i, ret = -1;
+    size_t path_len;
 
     for (i = 0; i < s->nb_library_paths; i++)
     {
-        snprintf(buf, sizeof(buf), "%s/%s", s->library_paths[i], filename);
+        path_len = strlen(s->library_paths[i]) + strlen(filename) + 2; // +2 for '/' and null terminator
+        buf = cc_malloc(path_len);
+        if (!buf) continue;
+
+        snprintf(buf, path_len, "%s/%s", s->library_paths[i], filename);
         if (cc_add_file_ex(s, buf, flags) == 0)
-            return 0;
+        {
+            ret = 0;
+            cc_free(buf);
+            break;
+        }
+        cc_free(buf);
     }
-    return -1;
+    return ret;
 }
 
 // The library name is the same as the argument of the '-l' option
 int cc_add_library(CCState *s, const char *libraryname)
 {
-    char buf[1024];
-    int i;
+    char *buf;
+    int i, ret = -1;
+    size_t path_len;
 
     // First we look for the dynamic library if not static linking
     if (!s->static_link)
     {
-        snprintf(buf, sizeof(buf), "%s.def", libraryname);
-        if (cc_add_dll(s, buf, 0) == 0)
-            return 0;
+        path_len = strlen(libraryname) + 5; // +5 for ".def" and null terminator
+        buf = cc_malloc(path_len);
+        if (buf)
+        {
+            snprintf(buf, path_len, "%s.def", libraryname);
+            if (cc_add_dll(s, buf, 0) == 0)
+            {
+                cc_free(buf);
+                return 0;
+            }
+            cc_free(buf);
+        }
     }
 
     // Then we look for the static library
     for (i = 0; i < s->nb_library_paths; i++)
     {
-        snprintf(buf, sizeof(buf), "%s/lib%s.a", s->library_paths[i], libraryname);
+        path_len = strlen(s->library_paths[i]) + strlen(libraryname) + 7; // +7 for "/lib", ".a" and null terminator
+        buf = cc_malloc(path_len);
+        if (!buf) continue;
+
+        snprintf(buf, path_len, "%s/lib%s.a", s->library_paths[i], libraryname);
         if (cc_add_file_ex(s, buf, 0) == 0)
-            return 0;
+        {
+            ret = 0;
+            cc_free(buf);
+            break;
+        }
+        cc_free(buf);
     }
-    return -1;
+    return ret;
 }
 
 int cc_add_symbol(CCState *s, const char *name, unsigned long val)

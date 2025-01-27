@@ -129,12 +129,19 @@ struct fs *fslookup(char *name, char **rest)
 struct filesystem *register_filesystem(char *name, struct fsops *ops)
 {
     struct filesystem *fsys;
+    char *name_copy;
 
     fsys = (struct filesystem *)malloc(sizeof(struct filesystem));
     if (!fsys)
         return NULL;
 
-    fsys->name = name;
+    name_copy = strdup(name);
+    if (!name_copy) {
+        free(fsys);
+        return NULL;
+    }
+
+    fsys->name = name_copy;
     fsys->ops = ops;
     fsys->next = fslist;
     fslist = fsys;
