@@ -129,19 +129,23 @@ struct fs *fslookup(char *name, char **rest)
 struct filesystem *register_filesystem(char *name, struct fsops *ops)
 {
     struct filesystem *fsys;
-    char *name_copy;
 
+    // Validate parameters
+    if (!name || !ops) return NULL;
+
+    // Allocate filesystem structure
     fsys = (struct filesystem *)malloc(sizeof(struct filesystem));
-    if (!fsys)
-        return NULL;
+    if (!fsys) return NULL;
 
-    name_copy = strdup(name);
-    if (!name_copy) {
+    // Allocate and copy name
+    fsys->name = strdup(name);
+    if (!fsys->name)
+    {
         free(fsys);
         return NULL;
     }
 
-    fsys->name = name_copy;
+    // Initialize remaining fields
     fsys->ops = ops;
     fsys->next = fslist;
     fslist = fsys;
