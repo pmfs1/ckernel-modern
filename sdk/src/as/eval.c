@@ -720,8 +720,6 @@ static expr *eval_strfunc(enum strfunc type)
     size_t string_len;
     int64_t val;
     bool parens, rn_warn;
-    char *scope = NULL;
-    char *full_name = NULL;
 
     parens = false;
     i = scan(scpriv, tokval);
@@ -761,13 +759,6 @@ static expr *eval_strfunc(enum strfunc type)
     addtotemp(EXPR_SIMPLE, val);
 
     i = scan(scpriv, tokval);
-    
-    // Free any allocated memory
-    if (scope)
-        as_free(scope);
-    if (full_name)
-        as_free(full_name);
-        
     return finishtemp();
 }
 
