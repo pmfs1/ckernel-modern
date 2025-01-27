@@ -153,16 +153,13 @@ void free_properties(struct section *sect)
 
     while (sect)
     {
-        if (sect->name)
-            free(sect->name);
+        free(sect->name);
 
         prop = sect->properties;
         while (prop)
         {
-            if (prop->name)
-                free(prop->name);
-            if (prop->value)
-                free(prop->value);
+            free(prop->name);
+            free(prop->value);
 
             nextprop = prop->next;
             free(prop);
