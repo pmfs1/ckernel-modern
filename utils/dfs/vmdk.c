@@ -200,12 +200,9 @@ static int vmdk_open(struct blockdevice *bs, const char *filename)
     return 0;
 
 fail:
-    if (s->l1_backup_table)
-        free(s->l1_backup_table);
-    if (s->l1_table)
-        free(s->l1_table);
-    if (s->l2_cache)
-        free(s->l2_cache);
+    free(s->l1_backup_table);
+    free(s->l1_table);
+    free(s->l2_cache);
     close(fd);
     return -1;
 }
