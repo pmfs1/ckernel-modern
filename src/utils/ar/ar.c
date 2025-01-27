@@ -614,6 +614,13 @@ int main(int argc, char *argv[])
     }
     archive_filename = argv[optind++];
 
+    // Validate archive filename
+    if (!is_safe_filename(archive_filename))
+    {
+        fprintf(stderr, "%s: Invalid archive filename\n", archive_filename);
+        return 1;
+    }
+
     // Read all the input object files
     init_archive(&ar);
     while (optind < argc)
@@ -668,6 +675,14 @@ int main(int argc, char *argv[])
             }
         }
         close(fd);
+    }
+
+    // Validate archive filename again before writing
+    if (!is_safe_filename(archive_filename))
+    {
+        fprintf(stderr, "%s: Invalid archive filename\n", archive_filename);
+        free_archive(&ar);
+        return 1;
     }
 
     // Open output archive
