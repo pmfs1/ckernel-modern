@@ -41,6 +41,7 @@ jobs:
                 - cpp/short-global-name
                 - cpp/long-switch
                 - cpp/commented-out-code
+                - cpp/useless-expression
     - if: matrix.build-mode == 'manual'
       name: 'BUILD (MANUAL)'
       shell: bash
