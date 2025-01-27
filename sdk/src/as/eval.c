@@ -720,6 +720,8 @@ static expr *eval_strfunc(enum strfunc type)
     size_t string_len;
     int64_t val;
     bool parens, rn_warn;
+    char *scope = NULL;
+    char *full_name = NULL;
 
     parens = false;
     i = scan(scpriv, tokval);
@@ -759,6 +761,13 @@ static expr *eval_strfunc(enum strfunc type)
     addtotemp(EXPR_SIMPLE, val);
 
     i = scan(scpriv, tokval);
+    
+    // Free any allocated memory
+    if (scope)
+        as_free(scope);
+    if (full_name)
+        as_free(full_name);
+        
     return finishtemp();
 }
 
@@ -907,18 +916,25 @@ static expr *expr6(int critical)
             {
                 if (!labelfunc(tokval->t_charptr, &label_seg, &label_ofs))
                 {
-                    scope = local_scope(tokval->t_charptr);
+                    char *tmp_scope = local_scope(tokval->t_charptr);
+                    char *scope = NULL;
+                    if (tmp_scope) {
+                        scope = as_strdup(tmp_scope);
+                    }
+                    
                     if (critical == 2)
                     {
                         error(ERR_NONFATAL, "symbol `%s%s' undefined",
-                              scope, tokval->t_charptr);
+                              scope ? scope : "", tokval->t_charptr);
+                        if (scope) as_free(scope);
                         return NULL;
                     }
                     else if (critical == 1)
                     {
                         error(ERR_NONFATAL,
                               "symbol `%s%s' not defined before use",
-                              scope, tokval->t_charptr);
+                              scope ? scope : "", tokval->t_charptr);
+                        if (scope) as_free(scope);
                         return NULL;
                     }
                     else
@@ -929,6 +945,7 @@ static expr *expr6(int critical)
                         label_seg = NO_SEG;
                         label_ofs = 1;
                     }
+                    if (scope) as_free(scope);
                 }
                 if (opflags && is_extern(tokval->t_charptr))
                     *opflags |= OPFLAG_EXTERN;
