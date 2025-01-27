@@ -301,8 +301,10 @@ static void bin_cleanup(int debuginfo)
      * this we need to know three things: the start of the group
      * to relocate (g), the section it is following (s), and the
      * end of the group we're relocating (gs). */
-    for (gp = &sections, g = sections; g; g = gs)
-    { /* Find the next follows group that is out of place (g). */
+    gp = &sections;
+    g = sections;
+    while (g != NULL) {
+        /* Find the next follows group that is out of place (g). */
         if (!(g->flags & FOLLOWS_DEFINED))
         {
             while (g->next)
@@ -348,6 +350,7 @@ static void bin_cleanup(int debuginfo)
         *gsp = s->next;
         s->next = g;
         *gp = gs;
+        g = gs;
     }
 
     /* Link all 'start' groups to their proper position.  Once
@@ -1189,9 +1192,8 @@ static void bin_assign_attributes(struct Section *sec, char *astring)
 
                 /* Don't allow a conflicting valign value. */
                 if ((sec->flags & VSTART_DEFINED) && (sec->vstart & (value - 1)))
-                    as_error(ERR_NONFATAL,
-                             "`valign' value conflicts "
-                             "with `vstart' address");
+                    as_error(ERR_NONFATAL, "`valign' value conflicts "
+                                           "with `vstart' address");
                 else
                 {
                     sec->valign = value;
