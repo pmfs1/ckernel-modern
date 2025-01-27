@@ -2105,7 +2105,7 @@ done:
 static enum match_result matches(const struct itemplate *itemp,
                                  insn *instruction, int bits)
 {
-    int i, size[MAX_OPERANDS], asize, oprs;
+    int i, j, size[MAX_OPERANDS], asize, oprs;
     bool opsizemissing = false;
 
     /*
@@ -2259,8 +2259,8 @@ static enum match_result matches(const struct itemplate *itemp,
             asize = itemp->opd[i] & SIZE_MASK;
             if (asize)
             {
-                for (i = 0; i < oprs; i++)
-                    size[i] = asize;
+                for (j = 0; i < oprs; j++)
+                    size[j] = asize;
                 break;
             }
         }
