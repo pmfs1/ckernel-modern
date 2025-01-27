@@ -1454,9 +1454,8 @@ static int elf_directive(enum directives directive, char *value, int pass)
     int64_t n;
     char *p;
 
-    switch (directive)
+    if (directive == D_OSABI)
     {
-    case D_OSABI:
         if (pass == 2)
             return 1; /* ignore in pass 2 */
 
@@ -1486,8 +1485,9 @@ static int elf_directive(enum directives directive, char *value, int pass)
 
         elf_abiver = n;
         return 1;
-
-    default:
+    }
+    else
+    {
         return 0;
     }
 }
