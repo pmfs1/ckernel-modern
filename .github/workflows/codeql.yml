@@ -30,6 +30,17 @@ jobs:
         languages: ${{ matrix.language }}
         build-mode: ${{ matrix.build-mode }}
         queries: security-extended,security-and-quality
+        config: |
+          disable-default-queries: false
+          queries:
+            - uses: security-extended,security-and-quality
+          query-filters:
+            - exclude:
+                id:
+                - cpp/complex-block
+                - cpp/short-global-name
+                - cpp/long-switch
+                - cpp/commented-out-code
     - if: matrix.build-mode == 'manual'
       name: 'BUILD (MANUAL)'
       shell: bash
