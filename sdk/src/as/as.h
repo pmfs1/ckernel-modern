@@ -176,31 +176,31 @@ enum token_type
   TOKEN_GT = '>',     /* = 62 */
   TOKEN_LT = '<',     /* = 60 */
   TOKEN_ID = 256,     /* identifier */
-  TOKEN_NUM,          /* numeric constant */
-  TOKEN_ERRNUM,       /* malformed numeric constant */
-  TOKEN_STR,          /* string constant */
-  TOKEN_ERRSTR,       /* unterminated string constant */
-  TOKEN_FLOAT,        /* floating-point constant */
-  TOKEN_REG,          /* register name */
-  TOKEN_INSN,         /* instruction name */
-  TOKEN_HERE,
-  TOKEN_BASE,    /* $ and $$ */
-  TOKEN_SPECIAL, /* BYTE, WORD, DWORD, QWORD, FAR, NEAR, etc */
-  TOKEN_PREFIX,  /* A32, O16, LOCK, REPNZ, TIMES, etc */
-  TOKEN_SHL,
-  TOKEN_SHR, /* << and >> */
-  TOKEN_SDIV,
-  TOKEN_SMOD, /* // and %% */
-  TOKEN_GE,
-  TOKEN_LE,
-  TOKEN_NE, /* >=, <= and <> (!= is same as <>) */
-  TOKEN_DBL_AND,
-  TOKEN_DBL_OR,
-  TOKEN_DBL_XOR, /* &&, || and ^^ */
-  TOKEN_SEG,
-  TOKEN_WRT,      /* SEG and WRT */
-  TOKEN_FLOATIZE, /* __floatX__ */
-  TOKEN_STRFUNC   /* __utf16__, __utf32__ */
+  TOKEN_NUM = 257,    /* numeric constant */
+  TOKEN_ERRNUM = 258, /* invalid numeric constant */
+  TOKEN_STR = 259,    /* string constant */
+  TOKEN_ERRSTR = 260, /* invalid string constant */
+  TOKEN_FLOAT = 261,  /* floating-point constant */
+  TOKEN_REG = 262,    /* register name */
+  TOKEN_INSN = 263,   /* instruction mnemonic */
+  TOKEN_HERE = 264,
+  TOKEN_BASE = 265,    /* $ and $$ */
+  TOKEN_SPECIAL = 266, /* BYTE, WORD, DWORD, QWORD, FAR, NEAR, etc */
+  TOKEN_PREFIX = 267,  /* A32, O16, LOCK, REPNZ, TIMES, etc */
+  TOKEN_SHL = 268,
+  TOKEN_SHR = 269, /* << and >> */
+  TOKEN_SDIV = 270,
+  TOKEN_SMOD = 271, /* // and %% */
+  TOKEN_GE = 272,
+  TOKEN_LE = 273,
+  TOKEN_NE = 274, /* >=, <= and <> (!= is same as <>) */
+  TOKEN_DBL_AND = 275,
+  TOKEN_DBL_OR = 276,
+  TOKEN_DBL_XOR = 277, /* &&, || and ^^ */
+  TOKEN_SEG = 278,
+  TOKEN_WRT = 279,      /* SEG and WRT */
+  TOKEN_FLOATIZE = 280, /* __floatX__ */
+  TOKEN_STRFUNC = 281,  /* __utf16__, __utf32__ */
 };
 
 enum floatize
@@ -498,22 +498,22 @@ enum prefixes
   P_none = 0,
   PREFIX_ENUM_START = REG_ENUM_LIMIT,
   P_A16 = PREFIX_ENUM_START,
-  P_A32,
-  P_A64,
-  P_ASP,
-  P_LOCK,
-  P_O16,
-  P_O32,
-  P_O64,
-  P_OSP,
-  P_REP,
-  P_REPE,
-  P_REPNE,
-  P_REPNZ,
-  P_REPZ,
-  P_TIMES,
-  P_WAIT,
-  PREFIX_ENUM_LIMIT
+  P_A32 = PREFIX_ENUM_START + 1,
+  P_A64 = PREFIX_ENUM_START + 2,
+  P_ASP = PREFIX_ENUM_START + 3,
+  P_LOCK = PREFIX_ENUM_START + 4,
+  P_O16 = PREFIX_ENUM_START + 5,
+  P_O32 = PREFIX_ENUM_START + 6,
+  P_O64 = PREFIX_ENUM_START + 7,
+  P_OSP = PREFIX_ENUM_START + 8,
+  P_REP = PREFIX_ENUM_START + 9,
+  P_REPE = PREFIX_ENUM_START + 10,
+  P_REPNE = PREFIX_ENUM_START + 11,
+  P_REPNZ = PREFIX_ENUM_START + 12,
+  P_REPZ = PREFIX_ENUM_START + 13,
+  P_TIMES = PREFIX_ENUM_START + 14,
+  P_WAIT = PREFIX_ENUM_START + 15,
+  PREFIX_ENUM_LIMIT = PREFIX_ENUM_START + 16
 };
 
 enum extop_type
@@ -919,8 +919,8 @@ extern const struct dfmt *dfmt;
 #define TY_EXTERN 0xF0
 #define TY_EQU 0xF8
 
-#define TYM_TYPE(x) ((x) & 0xF8)
-#define TYM_ELEMENTS(x) (((x) & 0xFFFFFF00) >> 8)
+#define TYM_TYPE(x) ((x)&0xF8)
+#define TYM_ELEMENTS(x) (((x)&0xFFFFFF00) >> 8)
 
 #define TYS_ELEMENTS(x) ((x) << 8)
 
