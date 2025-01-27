@@ -373,7 +373,7 @@ void gcode(void)
                 continue;
 
             t = skip_nops(b->target, 1);
-            if (branch[t].type == CodeJump && !branch[t].param && branch[t].target != b->target)
+            if (branch[t].type == CodeJump && !branch[t].param && b->target != branch[t].target)
             {
                 // Eliminate jump to jump
                 b->target = branch[t].target;
@@ -406,7 +406,7 @@ void gcode(void)
             }
 
             t = skip_nops(n + 1, 0);
-            if (bn->type == CodeJump && !bn->param && bn->target != b->target && bn->ind == branch[t].ind)
+            if (bn->type == CodeJump && !bn->param && b->target == t && bn->ind == branch[t].ind)
             {
                 // Optimize inverted jump
                 if (b->param)
@@ -1186,19 +1186,23 @@ void gen_opi(int op)
             r = gv(RC_INT);
             vswap();
             c = vtop->c.i;
-            if ((op == '+' && c == 1) || (op == '-' && c == -1))
+            if (c == (char)c)
             {
-                o(0x40 | r); // inc r
-            }
-            else if ((op == '-' && c == 1) || (op == '+' && c == -1))
-            {
-                o(0x48 | r); // dec r
-            }
-            else if (c == (char)c)
-            {
-                o(0x83);
-                o(0xc0 | (opc << 3) | r);
-                g(c);
+                // Optimize +/- 1 case with inc and dec
+                if (op == '+' && c == 1 || op == '-' && c == -1)
+                {
+                    o(0x40 | r); // inc r
+                }
+                else if (op == '-' && c == 1 || op == '+' && c == -1)
+                {
+                    o(0x48 | r); // dec r
+                }
+                else
+                {
+                    o(0x83);
+                    o(0xc0 | (opc << 3) | r);
+                    g(c);
+                }
             }
             else
             {
@@ -1385,6 +1389,7 @@ void gen_opf(int op)
         {
             o(0x45e480); // and $0x45, %ah
             o(0x40f480); // xor $0x40, %ah
+            op = TOK_NE;
         }
         else if (op == TOK_GE || op == TOK_LE)
         {
