@@ -2126,6 +2126,7 @@ static bool if_condition(Token *tline, enum preproc_token ct)
         skip_white_(tline);
         if (!tline)
         {
+            // this empty block is intentional: its required to keep rocessing even if the file pointer was null, but no specific action was required in that case.
         }
         else if (!tok_type_(tline, TOK_NUMBER))
         {

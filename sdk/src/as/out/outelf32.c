@@ -271,7 +271,7 @@ static void add_sectname(char *firsthalf, char *secondhalf)
     while (shstrtablen + len + 1 > shstrtabsize)
         shstrtab = as_realloc(shstrtab, (shstrtabsize += SHSTR_DELTA));
     strcpy(shstrtab + shstrtablen, firsthalf);
-    strcat(shstrtab + shstrtablen, secondhalf);
+    strncat(shstrtab + shstrtablen, secondhalf, SHSTR_DELTA - shstrtablen - 1);
     shstrtablen += len + 1;
 }
 
@@ -1454,9 +1454,8 @@ static int elf_directive(enum directives directive, char *value, int pass)
     int64_t n;
     char *p;
 
-    switch (directive)
+    if (directive == D_OSABI)
     {
-    case D_OSABI:
         if (pass == 2)
             return 1; /* ignore in pass 2 */
 
@@ -1486,8 +1485,9 @@ static int elf_directive(enum directives directive, char *value, int pass)
 
         elf_abiver = n;
         return 1;
-
-    default:
+    }
+    else
+    {
         return 0;
     }
 }
@@ -2030,11 +2030,11 @@ static void dwarf32_generate(void)
     saa_write8(pinfo, 4);  /* pointer size */
     saa_write8(pinfo, 1);  /* abbrviation number LEB128u */
     saa_write32(pinforel, pinfo->datalen + 4);
-    saa_write32(pinforel, ((dwarf_fsect->section + 2) << 8) + R_386_32);
+    saa_write32(pinforel, ((uint32_t)(psect->section + 2) << 8) + R_386_32);
     saa_write32(pinforel, 0);
     saa_write32(pinfo, 0); /* DW_AT_low_pc */
     saa_write32(pinforel, pinfo->datalen + 4);
-    saa_write32(pinforel, ((dwarf_fsect->section + 2) << 8) + R_386_32);
+    saa_write32(pinforel, ((uint32_t)(psect->section + 2) << 8) + R_386_32);
     saa_write32(pinforel, 0);
     saa_write32(pinfo, highaddr); /* DW_AT_high_pc */
     saa_write32(pinforel, pinfo->datalen + 4);
@@ -2046,7 +2046,7 @@ static void dwarf32_generate(void)
     saa_write16(pinfo, DW_LANG_Mips_Assembler);
     saa_write8(pinfo, 2); /* abbrviation number LEB128u */
     saa_write32(pinforel, pinfo->datalen + 4);
-    saa_write32(pinforel, ((dwarf_fsect->section + 2) << 8) + R_386_32);
+    saa_write32(pinforel, ((uint32_t)(psect->section + 2) << 8) + R_386_32);
     saa_write32(pinforel, 0);
     saa_write32(pinfo, 0); /* DW_AT_low_pc */
     saa_write32(pinfo, 0); /* DW_AT_frame_base */

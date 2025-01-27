@@ -1867,9 +1867,9 @@ int cc_load_object_file(CCState *s1, int fd, unsigned long file_offset)
             continue;
         sh = &shdr[i];
         offset = sm_table[i].offset;
-        switch (s->sh_type)
+
+        if (s->sh_type == SHT_REL)
         {
-        case SHT_REL:
             // Take relocation offset information
             offseti = sm_table[sh->sh_info].offset;
             rel_end = (Elf32_Rel *)(s->data + s->data_offset);
@@ -1896,9 +1896,6 @@ int cc_load_object_file(CCState *s1, int fd, unsigned long file_offset)
                 // Offset the relocation offset
                 rel->r_offset += offseti;
             }
-            break;
-        default:
-            break;
         }
     }
 
@@ -2143,9 +2140,8 @@ int cc_load_dll(CCState *s1, int fd, const char *filename, int level)
     // load all referenced DLLs
     for (i = 0, dt = dynamic; i < nb_dts; i++, dt++)
     {
-        switch (dt->d_tag)
+        if (dt->d_tag == DT_NEEDED)
         {
-        case DT_NEEDED:
             name = dynstr + dt->d_un.d_val;
             for (j = 0; j < s1->nb_loaded_dlls; j++)
             {
@@ -2163,6 +2159,7 @@ int cc_load_dll(CCState *s1, int fd, const char *filename, int level)
             break;
         }
     }
+
     ret = 0;
 cleanup:
     cc_free(dynstr);

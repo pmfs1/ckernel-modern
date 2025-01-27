@@ -129,7 +129,6 @@ static int raw_create(const char *filename, int64_t total_size, int flags)
 {
     int fd;
     off_t size;
-    int rc;
 
     if (flags)
         return -1;
@@ -266,8 +265,7 @@ int bdrv_open(struct blockdevice *bs, const char *filename, struct blockdriver *
     ret = drv->bdrv_open(bs, filename);
     if (ret < 0)
     {
-        if (bs->opaque)
-            free(bs->opaque);
+        free(bs->opaque);
         return -1;
     }
 

@@ -172,17 +172,17 @@ enum token_type
 {                     /* token types, other than chars */
   TOKEN_INVALID = -1, /* a placeholder value */
   TOKEN_EOS = 0,      /* end of string */
-  TOKEN_EQ = '=',
-  TOKEN_GT = '>',
-  TOKEN_LT = '<', /* aliases */
-  TOKEN_ID = 256, /* identifier */
-  TOKEN_NUM,      /* numeric constant */
-  TOKEN_ERRNUM,   /* malformed numeric constant */
-  TOKEN_STR,      /* string constant */
-  TOKEN_ERRSTR,   /* unterminated string constant */
-  TOKEN_FLOAT,    /* floating-point constant */
-  TOKEN_REG,      /* register name */
-  TOKEN_INSN,     /* instruction name */
+  TOKEN_EQ = '=',     /* = 61 */
+  TOKEN_GT = '>',     /* = 62 */
+  TOKEN_LT = '<',     /* = 60 */
+  TOKEN_ID = 256,     /* identifier */
+  TOKEN_NUM,          /* numeric constant */
+  TOKEN_ERRNUM,       /* malformed numeric constant */
+  TOKEN_STR,          /* string constant */
+  TOKEN_ERRSTR,       /* unterminated string constant */
+  TOKEN_FLOAT,        /* floating-point constant */
+  TOKEN_REG,          /* register name */
+  TOKEN_INSN,         /* instruction name */
   TOKEN_HERE,
   TOKEN_BASE,    /* $ and $$ */
   TOKEN_SPECIAL, /* BYTE, WORD, DWORD, QWORD, FAR, NEAR, etc */
@@ -200,7 +200,7 @@ enum token_type
   TOKEN_SEG,
   TOKEN_WRT,      /* SEG and WRT */
   TOKEN_FLOATIZE, /* __floatX__ */
-  TOKEN_STRFUNC,  /* __utf16__, __utf32__ */
+  TOKEN_STRFUNC   /* __utf16__, __utf32__ */
 };
 
 enum floatize
