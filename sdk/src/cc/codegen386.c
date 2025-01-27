@@ -580,11 +580,13 @@ void gcode(void)
             break;
 
         case CodeAlign:
-            i = addr;
-            while (i & (b->param - 1))
             {
-                gen(b->target);
-                i++;
+                int current_offset = i;
+                while (current_offset & (b->param - 1))
+                {
+                    gen(b->target);
+                    current_offset++;
+                }
             }
             break;
 
