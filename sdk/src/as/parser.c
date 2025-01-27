@@ -461,20 +461,16 @@ restart_parse:
                 {
                     as_error(ERR_NONFATAL, "floating-point constant"
                                            " encountered in unknown instruction");
-                    /*
-                     * fix suggested by Pedro Gimeno... original line was:
-                     * eop->type = EOT_NOTHING;
-                     */
                     eop->stringlen = 0;
                 }
 
-                eop = as_realloc(eop, sizeof(extop) + eop->stringlen);
+                
+                eop = as_realloc(eop, offsetof(struct extop, stringval) + eop->stringlen);
                 tail = &eop->next;
                 *fixptr = eop;
-                eop->stringval = (char *)eop + sizeof(extop);
                 if (!eop->stringlen ||
                     !float_const(tokval.t_charptr, sign,
-                                 (uint8_t *)eop->stringval,
+                                 (uint8_t *)&eop->stringval, 
                                  eop->stringlen, as_error))
                     eop->type = EOT_NOTHING;
                 i = stdscan(NULL, &tokval); /* eat the comma */
