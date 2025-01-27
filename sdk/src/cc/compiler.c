@@ -3920,24 +3920,20 @@ int cc_add_library_path(CCState *s, const char *pathname)
 // TODO: add '-rpath' option support?
 int cc_add_dll(CCState *s, const char *filename, int flags)
 {
-    char *buf;
+    char *fullpath;
     int i, ret = -1;
     size_t path_len;
 
     for (i = 0; i < s->nb_library_paths; i++)
     {
         path_len = strlen(s->library_paths[i]) + strlen(filename) + 2; // +2 for '/' and null terminator
-        buf = cc_malloc(path_len);
-        if (!buf) continue;
+        fullpath = cc_malloc(path_len);
+        if (!fullpath) continue;
 
-        snprintf(buf, path_len, "%s/%s", s->library_paths[i], filename);
-        if (cc_add_file_ex(s, buf, flags) == 0)
-        {
-            ret = 0;
-            cc_free(buf);
-            break;
-        }
-        cc_free(buf);
+        snprintf(fullpath, path_len, "%s/%s", s->library_paths[i], filename);
+        ret = cc_add_file_ex(s, fullpath, flags);
+        cc_free(fullpath);
+        if (ret == 0) break;
     }
     return ret;
 }
@@ -3945,7 +3941,7 @@ int cc_add_dll(CCState *s, const char *filename, int flags)
 // The library name is the same as the argument of the '-l' option
 int cc_add_library(CCState *s, const char *libraryname)
 {
-    char *buf;
+    char *fullpath;
     int i, ret = -1;
     size_t path_len;
 
@@ -3953,16 +3949,13 @@ int cc_add_library(CCState *s, const char *libraryname)
     if (!s->static_link)
     {
         path_len = strlen(libraryname) + 5; // +5 for ".def" and null terminator
-        buf = cc_malloc(path_len);
-        if (buf)
+        fullpath = cc_malloc(path_len);
+        if (fullpath)
         {
-            snprintf(buf, path_len, "%s.def", libraryname);
-            if (cc_add_dll(s, buf, 0) == 0)
-            {
-                cc_free(buf);
-                return 0;
-            }
-            cc_free(buf);
+            snprintf(fullpath, path_len, "%s.def", libraryname);
+            ret = cc_add_dll(s, fullpath, 0);
+            cc_free(fullpath);
+            if (ret == 0) return 0;
         }
     }
 
@@ -3970,17 +3963,13 @@ int cc_add_library(CCState *s, const char *libraryname)
     for (i = 0; i < s->nb_library_paths; i++)
     {
         path_len = strlen(s->library_paths[i]) + strlen(libraryname) + 7; // +7 for "/lib", ".a" and null terminator
-        buf = cc_malloc(path_len);
-        if (!buf) continue;
+        fullpath = cc_malloc(path_len);
+        if (!fullpath) continue;
 
-        snprintf(buf, path_len, "%s/lib%s.a", s->library_paths[i], libraryname);
-        if (cc_add_file_ex(s, buf, 0) == 0)
-        {
-            ret = 0;
-            cc_free(buf);
-            break;
-        }
-        cc_free(buf);
+        snprintf(fullpath, path_len, "%s/lib%s.a", s->library_paths[i], libraryname);
+        ret = cc_add_file_ex(s, fullpath, 0);
+        cc_free(fullpath);
+        if (ret == 0) break;
     }
     return ret;
 }
