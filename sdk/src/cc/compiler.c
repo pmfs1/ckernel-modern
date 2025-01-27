@@ -1427,15 +1427,15 @@ tok_next:
             // Compute first implicit argument if a structure is returned
             if ((s->type.t & VT_BTYPE) == VT_STRUCT)
             {
-                CType type;
-                // If returning structure, must copy it to implicit first pointer arg location
-                type = func_vt;
-                mk_pointer(&type);
-                vset(&type, VT_LOCAL | VT_LVAL, func_vc);
-                indir();
-                vswap();
-                // Copy structure value to pointer
-                vstore();
+                // Get some space for the returned structure
+                size = type_size(&s->type, &align);
+                loc = (loc - size) & -align;
+                ret.type = s->type;
+                ret.r = VT_LOCAL | VT_LVAL;
+                // Pass it as 'int' to avoid structure arg passing problems
+                vseti(VT_LOCAL, loc);
+                ret.c = vtop->c;
+                nb_args++;
             }
             else
             {
@@ -3588,14 +3588,9 @@ int cc_preprocess(CCState *s1)
 
 int cc_compile_string(CCState *s, const char *str)
 {
-    BufferedFile *bf;
+    BufferedFile bf1, *bf = &bf1;
     int ret, len;
     char *buf;
-
-    // Allocate buffer file structure from heap
-    bf = cc_malloc(sizeof(BufferedFile));
-    if (!bf)
-        return -1;
 
     // Init file structure
     bf->fd = -1;
@@ -3603,10 +3598,7 @@ int cc_compile_string(CCState *s, const char *str)
     len = strlen(str);
     buf = cc_malloc(len + 1);
     if (!buf)
-    {
-        cc_free(bf);
         return -1;
-    }
     memcpy(buf, str, len);
     buf[len] = CH_EOB;
     bf->buf_ptr = buf;
@@ -3614,47 +3606,32 @@ int cc_compile_string(CCState *s, const char *str)
     pstrcpy(bf->filename, sizeof(bf->filename), "<string>");
     bf->line_num = 1;
     file = bf;
+
     ret = cc_compile(s);
+
     cc_free(buf);
-    cc_free(bf);
+
+    // Currently, no need to close
     return ret;
 }
 
+// Define a preprocessor symbol. A value can also be provided with the '=' operator
 void cc_define_symbol(CCState *s1, const char *sym, const char *value)
 {
-    BufferedFile *bf;
-    char *buf;
-    int len;
+    BufferedFile bf1, *bf = &bf1;
 
-    // Allocate buffer file structure from heap
-    bf = cc_malloc(sizeof(BufferedFile));
-    if (!bf)
-        return;
+    pstrcpy(bf->buffer, IO_BUF_SIZE, sym);
+    pstrcat(bf->buffer, IO_BUF_SIZE, " ");
 
-    // Calculate required buffer size
-    len = strlen(sym) + 2; // +2 for space and potential null terminator
-    if (value)
-        len += strlen(value);
-
-    // Allocate buffer
-    buf = cc_malloc(len + 1);
-    if (!buf)
-    {
-        cc_free(bf);
-        return;
-    }
-
-    // Build definition string
-    strcpy(buf, sym);
-    strcat(buf, " ");
+    // Default value
     if (!value)
         value = "1";
-    strcat(buf, value);
+    pstrcat(bf->buffer, IO_BUF_SIZE, value);
 
     // Init file structure
     bf->fd = -1;
-    bf->buf_ptr = buf;
-    bf->buf_end = buf + strlen(buf);
+    bf->buf_ptr = bf->buffer;
+    bf->buf_end = bf->buffer + strlen(bf->buffer);
     *bf->buf_end = CH_EOB;
     bf->filename[0] = '\0';
     bf->line_num = 1;
@@ -3666,10 +3643,6 @@ void cc_define_symbol(CCState *s1, const char *sym, const char *value)
     ch = file->buf_ptr[0];
     next_nomacro();
     parse_define();
-
-    // Clean up
-    cc_free(buf);
-    cc_free(bf);
     file = NULL;
 }
 
