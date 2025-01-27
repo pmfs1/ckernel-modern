@@ -213,8 +213,7 @@ void free_archive(struct archive *ar)
     while (e)
     {
         struct entry *next = e->next;
-        if (e->contents)
-            free(e->contents);
+        free(e->contents);
         free(e);
         e = next;
     }
@@ -223,8 +222,7 @@ void free_archive(struct archive *ar)
     while (s)
     {
         struct symbol *next = s->next;
-        if (s->name)
-            free(s->name);
+        free(s->name);
         free(s);
         s = next;
     }
