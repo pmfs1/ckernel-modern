@@ -43,6 +43,7 @@ jobs:
                 - cpp/commented-out-code
                 - cpp/useless-expression
                 - cpp/complex-condition
+                - cpp/use-of-goto
     - if: matrix.build-mode == 'manual'
       name: 'BUILD (MANUAL)'
       shell: bash
