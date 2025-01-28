@@ -41,6 +41,7 @@ static struct location *location; /* Pointer to current line's segment,offset */
 static int *opflags;
 
 static struct eval_hints *hint;
+static struct eval_hints *static_hints = NULL;
 
 extern int in_abs_seg;     /* ABSOLUTE segment flag */
 extern int32_t abs_seg;    /* ABSOLUTE segment */
@@ -907,15 +908,17 @@ static expr *expr6(int critical, void *scpriv)
                 {
                     char *tmp_scope = local_scope(tokval->t_charptr);
                     char *tmp_scope_ptr = NULL;
-                    if (tmp_scope) {
+                    if (tmp_scope)
+                    {
                         tmp_scope_ptr = as_strdup(tmp_scope);
                     }
-                    
+
                     if (critical == 2)
                     {
                         error(ERR_NONFATAL, "symbol `%s%s' undefined",
                               tmp_scope_ptr ? tmp_scope_ptr : "", tokval->t_charptr);
-                        if (tmp_scope_ptr) as_free(tmp_scope_ptr);
+                        if (tmp_scope_ptr)
+                            as_free(tmp_scope_ptr);
                         return NULL;
                     }
                     else if (critical == 1)
@@ -923,7 +926,8 @@ static expr *expr6(int critical, void *scpriv)
                         error(ERR_NONFATAL,
                               "symbol `%s%s' not defined before use",
                               tmp_scope_ptr ? tmp_scope_ptr : "", tokval->t_charptr);
-                        if (tmp_scope_ptr) as_free(tmp_scope_ptr);
+                        if (tmp_scope_ptr)
+                            as_free(tmp_scope_ptr);
                         return NULL;
                     }
                     else
@@ -934,7 +938,8 @@ static expr *expr6(int critical, void *scpriv)
                         label_seg = NO_SEG;
                         label_ofs = 1;
                     }
-                    if (tmp_scope_ptr) as_free(tmp_scope_ptr);
+                    if (tmp_scope_ptr)
+                        as_free(tmp_scope_ptr);
                 }
                 if (opflags && is_extern(tokval->t_charptr))
                     *opflags |= OPFLAG_EXTERN;
@@ -967,10 +972,10 @@ expr *evaluate(scanner sc, void *scprivate, struct tokenval *tv,
 {
     expr *e;
     expr *f = NULL;
-    // Store fwref in a static variable to prevent stack escape
     static int *safe_opflags;
 
-    hint = hints;
+    static_hints = hints;
+    hint = static_hints;
     if (hint)
         hint->type = EAH_NOHINT;
 
@@ -985,7 +990,7 @@ expr *evaluate(scanner sc, void *scprivate, struct tokenval *tv,
     scan = sc;
     tokval = tv;
     error = report_error;
-    safe_opflags = fwref;  // Use the safe static variable
+    safe_opflags = fwref;
     opflags = safe_opflags;
 
     if (tokval->t_type == TOKEN_INVALID)
