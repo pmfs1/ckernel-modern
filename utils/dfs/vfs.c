@@ -183,6 +183,11 @@ int vfs_mount(char *type, char *path, vfs_devno_t devno, char *opts)
     struct filesystem *fsys;
     struct fs *fs;
     int rc;
+    size_t pathlen;
+
+    // Check path length before allocation
+    if (!path || (pathlen = strlen(path)) >= MAXPATH)
+        return -1;
 
     // Check for file system already mounted
     fs = mountlist;
@@ -209,21 +214,16 @@ int vfs_mount(char *type, char *path, vfs_devno_t devno, char *opts)
     if (!fs)
         return -1;
 
-    // Clear the structure first
+    // Clear the structure
     memset(fs, 0, sizeof(struct fs));
 
-    // Initialize core fields first
+    // Copy path first to ensure it's valid
+    strncpy(fs->path, path, MAXPATH - 1);
+    fs->path[MAXPATH - 1] = '\0';
+
+    // Initialize the rest of the structure
     fs->devno = devno;
     fs->ops = fsys->ops;
-
-    // Copy path with bounds checking
-    if (strlen(path) >= MAXPATH)
-    {
-        free(fs);
-        return -1;
-    }
-    strncpy(fs->path, path, MAXPATH);
-    fs->path[MAXPATH - 1] = '\0';
 
     // Initialize filesystem on device
     rc = fs->ops->mount(fs, opts);
@@ -233,7 +233,7 @@ int vfs_mount(char *type, char *path, vfs_devno_t devno, char *opts)
         return rc;
     }
 
-    // Add to mount list only after successful initialization
+    // Add to mount list
     fs->next = mountlist;
     mountlist = fs;
     return 0;
