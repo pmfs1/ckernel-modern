@@ -968,8 +968,8 @@ expr *evaluate(scanner sc, void *scprivate, struct tokenval *tv,
 {
     expr *e;
     expr *f = NULL;
-    // Store fwref in a static variable to prevent stack escape
     static int *safe_opflags;
+    static struct tokenval safe_tokval;
 
     hint = hints;
     if (hint)
@@ -985,9 +985,10 @@ expr *evaluate(scanner sc, void *scprivate, struct tokenval *tv,
 
     scan = sc;
     scpriv = scprivate;
-    tokval = tv;
+    safe_tokval = *tv;
+    tokval = &safe_tokval;
     error = report_error;
-    safe_opflags = fwref;  // Use the safe static variable
+    safe_opflags = fwref;
     opflags = safe_opflags;
 
     if (tokval->t_type == TOKEN_INVALID)
