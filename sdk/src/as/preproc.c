@@ -1704,13 +1704,13 @@ static Context *get_ctx(const char *name, const char **namep,
 /*
  * Check to see if a file is already in a string list
  */
-static bool in_list(const StrList *list, const char *str)
+static bool in_list(const StrList *lst, const char *str)
 {
-    while (list)
+    while (lst)
     {
-        if (!strcmp(list->str, str))
+        if (!strcmp(lst->str, str))
             return true;
-        list = list->next;
+        lst = lst->next;
     }
     return false;
 }
