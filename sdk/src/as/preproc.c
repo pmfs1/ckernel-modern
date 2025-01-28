@@ -658,10 +658,10 @@ static void free_tlist(Token *tokens)
 /*
  * Free a linked list of lines.
  */
-static void free_llist(Line *list)
+static void free_llist(Line *lineList)
 {
     Line *l, *tmp;
-    list_for_each_safe(l, tmp, list)
+    list_for_each_safe(l, tmp, lineList)
     {
         free_tlist(l->first);
         as_free(l);
