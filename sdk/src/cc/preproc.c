@@ -2588,10 +2588,10 @@ redo_no_start:
                 if (tokcstr.size > 2)
                 {
                     // Multi-character character constant (MSVC extension)
-                    unsigned char *p = tokcstr.data;
+                    unsigned char *pTokcstr = tokcstr.data;
                     tokc.i = 0;
-                    while (*p)
-                        tokc.i = tokc.i << 8 | *p++;
+                    while (*pTokcstr)
+                        tokc.i = tokc.i << 8 | *pTokcstr++;
                 }
                 else
                 {
