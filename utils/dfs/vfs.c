@@ -213,7 +213,7 @@ int vfs_mount(char *type, char *path, vfs_devno_t devno, char *opts)
     memset(fs, 0, sizeof(struct fs));
 
     // Initialize core fields first
-    fs->devno = devno;
+    memcpy(&fs->devno, &devno, sizeof(fs->devno));
     fs->ops = fsys->ops;
 
     // Copy path with bounds checking
