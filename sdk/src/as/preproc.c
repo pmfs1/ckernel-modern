@@ -968,8 +968,8 @@ static Token *tokenize(char *line)
 {
     char c, *p = line;
     enum pp_token_type type;
-    Token *list = NULL;
-    Token *t, **tail = &list;
+    Token *tokenList = NULL;
+    Token *t, **tail = &tokenList;
 
     while (*line)
     {
@@ -1278,7 +1278,7 @@ static Token *tokenize(char *line)
         }
         line = p;
     }
-    return list;
+    return tokenList;
 }
 
 /*
