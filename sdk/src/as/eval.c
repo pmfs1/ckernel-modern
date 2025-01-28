@@ -972,11 +972,15 @@ expr *evaluate(scanner sc, void *scprivate, struct tokenval *tv,
 {
     expr *e;
     expr *f = NULL;
+
     static int *safe_opflags;
     static struct tokenval safe_tokval;
     static void *static_scpriv;
+    static struct eval_hints static_hints;
 
-    hint = hints;
+    static_hints = *hints;
+    hint = &static_hints;
+
     if (hint)
         hint->type = EAH_NOHINT;
 
