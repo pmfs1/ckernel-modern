@@ -222,7 +222,8 @@ int vfs_mount(char *type, char *path, vfs_devno_t devno, char *opts)
     fs->path[MAXPATH - 1] = '\0';
 
     // Initialize the rest of the structure
-    fs->devno = devno;
+    vfs_devno_t tmp_devno = devno;
+    fs->devno = tmp_devno;
     fs->ops = fsys->ops;
 
     // Initialize filesystem on device
