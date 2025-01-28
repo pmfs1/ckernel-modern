@@ -649,10 +649,10 @@ static char *prepreproc(char *line)
 /*
  * Free a linked list of tokens.
  */
-static void free_tlist(Token *list)
+static void free_tlist(Token *tokens)
 {
-    while (list)
-        list = delete_Token(list);
+    while (tokens)
+        tokens = delete_Token(tokens);
 }
 
 /*
