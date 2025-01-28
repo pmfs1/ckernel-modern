@@ -202,14 +202,25 @@ int vfs_mount(char *type, char *path, vfs_devno_t devno, char *opts)
     if (!fsys)
         return -1;
 
-    // Allocate new mount point for file system
+    // Allocate and initialize new mount point for file system
     fs = (struct fs *)malloc(sizeof(struct fs));
     if (!fs)
         return -1;
+
+    // Clear the structure first
     memset(fs, 0, sizeof(struct fs));
 
+    // Copy path with bounds checking
+    if (strlen(path) >= MAXPATH + 1)
+    {
+        free(fs);
+        return -1;
+    }
+    strncpy(fs->path, path, MAXPATH);
+    fs->path[MAXPATH] = '\0';
+
+    // Initialize remaining fields
     fs->devno = devno;
-    strcpy(fs->path, path);
     fs->ops = fsys->ops;
     fs->next = mountlist;
 
