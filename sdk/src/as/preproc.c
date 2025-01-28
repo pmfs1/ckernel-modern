@@ -5669,7 +5669,7 @@ static char *pp_getline(void)
     return line;
 }
 
-static void pp_cleanup(int pass)
+static void pp_cleanup(int passNumber)
 {
     if (defining)
     {
@@ -5701,7 +5701,7 @@ static void pp_cleanup(int pass)
     while (cstk)
         ctx_pop();
     as_free(src_set_fname(NULL));
-    if (pass == 0)
+    if (passNumber == 0)
     {
         IncPath *i;
         free_llist(predef);
