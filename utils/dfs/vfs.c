@@ -131,11 +131,13 @@ struct filesystem *register_filesystem(char *name, struct fsops *ops)
     struct filesystem *fsys;
 
     // Validate parameters
-    if (!name || !ops) return NULL;
+    if (!name || !ops)
+        return NULL;
 
     // Allocate filesystem structure
     fsys = (struct filesystem *)malloc(sizeof(struct filesystem));
-    if (!fsys) return NULL;
+    if (!fsys)
+        return NULL;
 
     // Allocate and copy name
     fsys->name = strdup(name);
@@ -210,19 +212,18 @@ int vfs_mount(char *type, char *path, vfs_devno_t devno, char *opts)
     // Clear the structure first
     memset(fs, 0, sizeof(struct fs));
 
+    // Initialize core fields first
+    fs->devno = devno;
+    fs->ops = fsys->ops;
+
     // Copy path with bounds checking
-    if (strlen(path) >= MAXPATH + 1)
+    if (strlen(path) >= MAXPATH)
     {
         free(fs);
         return -1;
     }
     strncpy(fs->path, path, MAXPATH);
-    fs->path[MAXPATH] = '\0';
-
-    // Initialize remaining fields
-    fs->devno = devno;
-    fs->ops = fsys->ops;
-    fs->next = mountlist;
+    fs->path[MAXPATH - 1] = '\0';
 
     // Initialize filesystem on device
     rc = fs->ops->mount(fs, opts);
@@ -232,6 +233,8 @@ int vfs_mount(char *type, char *path, vfs_devno_t devno, char *opts)
         return rc;
     }
 
+    // Add to mount list only after successful initialization
+    fs->next = mountlist;
     mountlist = fs;
     return 0;
 }
