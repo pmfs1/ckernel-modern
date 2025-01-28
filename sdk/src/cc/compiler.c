@@ -3588,9 +3588,14 @@ int cc_preprocess(CCState *s1)
 
 int cc_compile_string(CCState *s, const char *str)
 {
-    BufferedFile bf1, *bf = &bf1;
+    BufferedFile *bf;
     int ret, len;
     char *buf;
+
+    // Allocate BufferedFile on heap instead of stack
+    bf = cc_malloc(sizeof(BufferedFile));
+    if (!bf)
+        return -1;
 
     // Init file structure
     bf->fd = -1;
@@ -3598,7 +3603,10 @@ int cc_compile_string(CCState *s, const char *str)
     len = strlen(str);
     buf = cc_malloc(len + 1);
     if (!buf)
+    {
+        cc_free(bf);
         return -1;
+    }
     memcpy(buf, str, len);
     buf[len] = CH_EOB;
     bf->buf_ptr = buf;
@@ -3610,6 +3618,7 @@ int cc_compile_string(CCState *s, const char *str)
     ret = cc_compile(s);
 
     cc_free(buf);
+    cc_free(bf);
 
     // Currently, no need to close
     return ret;
@@ -3618,7 +3627,12 @@ int cc_compile_string(CCState *s, const char *str)
 // Define a preprocessor symbol. A value can also be provided with the '=' operator
 void cc_define_symbol(CCState *s1, const char *sym, const char *value)
 {
-    BufferedFile bf1, *bf = &bf1;
+    BufferedFile *bf;
+
+    // Allocate BufferedFile on heap instead of stack
+    bf = cc_malloc(sizeof(BufferedFile));
+    if (!bf)
+        return;
 
     pstrcpy(bf->buffer, IO_BUF_SIZE, sym);
     pstrcat(bf->buffer, IO_BUF_SIZE, " ");
@@ -3644,6 +3658,8 @@ void cc_define_symbol(CCState *s1, const char *sym, const char *value)
     next_nomacro();
     parse_define();
     file = NULL;
+
+    cc_free(bf);
 }
 
 // Undefine a preprocessor symbol
@@ -3928,12 +3944,14 @@ int cc_add_dll(CCState *s, const char *filename, int flags)
     {
         path_len = strlen(s->library_paths[i]) + strlen(filename) + 2; // +2 for '/' and null terminator
         fullpath = cc_malloc(path_len);
-        if (!fullpath) continue;
+        if (!fullpath)
+            continue;
 
         snprintf(fullpath, path_len, "%s/%s", s->library_paths[i], filename);
         ret = cc_add_file_ex(s, fullpath, flags);
         cc_free(fullpath);
-        if (ret == 0) break;
+        if (ret == 0)
+            break;
     }
     return ret;
 }
@@ -3955,7 +3973,8 @@ int cc_add_library(CCState *s, const char *libraryname)
             snprintf(fullpath, path_len, "%s.def", libraryname);
             ret = cc_add_dll(s, fullpath, 0);
             cc_free(fullpath);
-            if (ret == 0) return 0;
+            if (ret == 0)
+                return 0;
         }
     }
 
@@ -3964,12 +3983,14 @@ int cc_add_library(CCState *s, const char *libraryname)
     {
         path_len = strlen(s->library_paths[i]) + strlen(libraryname) + 7; // +7 for "/lib", ".a" and null terminator
         fullpath = cc_malloc(path_len);
-        if (!fullpath) continue;
+        if (!fullpath)
+            continue;
 
         snprintf(fullpath, path_len, "%s/lib%s.a", s->library_paths[i], libraryname);
         ret = cc_add_file_ex(s, fullpath, 0);
         cc_free(fullpath);
-        if (ret == 0) break;
+        if (ret == 0)
+            break;
     }
     return ret;
 }
