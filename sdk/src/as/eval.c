@@ -38,7 +38,6 @@ static int tempexpr_size;
 static int i; /* The t_type of tokval */
 
 static struct location *location; /* Pointer to current line's segment,offset */
-static int *opflags;
 
 extern int in_abs_seg;     /* ABSOLUTE segment flag */
 extern int32_t abs_seg;    /* ABSOLUTE segment */
@@ -267,35 +266,35 @@ static expr *segment_part(expr *e)
  */
 
 // Update function prototypes to include tokenval parameter
-static expr *rexp0(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *rexp1(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *rexp2(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *rexp3(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *expr0(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *expr1(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *expr2(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *expr3(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *expr4(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *expr5(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
-static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint);
+static expr *rexp0(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *rexp1(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *rexp2(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *rexp3(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *expr0(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *expr1(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *expr2(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *expr3(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *expr4(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *expr5(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
+static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags);
 
 // Update the function pointer type
-static expr *(*bexpr)(int, void *, struct tokenval *, struct eval_hints *);
+static expr *(*bexpr)(int, void *, struct tokenval *, struct eval_hints *, int *);
 
 // Update all evaluation function implementations to include tv parameter
 // Here's an example for rexp0, apply similar changes to all other functions:
-static expr *rexp0(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *rexp0(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
 
-    e = rexp1(critical, scpriv, tv, hint);
+    e = rexp1(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
 
     while (i == TOKEN_DBL_OR)
     {
         i = scan(scpriv, tv);
-        f = rexp1(critical, scpriv, tv, hint);
+        f = rexp1(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
         if (!(is_simple(e) || is_just_unknown(e)) ||
@@ -313,18 +312,18 @@ static expr *rexp0(int critical, void *scpriv, struct tokenval *tv, struct eval_
     return e;
 }
 
-static expr *rexp1(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *rexp1(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
 
-    e = rexp2(critical, scpriv, tv, hint);
+    e = rexp2(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
 
     while (i == TOKEN_DBL_XOR)
     {
         i = scan(scpriv, tv);
-        f = rexp2(critical, scpriv, tv, hint);
+        f = rexp2(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
         if (!(is_simple(e) || is_just_unknown(e)) ||
@@ -342,17 +341,17 @@ static expr *rexp1(int critical, void *scpriv, struct tokenval *tv, struct eval_
     return e;
 }
 
-static expr *rexp2(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *rexp2(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
 
-    e = rexp3(critical, scpriv, tv, hint);
+    e = rexp3(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
     while (i == TOKEN_DBL_AND)
     {
         i = scan(scpriv, tv);
-        f = rexp3(critical, scpriv, tv, hint);
+        f = rexp3(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
         if (!(is_simple(e) || is_just_unknown(e)) ||
@@ -370,12 +369,12 @@ static expr *rexp2(int critical, void *scpriv, struct tokenval *tv, struct eval_
 }
 
 // Update rexp3 to include hint parameter
-static expr *rexp3(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *rexp3(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
     int64_t v;
 
-    e = expr0(critical, scpriv, tv, hint);
+    e = expr0(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
 
@@ -384,7 +383,7 @@ static expr *rexp3(int critical, void *scpriv, struct tokenval *tv, struct eval_
     {
         int j = i;
         i = scan(scpriv, tv);
-        f = expr0(critical, scpriv, tv, hint);
+        f = expr0(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
 
@@ -434,18 +433,18 @@ static expr *rexp3(int critical, void *scpriv, struct tokenval *tv, struct eval_
     return e;
 }
 
-static expr *expr0(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *expr0(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
 
-    e = expr1(critical, scpriv, tv, hint);
+    e = expr1(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
 
     while (i == '|')
     {
         i = scan(scpriv, tv);
-        f = expr1(critical, scpriv, tv, hint);
+        f = expr1(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
         if (!(is_simple(e) || is_just_unknown(e)) ||
@@ -462,18 +461,18 @@ static expr *expr0(int critical, void *scpriv, struct tokenval *tv, struct eval_
     return e;
 }
 
-static expr *expr1(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *expr1(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
 
-    e = expr2(critical, scpriv, tv, hint);
+    e = expr2(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
 
     while (i == '^')
     {
         i = scan(scpriv, tv);
-        f = expr2(critical, scpriv, tv, hint);
+        f = expr2(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
         if (!(is_simple(e) || is_just_unknown(e)) ||
@@ -490,18 +489,18 @@ static expr *expr1(int critical, void *scpriv, struct tokenval *tv, struct eval_
     return e;
 }
 
-static expr *expr2(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *expr2(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
 
-    e = expr3(critical, scpriv, tv, hint);
+    e = expr3(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
 
     while (i == '&')
     {
         i = scan(scpriv, tv);
-        f = expr3(critical, scpriv, tv, hint);
+        f = expr3(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
         if (!(is_simple(e) || is_just_unknown(e)) ||
@@ -518,11 +517,11 @@ static expr *expr2(int critical, void *scpriv, struct tokenval *tv, struct eval_
     return e;
 }
 
-static expr *expr3(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *expr3(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
 
-    e = expr4(critical, scpriv, tv, hint);
+    e = expr4(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
 
@@ -530,7 +529,7 @@ static expr *expr3(int critical, void *scpriv, struct tokenval *tv, struct eval_
     {
         int j = i;
         i = scan(scpriv, tv);
-        f = expr4(critical, scpriv, tv, hint);
+        f = expr4(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
         if (!(is_simple(e) || is_just_unknown(e)) ||
@@ -558,18 +557,18 @@ static expr *expr3(int critical, void *scpriv, struct tokenval *tv, struct eval_
     return e;
 }
 
-static expr *expr4(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *expr4(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
 
-    e = expr5(critical, scpriv, tv, hint);
+    e = expr5(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
     while (i == '+' || i == '-')
     {
         int j = i;
         i = scan(scpriv, tv);
-        f = expr5(critical, scpriv, tv, hint);
+        f = expr5(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
         switch (j)
@@ -585,11 +584,11 @@ static expr *expr4(int critical, void *scpriv, struct tokenval *tv, struct eval_
     return e;
 }
 
-static expr *expr5(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *expr5(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     expr *e, *f;
 
-    e = expr6(critical, scpriv, tv, hint);
+    e = expr6(critical, scpriv, tv, hint, opflags);
     if (!e)
         return NULL;
     while (i == '*' || i == '/' || i == '%' ||
@@ -597,7 +596,7 @@ static expr *expr5(int critical, void *scpriv, struct tokenval *tv, struct eval_
     {
         int j = i;
         i = scan(scpriv, tv);
-        f = expr6(critical, scpriv, tv, hint);
+        f = expr6(critical, scpriv, tv, hint, opflags);
         if (!f)
             return NULL;
         if (j != '*' && (!(is_simple(e) || is_just_unknown(e)) ||
@@ -772,7 +771,7 @@ static expr *eval_strfunc(enum strfunc type, void *scpriv, struct tokenval *tv)
 }
 
 // Update expr6 to include hint parameter
-static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint)
+static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_hints *hint, int *opflags)
 {
     int32_t type;
     expr *e;
@@ -785,18 +784,18 @@ static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_
     {
     case '-':
         i = scan(scpriv, tv);
-        e = expr6(critical, scpriv, tv, hint);
+        e = expr6(critical, scpriv, tv, hint, opflags);
         if (!e)
             return NULL;
         return scalar_mult(e, -1L, false, hint);
 
     case '+':
         i = scan(scpriv, tv);
-        return expr6(critical, scpriv, tv, hint);
+        return expr6(critical, scpriv, tv, hint, opflags);
 
     case '~':
         i = scan(scpriv, tv);
-        e = expr6(critical, scpriv, tv, hint);
+        e = expr6(critical, scpriv, tv, hint, opflags);
         if (!e)
             return NULL;
         if (is_just_unknown(e))
@@ -811,7 +810,7 @@ static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_
 
     case '!':
         i = scan(scpriv, tv);
-        e = expr6(critical, scpriv, tv, hint);
+        e = expr6(critical, scpriv, tv, hint, opflags);
         if (!e)
             return NULL;
         if (is_just_unknown(e))
@@ -826,7 +825,7 @@ static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_
 
     case TOKEN_SEG:
         i = scan(scpriv, tv);
-        e = expr6(critical, scpriv, tv, hint);
+        e = expr6(critical, scpriv, tv, hint, opflags);
         if (!e)
             return NULL;
         e = segment_part(e);
@@ -847,7 +846,7 @@ static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_
 
     case '(':
         i = scan(scpriv, tv);
-        e = bexpr(critical, scpriv, tv, hint);
+        e = bexpr(critical, scpriv, tv, hint, opflags);
         if (!e)
             return NULL;
         if (i != ')')
@@ -918,10 +917,11 @@ static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_
                 {
                     char *tmp_scope = local_scope(tv->t_charptr);
                     char *tmp_scope_ptr = NULL;
-                    if (tmp_scope) {
+                    if (tmp_scope)
+                    {
                         tmp_scope_ptr = as_strdup(tmp_scope);
                     }
-                    
+
                     if (critical == 2)
                     {
                         error(ERR_NONFATAL, "symbol `%s%s' undefined",
@@ -947,7 +947,8 @@ static expr *expr6(int critical, void *scpriv, struct tokenval *tv, struct eval_
                         label_seg = NO_SEG;
                         label_ofs = 1;
                     }
-                    if (tmp_scope_ptr) as_free(tmp_scope_ptr);
+                    if (tmp_scope_ptr)
+                        as_free(tmp_scope_ptr);
                 }
                 if (opflags && is_extern(tv->t_charptr))
                     *opflags |= OPFLAG_EXTERN;
@@ -995,7 +996,6 @@ expr *evaluate(scanner sc, void *scprivate, struct tokenval *tv,
 
     scan = sc;
     error = report_error;
-    opflags = fwref;
 
     if (tv->t_type == TOKEN_INVALID)
         i = scan(scprivate, tv);
@@ -1005,14 +1005,14 @@ expr *evaluate(scanner sc, void *scprivate, struct tokenval *tv,
     while (ntempexprs) /* initialize temporary storage */
         as_free(tempexprs[--ntempexprs]);
 
-    e = bexpr(critical, scprivate, tv, hints);
+    e = bexpr(critical, scprivate, tv, hints, fwref);
     if (!e)
         return NULL;
 
     if (i == TOKEN_WRT)
     {
         i = scan(scprivate, tv); /* eat the WRT */
-        f = expr6(critical, scprivate, tv, hints);
+        f = expr6(critical, scprivate, tv, hints, fwref);
         if (!f)
             return NULL;
     }
