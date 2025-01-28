@@ -908,17 +908,15 @@ static expr *expr6(int critical)
                 {
                     char *tmp_scope = local_scope(tokval->t_charptr);
                     char *tmp_scope_ptr = NULL;
-                    if (tmp_scope)
-                    {
+                    if (tmp_scope) {
                         tmp_scope_ptr = as_strdup(tmp_scope);
                     }
-
+                    
                     if (critical == 2)
                     {
                         error(ERR_NONFATAL, "symbol `%s%s' undefined",
                               tmp_scope_ptr ? tmp_scope_ptr : "", tokval->t_charptr);
-                        if (tmp_scope_ptr)
-                            as_free(tmp_scope_ptr);
+                        if (tmp_scope_ptr) as_free(tmp_scope_ptr);
                         return NULL;
                     }
                     else if (critical == 1)
@@ -926,8 +924,7 @@ static expr *expr6(int critical)
                         error(ERR_NONFATAL,
                               "symbol `%s%s' not defined before use",
                               tmp_scope_ptr ? tmp_scope_ptr : "", tokval->t_charptr);
-                        if (tmp_scope_ptr)
-                            as_free(tmp_scope_ptr);
+                        if (tmp_scope_ptr) as_free(tmp_scope_ptr);
                         return NULL;
                     }
                     else
@@ -938,8 +935,7 @@ static expr *expr6(int critical)
                         label_seg = NO_SEG;
                         label_ofs = 1;
                     }
-                    if (tmp_scope_ptr)
-                        as_free(tmp_scope_ptr);
+                    if (tmp_scope_ptr) as_free(tmp_scope_ptr);
                 }
                 if (opflags && is_extern(tokval->t_charptr))
                     *opflags |= OPFLAG_EXTERN;
@@ -974,7 +970,6 @@ expr *evaluate(scanner sc, void *scprivate, struct tokenval *tv,
     expr *f = NULL;
     static int *safe_opflags;
     static struct tokenval safe_tokval;
-    static void *static_scpriv;
 
     hint = hints;
     if (hint)
@@ -989,8 +984,7 @@ expr *evaluate(scanner sc, void *scprivate, struct tokenval *tv,
         bexpr = expr0;
 
     scan = sc;
-    static_scpriv = scprivate;
-    scpriv = static_scpriv;
+    scpriv = scprivate;
     safe_tokval = *tv;
     tokval = &safe_tokval;
     error = report_error;
