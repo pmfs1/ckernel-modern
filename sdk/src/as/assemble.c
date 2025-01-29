@@ -1764,11 +1764,11 @@ static void gencode(int32_t segment, int64_t offset, int bits,
                 errfunc(ERR_PANIC, "non-constant BSS size in pass two");
             else
             {
-                int64_t size = ins->oprs[0].offset;
-                if (size > 0)
+                int64_t _size = ins->oprs[0].offset;
+                if (_size > 0)
                     out(offset, segment, NULL,
-                        OUT_RESERVE, size, NO_SEG, NO_SEG);
-                offset += size;
+                        OUT_RESERVE, _size, NO_SEG, NO_SEG);
+                offset += _size;
             }
             break;
 
