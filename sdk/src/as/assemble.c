@@ -446,9 +446,9 @@ int64_t assemble(int32_t segment, int64_t offset, int bits, uint32_t cp,
                 l = len;
                 while (l > 0)
                 {
-                    int32_t m;
-                    m = fread(buf, 1, l > sizeof(buf) ? sizeof(buf) : l, fp);
-                    if (!m)
+                    int32_t m2;
+                    m2 = fread(buf, 1, l > sizeof(buf) ? sizeof(buf) : l, fp);
+                    if (!m2)
                     {
                         /*
                          * This shouldn't happen unless the file
@@ -462,9 +462,9 @@ int64_t assemble(int32_t segment, int64_t offset, int bits, uint32_t cp,
                         t = 0; /* Try to exit cleanly */
                         break;
                     }
-                    out(offset, segment, buf, OUT_RAWDATA, m,
+                    out(offset, segment, buf, OUT_RAWDATA, m2,
                         NO_SEG, NO_SEG);
-                    l -= m;
+                    l -= m2;
                 }
             }
             list->downlevel(LIST_INCBIN);
