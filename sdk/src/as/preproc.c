@@ -4479,7 +4479,7 @@ static Token *expand_mmac_params(Token *tline)
 
     if (changed)
     {
-        const struct tokseq_match t[] = {
+        const struct tokseq_match tokseq_m[] = {
             {
                 PP_CONCAT_MASK(TOK_ID) |
                     PP_CONCAT_MASK(TOK_FLOAT), /* head */
@@ -4492,7 +4492,7 @@ static Token *expand_mmac_params(Token *tline)
                 PP_CONCAT_MASK(TOK_NUMBER), /* head */
                 PP_CONCAT_MASK(TOK_NUMBER)  /* tail */
             }};
-        paste_tokens(&thead, t, ARRAY_SIZE(t), false);
+        paste_tokens(&thead, tokseq_m, ARRAY_SIZE(tokseq_m), false);
     }
 
     return thead;
