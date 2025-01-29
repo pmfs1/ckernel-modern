@@ -775,10 +775,10 @@ restart_parse:
         if (mref)
         { /* it's a memory reference */
             expr *e = value;
-            int b, i, s; /* basereg, indexreg, scale */
+            int b, _i, s; /* basereg, indexreg, scale */
             int64_t o;   /* offset */
 
-            b = i = -1, o = s = 0;
+            b = _i = -1, o = s = 0;
             result->oprs[operand].hintbase = hints.base;
             result->oprs[operand].hinttype = hints.type;
 
@@ -787,13 +787,13 @@ restart_parse:
                 if (e->value == 1) /* in fact it can be basereg */
                     b = e->type;
                 else /* no, it has to be indexreg */
-                    i = e->type, s = e->value;
+                    _i = e->type, s = e->value;
                 e++;
             }
             if (e->type && e->type <= EXPR_REG_END)
             {                                  /* it's a 2nd register */
                 if (b != -1)                   /* If the first was the base, ... */
-                    i = e->type, s = e->value; /* second has to be indexreg */
+                    _i = e->type, s = e->value; /* second has to be indexreg */
 
                 else if (e->value != 1)
                 { /* If both want to be index */
@@ -908,7 +908,7 @@ restart_parse:
                 result->oprs[operand].type |= is_rel ? IP_REL : MEM_OFFS;
             }
             result->oprs[operand].basereg = b;
-            result->oprs[operand].indexreg = i;
+            result->oprs[operand].indexreg = _i;
             result->oprs[operand].scale = s;
             result->oprs[operand].offset = o;
         }
