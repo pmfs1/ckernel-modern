@@ -1046,15 +1046,15 @@ int cc_output_file(CCState *s1, const char *filename)
                             }
                             else if (type == STT_OBJECT)
                             {
-                                unsigned long offset;
-                                offset = bss_section->data_offset;
+                                unsigned long _offset;
+                                _offset = bss_section->data_offset;
                                 // TODO: which alignment ?
-                                offset = (offset + 16 - 1) & -16;
-                                index = put_elf_sym(s1->dynsym, offset, esym->st_size, esym->st_info, 0,
+                                _offset = (_offset + 16 - 1) & -16;
+                                index = put_elf_sym(s1->dynsym, _offset, esym->st_size, esym->st_info, 0,
                                                     bss_section->sh_num, name);
-                                put_elf_reloc(s1->dynsym, bss_section, offset, R_386_COPY, index);
-                                offset += esym->st_size;
-                                bss_section->data_offset = offset;
+                                put_elf_reloc(s1->dynsym, bss_section, _offset, R_386_COPY, index);
+                                _offset += esym->st_size;
+                                bss_section->data_offset = _offset;
                             }
                         }
                         else
@@ -1876,23 +1876,23 @@ int cc_load_object_file(CCState *s1, int fd, unsigned long file_offset)
             for (rel = (Elf32_Rel *)(s->data + offset); rel < rel_end; rel++)
             {
                 int type;
-                unsigned sym_index;
+                unsigned sym_index2;
                 // Convert symbol index
                 type = ELF32_R_TYPE(rel->r_info);
-                sym_index = ELF32_R_SYM(rel->r_info);
+                sym_index2 = ELF32_R_SYM(rel->r_info);
                 // NOTE: only one symtab assumed
-                if (sym_index >= (unsigned)nb_syms)
+                if (sym_index2 >= (unsigned)nb_syms)
                     goto invalid_reloc;
-                sym_index = old_to_new_syms[sym_index];
+                sym_index2 = old_to_new_syms[sym_index2];
                 // Ignore link_once in rel section
-                if (!sym_index && !sm->link_once)
+                if (!sym_index2 && !sm->link_once)
                 {
                 invalid_reloc:
                     error_noabort("Invalid relocation entry [%2d] '%s' @ %.8x", i, strsec + sh->sh_name,
                                   rel->r_offset);
                     goto fail;
                 }
-                rel->r_info = ELF32_R_INFO(sym_index, type);
+                rel->r_info = ELF32_R_INFO(sym_index2, type);
                 // Offset the relocation offset
                 rel->r_offset += offseti;
             }

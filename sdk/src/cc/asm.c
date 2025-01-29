@@ -558,7 +558,7 @@ void asm_parse_directive(CCState *s1)
 
     case TOK_ASM_fill:
     {
-        int repeat, size, val, i, j;
+        int repeat, _size, val, i, j;
         uint8_t repeat_buf[8];
         next();
         repeat = asm_int_expr(s1);
@@ -567,19 +567,19 @@ void asm_parse_directive(CCState *s1)
             error("repeat < 0; .fill ignored");
             break;
         }
-        size = 1;
+        _size = 1;
         val = 0;
         if (tok == ',')
         {
             next();
-            size = asm_int_expr(s1);
-            if (size < 0)
+            _size = asm_int_expr(s1);
+            if (_size < 0)
             {
                 error("size < 0; .fill ignored");
                 break;
             }
-            if (size > 8)
-                size = 8;
+            if (_size > 8)
+                _size = 8;
             if (tok == ',')
             {
                 next();
@@ -597,7 +597,7 @@ void asm_parse_directive(CCState *s1)
         repeat_buf[7] = 0;
         for (i = 0; i < repeat; i++)
         {
-            for (j = 0; j < size; j++)
+            for (j = 0; j < _size; j++)
             {
                 g(repeat_buf[j]);
             }
@@ -627,7 +627,7 @@ void asm_parse_directive(CCState *s1)
     case TOK_ASM_asciz:
     {
         const uint8_t *p;
-        int i, size, t;
+        int i, _size, t;
 
         t = tok;
         next();
@@ -636,10 +636,10 @@ void asm_parse_directive(CCState *s1)
             if (tok != TOK_STR)
                 expect("string constant");
             p = tokc.cstr->data;
-            size = tokc.cstr->size;
-            if (t == TOK_ASM_ascii && size > 0)
-                size--;
-            for (i = 0; i < size; i++)
+            _size = tokc.cstr->size;
+            if (t == TOK_ASM_ascii && _size > 0)
+                _size--;
+            for (i = 0; i < _size; i++)
                 g(p[i]);
             next();
             if (tok == ',')
@@ -706,13 +706,13 @@ void asm_parse_directive(CCState *s1)
 
     case TOK_ASM_previous:
     {
-        Section *sec;
+        Section *sec2;
         next();
         if (!last_text_section)
             error("no previous section referenced");
-        sec = cur_text_section;
+        sec2 = cur_text_section;
         use_section_ex(s1, last_text_section);
-        last_text_section = sec;
+        last_text_section = sec2;
         break;
     }
 

@@ -907,9 +907,9 @@ void asm_opcode(CCState *s1, int opcode)
         // Now decode and check each operand
         for (i = 0; i < nb_ops; i++)
         {
-            int op1, op2;
-            op1 = pa->op_type[i];
-            op2 = op1 & 0x1f;
+            int _op1, op2;
+            _op1 = pa->op_type[i];
+            op2 = _op1 & 0x1f;
             switch (op2)
             {
             case OPT_IM:
@@ -927,7 +927,7 @@ void asm_opcode(CCState *s1, int opcode)
             default:
                 v = 1 << op2;
             }
-            if (op1 & OPT_EA)
+            if (_op1 & OPT_EA)
                 v |= OP_EA;
             op_type[i] = v;
             if ((ops[i].type & v) == 0)

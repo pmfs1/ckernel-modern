@@ -110,19 +110,19 @@ unsigned int dev_getsize(vfs_devno_t devno)
     return size;
 }
 
-void create_device(char *devname, int devsize)
+void create_device(char *dev_name, int dev_size)
 {
-    if (bdrv_create(devtype, devname, devsize, 0) < 0)
+    if (bdrv_create(devtype, dev_name, dev_size, 0) < 0)
         panic("unable to create device file");
 }
 
-void clear_device(struct blockdevice *bs, int devsize)
+void clear_device(struct blockdevice *bs, int dev_size)
 {
     char sector[SECTORSIZE];
     int i;
 
     memset(sector, 0, SECTORSIZE);
-    for (i = 0; i < devsize; i++)
+    for (i = 0; i < dev_size; i++)
     {
         if (bdrv_write(bs, i, sector, 1) < 0)
             panic("error writing to device");

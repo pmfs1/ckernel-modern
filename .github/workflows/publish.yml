@@ -34,7 +34,7 @@ jobs:
           cosign-release: 'v2.2.4'
       - name: 'COMPILE'
         if: github.event_name != 'pull_request'
-        run: sudo apt-get update -y && sudo apt-get install -y gcc-multilib libc6-dev-i386 kmod genisoimage squashfs-tools && make krlean cdrom
+        run: sudo apt-get update -y && sudo apt-get install -y gcc-multilib libc6-dev-i386 kmod genisoimage squashfs-tools && make krlean cdrom vmdk
       - name: 'PREPARE'
         if: github.event_name != 'pull_request'
         run: |  
