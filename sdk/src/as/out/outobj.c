@@ -1508,20 +1508,20 @@ static int32_t obj_segment(char *name, int pass, int *bits)
                  * already exist; then we must set the default
                  * group of this segment to be the FLAT group.
                  */
-                struct Group *grp;
-                for (grp = grphead; grp; grp = grp->next)
-                    if (!strcmp(grp->name, "FLAT"))
+                struct Group *grp2;
+                for (grp2 = grphead; grp2; grp2 = grp2->next)
+                    if (!strcmp(grp2->name, "FLAT"))
                         break;
-                if (!grp)
+                if (!grp2)
                 {
                     obj_directive(D_GROUP, "FLAT", 1);
-                    for (grp = grphead; grp; grp = grp->next)
-                        if (!strcmp(grp->name, "FLAT"))
+                    for (grp2 = grphead; grp2; grp2 = grp2->next)
+                        if (!strcmp(grp2->name, "FLAT"))
                             break;
-                    if (!grp)
+                    if (!grp2)
                         as_error(ERR_PANIC, "failure to define FLAT?!");
                 }
-                seg->grp = grp;
+                seg->grp = grp2;
             }
             else if (!as_strnicmp(p, "class=", 6))
                 seg->segclass = as_strdup(p + 6);
