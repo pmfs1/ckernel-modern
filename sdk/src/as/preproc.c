@@ -4155,7 +4155,7 @@ static bool paste_tokens(Token **head, const struct tokseq_match *m,
                 if (PP_CONCAT_MASK(t->type) & m[i].mask_head)
                 {
                     size_t len = 0;
-                    char *tmp, *p;
+                    char *tmp2, *p;
 
                     while (tt && (PP_CONCAT_MASK(tt->type) & m[i].mask_tail))
                     {
@@ -4171,15 +4171,15 @@ static bool paste_tokens(Token **head, const struct tokseq_match *m,
                     {
                         /* We have at least two tokens... */
                         len += strlen(t->text);
-                        p = tmp = as_malloc(len + 1);
+                        p = tmp2 = as_malloc(len + 1);
                         while (t != tt)
                         {
                             strcpy(p, t->text);
                             p = strchr(p, '\0');
                             t = delete_Token(t);
                         }
-                        t = *tail = tokenize(tmp);
-                        as_free(tmp);
+                        t = *tail = tokenize(tmp2);
+                        as_free(tmp2);
                         while (t->next)
                         {
                             tail = &t->next;
