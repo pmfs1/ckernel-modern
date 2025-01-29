@@ -706,13 +706,13 @@ void asm_parse_directive(CCState *s1)
 
     case TOK_ASM_previous:
     {
-        Section *sec;
+        Section *sec2;
         next();
         if (!last_text_section)
             error("no previous section referenced");
-        sec = cur_text_section;
+        sec2 = cur_text_section;
         use_section_ex(s1, last_text_section);
-        last_text_section = sec;
+        last_text_section = sec2;
         break;
     }
 
