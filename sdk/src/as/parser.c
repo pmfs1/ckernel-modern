@@ -1054,13 +1054,13 @@ static int is_comma_next(void)
     return (i == ',' || i == ';' || !i);
 }
 
-void cleanup_insn(insn *i)
+void cleanup_insn(insn *insn_i)
 {
     extop *e;
 
-    while ((e = i->eops))
+    while ((e = insn_i->eops))
     {
-        i->eops = e->next;
+        insn_i->eops = e->next;
         if (e->type == EOT_DB_STRING_FREE)
             as_free(e->stringval);
         as_free(e);
