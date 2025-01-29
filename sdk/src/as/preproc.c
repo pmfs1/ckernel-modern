@@ -1427,15 +1427,15 @@ static char *detoken(Token *tlist, bool expand_locals)
             t->text[0] == '%' && t->text[1] == '$')
         {
             const char *q;
-            char *p;
+            char *p2;
             Context *ctx = get_ctx(t->text, &q, false);
             if (ctx)
             {
                 char buffer[40];
                 snprintf(buffer, sizeof(buffer), "..@%" PRIu32 ".", ctx->number);
-                p = as_strcat(buffer, q);
+                p2 = as_strcat(buffer, q);
                 as_free(t->text);
-                t->text = p;
+                t->text = p2;
             }
         }
         if (t->type == TOK_WHITESPACE)
