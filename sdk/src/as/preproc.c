@@ -784,7 +784,7 @@ hash_findix(struct hash_table *hash, const char *str)
  */
 static char *line_from_stdmac(void)
 {
-    unsigned char localC;
+    unsigned char c;
     const unsigned char *p = stdmacpos;
     char *line, *q;
     size_t len = 0;
@@ -792,27 +792,27 @@ static char *line_from_stdmac(void)
     if (!stdmacpos)
         return NULL;
 
-    while ((localC = *p++))
+    while ((c = *p++))
     {
-        if (localC >= 0x80)
-            len += pp_directives_len[localC - 0x80] + 1;
+        if (c >= 0x80)
+            len += pp_directives_len[c - 0x80] + 1;
         else
             len++;
     }
 
     line = as_malloc(len + 1);
     q = line;
-    while ((localC = *stdmacpos++))
+    while ((c = *stdmacpos++))
     {
-        if (localC >= 0x80)
+        if (c >= 0x80)
         {
-            memcpy(q, pp_directives[localC - 0x80], pp_directives_len[localC - 0x80]);
-            q += pp_directives_len[localC - 0x80];
+            memcpy(q, pp_directives[c - 0x80], pp_directives_len[c - 0x80]);
+            q += pp_directives_len[c - 0x80];
             *q++ = ' ';
         }
         else
         {
-            *q++ = localC;
+            *q++ = c;
         }
     }
     stdmacpos = p;
@@ -966,7 +966,7 @@ static char *read_line(void)
  */
 static Token *tokenize(char *line)
 {
-    char localC, *p = line;
+    char c, *p = line;
     enum pp_token_type type;
     Token *tokenList = NULL;
     Token *t, **tail = &tokenList;
@@ -1013,9 +1013,9 @@ static Token *tokenize(char *line)
                 int lvl = 1;
                 line += 2; /* Skip the leading %[ */
                 p++;
-                while (lvl && (localC = *p++))
+                while (lvl && (c = *p++))
                 {
-                    switch (localC)
+                    switch (c)
                     {
                     case ']':
                         lvl--;
@@ -1128,7 +1128,7 @@ static Token *tokenize(char *line)
             bool is_hex = false;
             bool is_float = false;
             bool has_e = false;
-            char localC, *r;
+            char c, *r;
 
             /*
              * A numeric token.
@@ -1142,9 +1142,9 @@ static Token *tokenize(char *line)
 
             for (;;)
             {
-                localC = *p++;
+                c = *p++;
 
-                if (!is_hex && (localC == 'e' || localC == 'E'))
+                if (!is_hex && (c == 'e' || c == 'E'))
                 {
                     has_e = true;
                     if (*p == '+' || *p == '-')
@@ -1157,19 +1157,19 @@ static Token *tokenize(char *line)
                         is_float = true;
                     }
                 }
-                else if (localC == 'H' || localC == 'h' || localC == 'X' || localC == 'x')
+                else if (c == 'H' || c == 'h' || c == 'X' || c == 'x')
                 {
                     is_hex = true;
                 }
-                else if (localC == 'P' || localC == 'p')
+                else if (c == 'P' || c == 'p')
                 {
                     is_float = true;
                     if (*p == '+' || *p == '-')
                         p++;
                 }
-                else if (isnumchar(localC) || localC == '_')
+                else if (isnumchar(c) || c == '_')
                     ; /* just advance */
-                else if (localC == '.')
+                else if (c == '.')
                 {
                     /*
                      * we need to deal with consequences of the legacy
@@ -3818,6 +3818,7 @@ static int do_directive(Token *tline)
     {
         int64_t start, count;
         size_t len;
+        char c, *r;
 
         casesense = true;
 
@@ -5166,7 +5167,7 @@ static int expand_mmacro(Token *tline)
         ;
     paramlen = nparam ? as_malloc(nparam * sizeof(*paramlen)) : NULL;
 
-    for (i = 0; params[i]; i++)
+    for (i = 0; i < nparam; i++)
     {
         int brace = false;
         int comma = (!m->plus || i < nparam - 1);
