@@ -1426,14 +1426,14 @@ static char *detoken(Token *tlist, bool expand_locals)
             t->type == TOK_PREPROC_ID && t->text &&
             t->text[0] == '%' && t->text[1] == '$')
         {
-            const char *q;
+            const char *q2;
             char *p2;
-            Context *ctx = get_ctx(t->text, &q, false);
+            Context *ctx = get_ctx(t->text, &q2, false);
             if (ctx)
             {
                 char buffer[40];
                 snprintf(buffer, sizeof(buffer), "..@%" PRIu32 ".", ctx->number);
-                p2 = as_strcat(buffer, q);
+                p2 = as_strcat(buffer, q2);
                 as_free(t->text);
                 t->text = p2;
             }
