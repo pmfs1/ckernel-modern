@@ -295,11 +295,11 @@ restart_parse:
 
     if (i != TOKEN_INSN)
     {
-        int j;
+        int j2;
         enum prefixes pfx;
 
-        for (j = 0; j < MAXPREFIX; j++)
-            if ((pfx = result->prefixes[j]) != P_none)
+        for (j2 = 0; j2 < MAXPREFIX; j2++)
+            if ((pfx = result->prefixes[j2]) != P_none)
                 break;
 
         if (i == 0 && pfx != P_none)
