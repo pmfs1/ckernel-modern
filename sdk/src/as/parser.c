@@ -1045,13 +1045,13 @@ restart_parse:
 static int is_comma_next(void)
 {
     char *p;
-    int i;
+    int i2;
     struct tokenval tv;
 
     p = stdscan_get();
-    i = stdscan(NULL, &tv);
+    i2 = stdscan(NULL, &tv);
     stdscan_set(p);
-    return (i == ',' || i == ';' || !i);
+    return (i2 == ',' || i2 == ';' || !i2);
 }
 
 void cleanup_insn(insn *insn_i)
