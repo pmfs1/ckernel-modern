@@ -1391,7 +1391,7 @@ static char *detoken(Token *tlist, bool expand_locals)
         if (t->type == TOK_PREPROC_ID && t->text[1] == '!')
         {
             char *v;
-            char *q = t->text;
+            char *q2 = t->text;
 
             v = t->text + 2;
             if (*v == '\'' || *v == '\"' || *v == '`')
@@ -1418,7 +1418,7 @@ static char *detoken(Token *tlist, bool expand_locals)
                 }
                 t->text = as_strdup(p2);
             }
-            as_free(q);
+            as_free(q2);
         }
 
         /* Expand local macros here and not during preprocessing */
