@@ -3816,7 +3816,7 @@ static int do_directive(Token *tline)
 
     case PP_SUBSTR:
     {
-        int64_t start, count;
+        int64_t start, count2;
         size_t len2;
 
         casesense = true;
@@ -3877,7 +3877,7 @@ static int do_directive(Token *tline)
             tt = tt->next;
         if (!tt)
         {
-            count = 1; /* Backwards compatibility: one character */
+            count2 = 1; /* Backwards compatibility: one character */
         }
         else
         {
@@ -3897,7 +3897,7 @@ static int do_directive(Token *tline)
                 free_tlist(origline);
                 return DIRECTIVE_FOUND;
             }
-            count = evalresult->value;
+            count2 = evalresult->value;
         }
 
         len2 = as_unquote(t->text, NULL);
@@ -3905,16 +3905,16 @@ static int do_directive(Token *tline)
         /* make start and count being in range */
         if (start < 0)
             start = 0;
-        if (count < 0)
-            count = len2 + count + 1 - start;
-        if (start + count > (int64_t)len2)
-            count = len2 - start;
-        if (!len2 || count < 0 || start >= (int64_t)len2)
-            start = -1, count = 0; /* empty string */
+        if (count2 < 0)
+            count2 = len2 + count2 + 1 - start;
+        if (start + count2 > (int64_t)len2)
+            count2 = len2 - start;
+        if (!len2 || count2 < 0 || start >= (int64_t)len2)
+            start = -1, count2 = 0; /* empty string */
 
         macro_start = as_malloc(sizeof(*macro_start));
         macro_start->next = NULL;
-        macro_start->text = as_quote((start < 0) ? "" : t->text + start, count);
+        macro_start->text = as_quote((start < 0) ? "" : t->text + start, count2);
         macro_start->type = TOK_STRING;
         macro_start->a.mac = NULL;
 
