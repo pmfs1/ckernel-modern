@@ -1409,14 +1409,14 @@ static char *detoken(Token *tlist, bool expand_locals)
 
             if (v)
             {
-                char *p = getenv(v);
-                if (!p)
+                char *p2 = getenv(v);
+                if (!p2)
                 {
                     error(ERR_NONFATAL | ERR_PASS1,
                           "nonexistent environment variable `%s'", v);
-                    p = "";
+                    p2 = "";
                 }
-                t->text = as_strdup(p);
+                t->text = as_strdup(p2);
             }
             as_free(q);
         }
