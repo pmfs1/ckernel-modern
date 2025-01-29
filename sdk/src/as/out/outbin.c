@@ -552,35 +552,35 @@ static void bin_cleanup(int debuginfo)
     list_for_each(r, relocs)
     {
         uint8_t *p, mydata[8];
-        int64_t l;
+        int64_t l2;
         int b;
 
         as_assert(r->bytes <= 8);
 
         saa_fread(r->target->contents, r->posn, mydata, r->bytes);
         p = mydata;
-        l = 0;
+        l2 = 0;
         for (b = r->bytes - 1; b >= 0; b--)
-            l = (l << 8) + mydata[b];
+            l2 = (l2 << 8) + mydata[b];
 
         s = find_section_by_index(r->secref);
         if (s)
         {
             if (r->secref == s->start_index)
-                l += s->start;
+                l2 += s->start;
             else
-                l += s->vstart;
+                l2 += s->vstart;
         }
         s = find_section_by_index(r->secrel);
         if (s)
         {
             if (r->secrel == s->start_index)
-                l -= s->start;
+                l2 -= s->start;
             else
-                l -= s->vstart;
+                l2 -= s->vstart;
         }
 
-        WRITEADDR(p, l, r->bytes);
+        WRITEADDR(p, l2, r->bytes);
         saa_fwrite(r->target->contents, r->posn, mydata, r->bytes);
     }
 
