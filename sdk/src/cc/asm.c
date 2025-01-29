@@ -636,7 +636,7 @@ void asm_parse_directive(CCState *s1)
             if (tok != TOK_STR)
                 expect("string constant");
             p = tokc.cstr->data;
-            _size = tokc.cstr->_size;
+            _size = tokc.cstr->size;
             if (t == TOK_ASM_ascii && _size > 0)
                 _size--;
             for (i = 0; i < _size; i++)
