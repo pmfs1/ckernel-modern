@@ -8,8 +8,8 @@ on:
     - cron: '43 15 * * 3'
   workflow_dispatch:
 jobs:
-  analyze:
-    name: 'ANALYZE (${{ matrix.language }})'
+  CODEQL_ADVANCED:
+    name: 'CODEQL_ADVANCED (${{ matrix.language }})'
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
       security-events: write
