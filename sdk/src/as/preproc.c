@@ -1128,7 +1128,7 @@ static Token *tokenize(char *line)
             bool is_hex = false;
             bool is_float = false;
             bool has_e = false;
-            char c, *r;
+            char c2, *r;
 
             /*
              * A numeric token.
@@ -1142,9 +1142,9 @@ static Token *tokenize(char *line)
 
             for (;;)
             {
-                c = *p++;
+                c2 = *p++;
 
-                if (!is_hex && (c == 'e' || c == 'E'))
+                if (!is_hex && (c2 == 'e' || c2 == 'E'))
                 {
                     has_e = true;
                     if (*p == '+' || *p == '-')
@@ -1157,19 +1157,19 @@ static Token *tokenize(char *line)
                         is_float = true;
                     }
                 }
-                else if (c == 'H' || c == 'h' || c == 'X' || c == 'x')
+                else if (c2 == 'H' || c2 == 'h' || c2 == 'X' || c2 == 'x')
                 {
                     is_hex = true;
                 }
-                else if (c == 'P' || c == 'p')
+                else if (c2 == 'P' || c2 == 'p')
                 {
                     is_float = true;
                     if (*p == '+' || *p == '-')
                         p++;
                 }
-                else if (isnumchar(c) || c == '_')
+                else if (isnumchar(c2) || c2 == '_')
                     ; /* just advance */
-                else if (c == '.')
+                else if (c2 == '.')
                 {
                     /*
                      * we need to deal with consequences of the legacy
