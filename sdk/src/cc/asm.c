@@ -558,7 +558,7 @@ void asm_parse_directive(CCState *s1)
 
     case TOK_ASM_fill:
     {
-        int repeat, size, val, i, j;
+        int repeat, _size, val, i, j;
         uint8_t repeat_buf[8];
         next();
         repeat = asm_int_expr(s1);
@@ -567,19 +567,19 @@ void asm_parse_directive(CCState *s1)
             error("repeat < 0; .fill ignored");
             break;
         }
-        size = 1;
+        _size = 1;
         val = 0;
         if (tok == ',')
         {
             next();
-            size = asm_int_expr(s1);
-            if (size < 0)
+            _size = asm_int_expr(s1);
+            if (_size < 0)
             {
                 error("size < 0; .fill ignored");
                 break;
             }
-            if (size > 8)
-                size = 8;
+            if (_size > 8)
+                _size = 8;
             if (tok == ',')
             {
                 next();
@@ -597,7 +597,7 @@ void asm_parse_directive(CCState *s1)
         repeat_buf[7] = 0;
         for (i = 0; i < repeat; i++)
         {
-            for (j = 0; j < size; j++)
+            for (j = 0; j < _size; j++)
             {
                 g(repeat_buf[j]);
             }
