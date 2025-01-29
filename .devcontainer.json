@@ -14,10 +14,11 @@
 				"github.vscode-github-actions",
 				"GitHub.copilot",
 				"GitHub.copilot-chat",
-				"VisualStudioExptTeam.vscodeintellicode"
+				"VisualStudioExptTeam.vscodeintellicode",
+				"VisualStudioExptTeam.intellicode-api-usage-examples"
 			]
 		}
 	},
-	"postCreateCommand": "apt-get update && export DEBIAN_FRONTEND=noninteractive && apt-get -y install build-essential cmake cppcheck valgrind clang lldb llvm gdb gcc-multilib libc6-dev-i386 genisoimage sudo && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*",
+	"onCreateCommand": "apt-get update -y && export DEBIAN_FRONTEND=noninteractive && apt-get -y install build-essential cmake gcc-multilib libc6-dev-i386 genisoimage",
 	"postAttachCommand": "make krlean cdrom vmdk"
 }

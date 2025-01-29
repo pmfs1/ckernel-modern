@@ -10,7 +10,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: "${{ github.repository }}"
 jobs:
-  publish:
+  PUBLISH:
     name: 'PUBLISH'
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name }}
@@ -92,3 +92,13 @@ jobs:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ env.DIGEST }}
           push-to-registry: true
+      - name: 'UPLOAD ARTIFACT (ISO)'
+        uses: actions/upload-artifact@v4
+        with:
+          name: "krlean-${{ github.sha }}.iso"
+          path: 'bin/img/krlean.iso'
+      - name: 'UPLOAD ARTIFACT (VMDK)'
+        uses: actions/upload-artifact@v4
+        with:
+          name: "krlean-${{ github.sha }}.vmdk"
+          path: 'bin/img/krlean.vmdk'

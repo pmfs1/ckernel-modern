@@ -649,19 +649,19 @@ static char *prepreproc(char *line)
 /*
  * Free a linked list of tokens.
  */
-static void free_tlist(Token *list)
+static void free_tlist(Token *tokens)
 {
-    while (list)
-        list = delete_Token(list);
+    while (tokens)
+        tokens = delete_Token(tokens);
 }
 
 /*
  * Free a linked list of lines.
  */
-static void free_llist(Line *list)
+static void free_llist(Line *lineList)
 {
     Line *l, *tmp;
-    list_for_each_safe(l, tmp, list)
+    list_for_each_safe(l, tmp, lineList)
     {
         free_tlist(l->first);
         as_free(l);
@@ -968,8 +968,8 @@ static Token *tokenize(char *line)
 {
     char c, *p = line;
     enum pp_token_type type;
-    Token *list = NULL;
-    Token *t, **tail = &list;
+    Token *tokenList = NULL;
+    Token *t, **tail = &tokenList;
 
     while (*line)
     {
@@ -1128,7 +1128,7 @@ static Token *tokenize(char *line)
             bool is_hex = false;
             bool is_float = false;
             bool has_e = false;
-            char c, *r;
+            char c2, *r;
 
             /*
              * A numeric token.
@@ -1142,9 +1142,9 @@ static Token *tokenize(char *line)
 
             for (;;)
             {
-                c = *p++;
+                c2 = *p++;
 
-                if (!is_hex && (c == 'e' || c == 'E'))
+                if (!is_hex && (c2 == 'e' || c2 == 'E'))
                 {
                     has_e = true;
                     if (*p == '+' || *p == '-')
@@ -1157,19 +1157,19 @@ static Token *tokenize(char *line)
                         is_float = true;
                     }
                 }
-                else if (c == 'H' || c == 'h' || c == 'X' || c == 'x')
+                else if (c2 == 'H' || c2 == 'h' || c2 == 'X' || c2 == 'x')
                 {
                     is_hex = true;
                 }
-                else if (c == 'P' || c == 'p')
+                else if (c2 == 'P' || c2 == 'p')
                 {
                     is_float = true;
                     if (*p == '+' || *p == '-')
                         p++;
                 }
-                else if (isnumchar(c) || c == '_')
+                else if (isnumchar(c2) || c2 == '_')
                     ; /* just advance */
-                else if (c == '.')
+                else if (c2 == '.')
                 {
                     /*
                      * we need to deal with consequences of the legacy
@@ -1278,7 +1278,7 @@ static Token *tokenize(char *line)
         }
         line = p;
     }
-    return list;
+    return tokenList;
 }
 
 /*
@@ -1391,15 +1391,15 @@ static char *detoken(Token *tlist, bool expand_locals)
         if (t->type == TOK_PREPROC_ID && t->text[1] == '!')
         {
             char *v;
-            char *q = t->text;
+            char *q2 = t->text;
 
             v = t->text + 2;
             if (*v == '\'' || *v == '\"' || *v == '`')
             {
-                size_t len = as_unquote(v, NULL);
+                size_t len2 = as_unquote(v, NULL);
                 size_t clen = strlen(v);
 
-                if (len != clen)
+                if (len2 != clen)
                 {
                     error(ERR_NONFATAL | ERR_PASS1,
                           "NUL character in %! string");
@@ -1409,16 +1409,16 @@ static char *detoken(Token *tlist, bool expand_locals)
 
             if (v)
             {
-                char *p = getenv(v);
-                if (!p)
+                char *p2 = getenv(v);
+                if (!p2)
                 {
                     error(ERR_NONFATAL | ERR_PASS1,
                           "nonexistent environment variable `%s'", v);
-                    p = "";
+                    p2 = "";
                 }
-                t->text = as_strdup(p);
+                t->text = as_strdup(p2);
             }
-            as_free(q);
+            as_free(q2);
         }
 
         /* Expand local macros here and not during preprocessing */
@@ -1426,16 +1426,16 @@ static char *detoken(Token *tlist, bool expand_locals)
             t->type == TOK_PREPROC_ID && t->text &&
             t->text[0] == '%' && t->text[1] == '$')
         {
-            const char *q;
-            char *p;
-            Context *ctx = get_ctx(t->text, &q, false);
+            const char *q2;
+            char *p2;
+            Context *ctx = get_ctx(t->text, &q2, false);
             if (ctx)
             {
                 char buffer[40];
                 snprintf(buffer, sizeof(buffer), "..@%" PRIu32 ".", ctx->number);
-                p = as_strcat(buffer, q);
+                p2 = as_strcat(buffer, q2);
                 as_free(t->text);
-                t->text = p;
+                t->text = p2;
             }
         }
         if (t->type == TOK_WHITESPACE)
@@ -1704,13 +1704,13 @@ static Context *get_ctx(const char *name, const char **namep,
 /*
  * Check to see if a file is already in a string list
  */
-static bool in_list(const StrList *list, const char *str)
+static bool in_list(const StrList *lst, const char *str)
 {
-    while (list)
+    while (lst)
     {
-        if (!strcmp(list->str, str))
+        if (!strcmp(lst->str, str))
             return true;
-        list = list->next;
+        lst = lst->next;
     }
     return false;
 }
@@ -3816,8 +3816,8 @@ static int do_directive(Token *tline)
 
     case PP_SUBSTR:
     {
-        int64_t start, count;
-        size_t len;
+        int64_t start, count2;
+        size_t len2;
 
         casesense = true;
 
@@ -3877,7 +3877,7 @@ static int do_directive(Token *tline)
             tt = tt->next;
         if (!tt)
         {
-            count = 1; /* Backwards compatibility: one character */
+            count2 = 1; /* Backwards compatibility: one character */
         }
         else
         {
@@ -3897,24 +3897,24 @@ static int do_directive(Token *tline)
                 free_tlist(origline);
                 return DIRECTIVE_FOUND;
             }
-            count = evalresult->value;
+            count2 = evalresult->value;
         }
 
-        len = as_unquote(t->text, NULL);
+        len2 = as_unquote(t->text, NULL);
 
         /* make start and count being in range */
         if (start < 0)
             start = 0;
-        if (count < 0)
-            count = len + count + 1 - start;
-        if (start + count > (int64_t)len)
-            count = len - start;
-        if (!len || count < 0 || start >= (int64_t)len)
-            start = -1, count = 0; /* empty string */
+        if (count2 < 0)
+            count2 = len2 + count2 + 1 - start;
+        if (start + count2 > (int64_t)len2)
+            count2 = len2 - start;
+        if (!len2 || count2 < 0 || start >= (int64_t)len2)
+            start = -1, count2 = 0; /* empty string */
 
         macro_start = as_malloc(sizeof(*macro_start));
         macro_start->next = NULL;
-        macro_start->text = as_quote((start < 0) ? "" : t->text + start, count);
+        macro_start->text = as_quote((start < 0) ? "" : t->text + start, count2);
         macro_start->type = TOK_STRING;
         macro_start->a.mac = NULL;
 
@@ -4155,7 +4155,7 @@ static bool paste_tokens(Token **head, const struct tokseq_match *m,
                 if (PP_CONCAT_MASK(t->type) & m[i].mask_head)
                 {
                     size_t len = 0;
-                    char *tmp, *p;
+                    char *tmp2, *p;
 
                     while (tt && (PP_CONCAT_MASK(tt->type) & m[i].mask_tail))
                     {
@@ -4171,15 +4171,15 @@ static bool paste_tokens(Token **head, const struct tokseq_match *m,
                     {
                         /* We have at least two tokens... */
                         len += strlen(t->text);
-                        p = tmp = as_malloc(len + 1);
+                        p = tmp2 = as_malloc(len + 1);
                         while (t != tt)
                         {
                             strcpy(p, t->text);
                             p = strchr(p, '\0');
                             t = delete_Token(t);
                         }
-                        t = *tail = tokenize(tmp);
-                        as_free(tmp);
+                        t = *tail = tokenize(tmp2);
+                        as_free(tmp2);
                         while (t->next)
                         {
                             tail = &t->next;
@@ -4479,7 +4479,7 @@ static Token *expand_mmac_params(Token *tline)
 
     if (changed)
     {
-        const struct tokseq_match t[] = {
+        const struct tokseq_match tokseq_m[] = {
             {
                 PP_CONCAT_MASK(TOK_ID) |
                     PP_CONCAT_MASK(TOK_FLOAT), /* head */
@@ -4492,7 +4492,7 @@ static Token *expand_mmac_params(Token *tline)
                 PP_CONCAT_MASK(TOK_NUMBER), /* head */
                 PP_CONCAT_MASK(TOK_NUMBER)  /* tail */
             }};
-        paste_tokens(&thead, t, ARRAY_SIZE(t), false);
+        paste_tokens(&thead, tokseq_m, ARRAY_SIZE(tokseq_m), false);
     }
 
     return thead;
@@ -4849,7 +4849,7 @@ again:
      */
     if (expanded)
     {
-        const struct tokseq_match t[] = {
+        const struct tokseq_match tokseq_m[] = {
             {
                 PP_CONCAT_MASK(TOK_ID) |
                     PP_CONCAT_MASK(TOK_PREPROC_ID), /* head */
@@ -4857,7 +4857,7 @@ again:
                     PP_CONCAT_MASK(TOK_PREPROC_ID) |
                     PP_CONCAT_MASK(TOK_NUMBER) /* tail */
             }};
-        if (paste_tokens(&thead, t, ARRAY_SIZE(t), true))
+        if (paste_tokens(&thead, tokseq_m, ARRAY_SIZE(tokseq_m), true))
         {
             /*
              * If we concatenated something, *and* we had previously expanded
@@ -5669,7 +5669,7 @@ static char *pp_getline(void)
     return line;
 }
 
-static void pp_cleanup(int pass)
+static void pp_cleanup(int passNumber)
 {
     if (defining)
     {
@@ -5701,7 +5701,7 @@ static void pp_cleanup(int pass)
     while (cstk)
         ctx_pop();
     as_free(src_set_fname(NULL));
-    if (pass == 0)
+    if (passNumber == 0)
     {
         IncPath *i;
         free_llist(predef);

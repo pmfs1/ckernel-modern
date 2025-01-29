@@ -1,4 +1,4 @@
-name: "CODE_QL ADVANCED"
+name: "CODEQL_ADVANCED"
 on:
   push:
     branches: [ "**" ]
@@ -6,9 +6,10 @@ on:
     branches: [ "trunk" ]
   schedule:
     - cron: '43 15 * * 3'
+  workflow_dispatch:
 jobs:
-  analyze:
-    name: 'ANALYZE (${{ matrix.language }})'
+  CODEQL_ADVANCED:
+    name: 'CODEQL_ADVANCED (${{ matrix.language }})'
     runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
     permissions:
       security-events: write
@@ -43,6 +44,7 @@ jobs:
                 - cpp/commented-out-code
                 - cpp/useless-expression
                 - cpp/complex-condition
+                - cpp/use-of-goto
     - if: matrix.build-mode == 'manual'
       name: 'BUILD (MANUAL)'
       shell: bash

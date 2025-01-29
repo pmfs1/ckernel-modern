@@ -1820,16 +1820,16 @@ void bn_zero(unsigned int *bn)
 // Parse number in null terminated string 'p' and return it in the current token
 void parse_number(const char *p)
 {
-    int b, t, shift, frac_bits, s, exp_val, ch;
+    int b, t, shift, frac_bits, s, exp_val, local_ch;
     char *q;
     unsigned int bn[BN_SIZE];
     double d;
 
     // Number
     q = token_buf;
-    ch = *p++;
-    t = ch;
-    ch = *p++;
+    local_ch = *p++;
+    t = local_ch;
+    local_ch = *p++;
     *q++ = t;
     b = 10;
     if (t == '.')
@@ -1838,16 +1838,16 @@ void parse_number(const char *p)
     }
     else if (t == '0')
     {
-        if (ch == 'x' || ch == 'X')
+        if (local_ch == 'x' || local_ch == 'X')
         {
             q--;
-            ch = *p++;
+            local_ch = *p++;
             b = 16;
         }
-        else if (ch == 'b' || ch == 'B')
+        else if (local_ch == 'b' || local_ch == 'B')
         {
             q--;
-            ch = *p++;
+            local_ch = *p++;
             b = 2;
         }
     }
@@ -1856,17 +1856,17 @@ void parse_number(const char *p)
     // because of floating point constants.
     while (1)
     {
-        if (ch >= 'a' && ch <= 'f')
+        if (local_ch >= 'a' && local_ch <= 'f')
         {
-            t = ch - 'a' + 10;
+            t = local_ch - 'a' + 10;
         }
-        else if (ch >= 'A' && ch <= 'F')
+        else if (local_ch >= 'A' && local_ch <= 'F')
         {
-            t = ch - 'A' + 10;
+            t = local_ch - 'A' + 10;
         }
-        else if (is_num(ch))
+        else if (is_num(local_ch))
         {
-            t = ch - '0';
+            t = local_ch - '0';
         }
         else
         {
@@ -1880,12 +1880,12 @@ void parse_number(const char *p)
         num_too_long:
             error("number too long");
         }
-        *q++ = ch;
-        ch = *p++;
+        *q++ = local_ch;
+        local_ch = *p++;
     }
-    if (ch == '.' ||
-        ((ch == 'e' || ch == 'E') && b == 10) ||
-        ((ch == 'p' || ch == 'P') && (b == 16 || b == 2)))
+    if (local_ch == '.' ||
+        ((local_ch == 'e' || local_ch == 'E') && b == 10) ||
+        ((local_ch == 'p' || local_ch == 'P') && (b == 16 || b == 2)))
     {
         if (b != 10)
         {
@@ -1927,12 +1927,12 @@ void parse_number(const char *p)
                 bn_lshift(bn, shift, t);
             }
             frac_bits = 0;
-            if (ch == '.')
+            if (local_ch == '.')
             {
-                ch = *p++;
+                local_ch = *p++;
                 while (1)
                 {
-                    t = ch;
+                    t = local_ch;
                     if (t >= 'a' && t <= 'f')
                     {
                         t = t - 'a' + 10;
@@ -1953,29 +1953,29 @@ void parse_number(const char *p)
                         error("invalid digit");
                     bn_lshift(bn, shift, t);
                     frac_bits += shift;
-                    ch = *p++;
+                    local_ch = *p++;
                 }
             }
-            if (ch != 'p' && ch != 'P')
+            if (local_ch != 'p' && local_ch != 'P')
                 expect("exponent");
-            ch = *p++;
+            local_ch = *p++;
             s = 1;
             exp_val = 0;
-            if (ch == '+')
+            if (local_ch == '+')
             {
-                ch = *p++;
+                local_ch = *p++;
             }
-            else if (ch == '-')
+            else if (local_ch == '-')
             {
                 s = -1;
-                ch = *p++;
+                local_ch = *p++;
             }
-            if (ch < '0' || ch > '9')
+            if (local_ch < '0' || local_ch > '9')
                 expect("exponent digits");
-            while (ch >= '0' && ch <= '9')
+            while (local_ch >= '0' && local_ch <= '9')
             {
-                exp_val = exp_val * 10 + ch - '0';
-                ch = *p++;
+                exp_val = exp_val * 10 + local_ch - '0';
+                local_ch = *p++;
             }
             exp_val = exp_val * s;
 
@@ -1983,17 +1983,17 @@ void parse_number(const char *p)
             // TODO: should patch float number directly
             d = (double)bn[1] * 4294967296.0 + (double)bn[0];
             d = ldexp(d, exp_val - frac_bits);
-            t = to_upper(ch);
+            t = to_upper(local_ch);
             if (t == 'F')
             {
-                ch = *p++;
+                local_ch = *p++;
                 tok = TOK_CFLOAT;
                 // float, should handle overflow
                 tokc.f = (float)d;
             }
             else if (t == 'L')
             {
-                ch = *p++;
+                local_ch = *p++;
                 tok = TOK_CLDOUBLE;
                 // TODO: not large enough
                 tokc.ld = (long double)d;
@@ -2007,56 +2007,56 @@ void parse_number(const char *p)
         else
         {
             // Decimal floats
-            if (ch == '.')
+            if (local_ch == '.')
             {
                 if (q >= token_buf + STRING_MAX_SIZE)
                     goto num_too_long;
-                *q++ = ch;
-                ch = *p++;
+                *q++ = local_ch;
+                local_ch = *p++;
             float_frac_parse:
-                while (ch >= '0' && ch <= '9')
+                while (local_ch >= '0' && local_ch <= '9')
                 {
                     if (q >= token_buf + STRING_MAX_SIZE)
                         goto num_too_long;
-                    *q++ = ch;
-                    ch = *p++;
+                    *q++ = local_ch;
+                    local_ch = *p++;
                 }
             }
-            if (ch == 'e' || ch == 'E')
+            if (local_ch == 'e' || local_ch == 'E')
             {
                 if (q >= token_buf + STRING_MAX_SIZE)
                     goto num_too_long;
-                *q++ = ch;
-                ch = *p++;
-                if (ch == '-' || ch == '+')
+                *q++ = local_ch;
+                local_ch = *p++;
+                if (local_ch == '-' || local_ch == '+')
                 {
                     if (q >= token_buf + STRING_MAX_SIZE)
                         goto num_too_long;
-                    *q++ = ch;
-                    ch = *p++;
+                    *q++ = local_ch;
+                    local_ch = *p++;
                 }
-                if (ch < '0' || ch > '9')
+                if (local_ch < '0' || local_ch > '9')
                     expect("exponent digits");
-                while (ch >= '0' && ch <= '9')
+                while (local_ch >= '0' && local_ch <= '9')
                 {
                     if (q >= token_buf + STRING_MAX_SIZE)
                         goto num_too_long;
-                    *q++ = ch;
-                    ch = *p++;
+                    *q++ = local_ch;
+                    local_ch = *p++;
                 }
             }
             *q = '\0';
-            t = to_upper(ch);
+            t = to_upper(local_ch);
             errno = 0;
             if (t == 'F')
             {
-                ch = *p++;
+                local_ch = *p++;
                 tok = TOK_CFLOAT;
                 tokc.f = strtof(token_buf, NULL);
             }
             else if (t == 'L')
             {
-                ch = *p++;
+                local_ch = *p++;
                 tok = TOK_CLDOUBLE;
                 tokc.ld = strtold(token_buf, NULL);
             }
@@ -2133,20 +2133,20 @@ void parse_number(const char *p)
         }
 
         // Handle MSVC integer size extension
-        if (ch == 'i' || ch == 'u' && *p == 'i')
+        if (local_ch == 'i' || local_ch == 'u' && *p == 'i')
         {
             int sgn = 1;
             int bits = 0;
-            if (ch == 'u')
+            if (local_ch == 'u')
             {
                 sgn = 0;
                 p++;
             }
-            ch = *p++;
-            while (is_num(ch))
+            local_ch = *p++;
+            while (is_num(local_ch))
             {
-                bits = bits * 10 + (ch - '0');
-                ch = *p++;
+                bits = bits * 10 + (local_ch - '0');
+                local_ch = *p++;
             }
             if (bits == 64)
             {
@@ -2166,7 +2166,7 @@ void parse_number(const char *p)
         ucount = 0;
         for (;;)
         {
-            t = to_upper(ch);
+            t = to_upper(local_ch);
             if (t == 'L')
             {
                 if (lcount >= 2)
@@ -2183,7 +2183,7 @@ void parse_number(const char *p)
                         tok = TOK_CULLONG;
                     }
                 }
-                ch = *p++;
+                local_ch = *p++;
             }
             else if (t == 'U')
             {
@@ -2198,7 +2198,7 @@ void parse_number(const char *p)
                 {
                     tok = TOK_CULLONG;
                 }
-                ch = *p++;
+                local_ch = *p++;
             }
             else
             {
@@ -2588,10 +2588,10 @@ redo_no_start:
                 if (tokcstr.size > 2)
                 {
                     // Multi-character character constant (MSVC extension)
-                    unsigned char *p = tokcstr.data;
+                    unsigned char *pTokcstr = tokcstr.data;
                     tokc.i = 0;
-                    while (*p)
-                        tokc.i = tokc.i << 8 | *p++;
+                    while (*pTokcstr)
+                        tokc.i = tokc.i << 8 | *pTokcstr++;
                 }
                 else
                 {
