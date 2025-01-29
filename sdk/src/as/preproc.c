@@ -3817,7 +3817,7 @@ static int do_directive(Token *tline)
     case PP_SUBSTR:
     {
         int64_t start, count;
-        size_t len;
+        size_t len2;
 
         casesense = true;
 
@@ -3900,16 +3900,16 @@ static int do_directive(Token *tline)
             count = evalresult->value;
         }
 
-        len = as_unquote(t->text, NULL);
+        len2 = as_unquote(t->text, NULL);
 
         /* make start and count being in range */
         if (start < 0)
             start = 0;
         if (count < 0)
-            count = len + count + 1 - start;
-        if (start + count > (int64_t)len)
-            count = len - start;
-        if (!len || count < 0 || start >= (int64_t)len)
+            count = len2 + count + 1 - start;
+        if (start + count > (int64_t)len2)
+            count = len2 - start;
+        if (!len2 || count < 0 || start >= (int64_t)len2)
             start = -1, count = 0; /* empty string */
 
         macro_start = as_malloc(sizeof(*macro_start));
