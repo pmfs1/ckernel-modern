@@ -627,7 +627,7 @@ void asm_parse_directive(CCState *s1)
     case TOK_ASM_asciz:
     {
         const uint8_t *p;
-        int i, size, t;
+        int i, _size, t;
 
         t = tok;
         next();
@@ -636,10 +636,10 @@ void asm_parse_directive(CCState *s1)
             if (tok != TOK_STR)
                 expect("string constant");
             p = tokc.cstr->data;
-            size = tokc.cstr->size;
-            if (t == TOK_ASM_ascii && size > 0)
-                size--;
-            for (i = 0; i < size; i++)
+            _size = tokc.cstr->_size;
+            if (t == TOK_ASM_ascii && _size > 0)
+                _size--;
+            for (i = 0; i < _size; i++)
                 g(p[i]);
             next();
             if (tok == ',')
