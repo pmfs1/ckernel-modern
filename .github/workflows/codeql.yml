@@ -1,4 +1,4 @@
-name: "CODE_QL ADVANCED"
+name: "CODEQL_ADVANCED"
 on:
   push:
     branches: [ "**" ]
