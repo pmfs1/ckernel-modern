@@ -1046,15 +1046,15 @@ int cc_output_file(CCState *s1, const char *filename)
                             }
                             else if (type == STT_OBJECT)
                             {
-                                unsigned long offset;
-                                offset = bss_section->data_offset;
+                                unsigned long _offset;
+                                _offset = bss_section->data_offset;
                                 // TODO: which alignment ?
-                                offset = (offset + 16 - 1) & -16;
-                                index = put_elf_sym(s1->dynsym, offset, esym->st_size, esym->st_info, 0,
+                                _offset = (_offset + 16 - 1) & -16;
+                                index = put_elf_sym(s1->dynsym, _offset, esym->st_size, esym->st_info, 0,
                                                     bss_section->sh_num, name);
-                                put_elf_reloc(s1->dynsym, bss_section, offset, R_386_COPY, index);
-                                offset += esym->st_size;
-                                bss_section->data_offset = offset;
+                                put_elf_reloc(s1->dynsym, bss_section, _offset, R_386_COPY, index);
+                                _offset += esym->st_size;
+                                bss_section->data_offset = _offset;
                             }
                         }
                         else
