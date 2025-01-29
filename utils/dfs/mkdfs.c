@@ -110,9 +110,9 @@ unsigned int dev_getsize(vfs_devno_t devno)
     return size;
 }
 
-void create_device(char *devname, int sizeInSectors)
+void create_device(char *devname, int devsize)
 {
-    if (bdrv_create(devtype, devname, sizeInSectors, 0) < 0)
+    if (bdrv_create(devtype, devname, devsize, 0) < 0)
         panic("unable to create device file");
 }
 
