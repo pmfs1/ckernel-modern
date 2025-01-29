@@ -1396,10 +1396,10 @@ static char *detoken(Token *tlist, bool expand_locals)
             v = t->text + 2;
             if (*v == '\'' || *v == '\"' || *v == '`')
             {
-                size_t len = as_unquote(v, NULL);
+                size_t len2 = as_unquote(v, NULL);
                 size_t clen = strlen(v);
 
-                if (len != clen)
+                if (len2 != clen)
                 {
                     error(ERR_NONFATAL | ERR_PASS1,
                           "NUL character in %! string");
