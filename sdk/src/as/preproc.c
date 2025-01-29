@@ -4849,7 +4849,7 @@ again:
      */
     if (expanded)
     {
-        const struct tokseq_match t[] = {
+        const struct tokseq_match tokseq_m[] = {
             {
                 PP_CONCAT_MASK(TOK_ID) |
                     PP_CONCAT_MASK(TOK_PREPROC_ID), /* head */
@@ -4857,7 +4857,7 @@ again:
                     PP_CONCAT_MASK(TOK_PREPROC_ID) |
                     PP_CONCAT_MASK(TOK_NUMBER) /* tail */
             }};
-        if (paste_tokens(&thead, t, ARRAY_SIZE(t), true))
+        if (paste_tokens(&thead, tokseq_m, ARRAY_SIZE(tokseq_m), true))
         {
             /*
              * If we concatenated something, *and* we had previously expanded
