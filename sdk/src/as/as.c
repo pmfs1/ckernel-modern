@@ -930,7 +930,7 @@
                  if (!as_stricmp(param, warnings[i].name))
                      break;
              if (i <= ERR_WARN_MAX)
-             warning_on_global[i] = do_warn;
+                 warning_on_global[i] = do_warn;
              else if (!as_stricmp(param, "all"))
                  for (i = 1; i <= ERR_WARN_MAX; i++)
                      warning_on_global[i] = do_warn;
@@ -955,15 +955,15 @@
                  depend_emit_phony = true;
                  break;
              case 'D':
-                 depend_file = as_strdup(q);  // Fixed: Create copy of string
+                 depend_file = as_strdup(q); // Fixed: Create copy of string
                  advance = true;
                  break;
              case 'T':
-                 depend_target = as_strdup(q);  // Fixed: Create copy of string
+                 depend_target = as_strdup(q); // Fixed: Create copy of string
                  advance = true;
                  break;
              case 'Q':
-                 depend_target = quote_for_make(q);  // Already allocates new memory
+                 depend_target = quote_for_make(q); // Already allocates new memory
                  advance = true;
                  break;
              default:
@@ -1182,7 +1182,8 @@
      fclose(f);
  }
  
- static bool has_path_traversal(const char *str) {
+ static bool has_path_traversal(const char *str)
+ {
      if (!str)
          return false;
      // Basic check for directory traversal patterns
@@ -1226,11 +1227,8 @@
               * different to the -@resp file processing below for regular
               * AS.
               */
-             if (has_path_traversal(argv[0] + 1)) {
-                 fprintf(stderr, "Invalid response file path: %s\n", argv[0] + 1);
-                 return;
-             }
-             if (has_path_traversal(argv[0] + 1)) {
+             if (has_path_traversal(argv[0] + 1))
+             {
                  fprintf(stderr, "Invalid response file path: %s\n", argv[0] + 1);
                  return;
              }
@@ -1243,15 +1241,24 @@
              p = get_param(argv[0], argc > 1 ? argv[1] : NULL, &advance);
              if (p)
              {
-                 rfile = fopen(p, "r");
-                 if (rfile)
+                 // Validate path before opening response file
+                 if (has_path_traversal(p))
                  {
-                     process_respfile(rfile);
-                     fclose(rfile);
+                     as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
+                              "invalid response file path '%s'", p);
                  }
                  else
-                     as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
-                              "unable to open response file `%s'", p);
+                 {
+                     rfile = fopen(p, "r");
+                     if (rfile)
+                     {
+                         process_respfile(rfile);
+                         fclose(rfile);
+                     }
+                     else
+                         as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
+                                  "unable to open response file `%s'", p);
+                 }
              }
          }
          else
@@ -1612,12 +1619,17 @@
                      p = value;
                      q = debugid;
                      badid = overlong = false;
-                     if (!isidstart(*p)) {
+                     if (!isidstart(*p))
+                     {
                          badid = true;
-                     } else {
-                         while (*p && !as_isspace(*p)) {
+                     }
+                     else
+                     {
+                         while (*p && !as_isspace(*p))
+                         {
                              // Changed to use explicit array bounds check
-                             if (q >= debugid + 127) {  // Reserve 1 byte for null terminator
+                             if (q >= debugid + 127)
+                             { // Reserve 1 byte for null terminator
                                  overlong = true;
                                  break;
                              }
@@ -1627,9 +1639,10 @@
                          }
                          *q = 0;
                      }
-                     if (badid) {
+                     if (badid)
+                     {
                          as_error(passn == 1 ? ERR_NONFATAL : ERR_PANIC,
-                                 "identifier expected after DEBUG");
+                                  "identifier expected after DEBUG");
                          break;
                      }
                      p = as_skip_spaces(p);
