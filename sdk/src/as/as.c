@@ -1243,12 +1243,16 @@
               * different to the -@resp file processing below for regular
               * AS.
               */
-             if (has_path_traversal(argv[0] + 1))
+             const char *respfile = argv[0] + 1;
+             if (has_path_traversal(respfile))
              {
-                 fprintf(stderr, "Invalid response file path: %s\n", argv[0] + 1);
-                 return;
+                 as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
+                          "invalid response file path '%s'", respfile);
              }
-             process_response_file(argv[0] + 1);
+             else
+             {
+                 process_response_file(respfile);
+             }
              argc--;
              argv++;
          }
