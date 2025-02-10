@@ -1301,15 +1301,25 @@
                  }
                  else
                  {
-                     rfile = fopen(p, "r");
-                     if (rfile)
+                     // Get canonical path
+                     char resolved[FILENAME_MAX];
+                     if (!realpath(p, resolved))
                      {
-                         process_respfile(rfile);
-                         fclose(rfile);
+                         as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
+                                  "unable to resolve response file path '%s'", p);
                      }
                      else
-                         as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
-                                  "unable to open response file `%s'", p);
+                     {
+                         rfile = fopen(resolved, "r");
+                         if (rfile)
+                         {
+                             process_respfile(rfile);
+                             fclose(rfile);
+                         }
+                         else
+                             as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
+                                      "unable to open response file `%s'", p);
+                     }
                  }
              }
          }
