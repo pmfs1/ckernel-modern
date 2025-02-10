@@ -1185,9 +1185,25 @@
  static bool has_path_traversal(const char *str)
  {
      if (!str)
-         return false;
-     // Basic check for directory traversal patterns
-     return strstr(str, "../") || strstr(str, "..\\");
+         return true; // Consider null path as unsafe
+ 
+     // Check for path traversal patterns
+     if (strstr(str, "../") || strstr(str, "..\\") ||
+         strstr(str, "/..") || strstr(str, "\\..") ||
+         strstr(str, "//") || strstr(str, "\\\\") ||
+         *str == '/' || *str == '\\' ||
+         strstr(str, ":"))
+         return true;
+ 
+     // Check for non-printable characters
+     while (*str)
+     {
+         if (*str < 32 || *str > 126)
+             return true;
+         str++;
+     }
+ 
+     return false;
  }
  
  static void parse_cmdline(int argc, char **argv)
