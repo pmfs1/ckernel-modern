@@ -274,17 +274,28 @@
  
      if (depend_file && strcmp(depend_file, "-"))
      {
+         // Add validation of dependency file path
          if (has_path_traversal(depend_file))
          {
              as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
                       "invalid dependency file path `%s'", depend_file);
              return;
          }
-         int fd = open(depend_file, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
+ 
+         // Get canonical path
+         char resolved[FILENAME_MAX];
+         if (!realpath(depend_file, resolved))
+         {
+             as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
+                      "unable to resolve dependency file path `%s'", depend_file);
+             return;
+         }
+ 
+         int fd = open(resolved, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
          if (fd < 0)
          {
              as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
-                      "unable to write dependency file `%s'", depend_file);
+                      "unable to write dependency file `%s'", resolved);
              return;
          }
          deps = fdopen(fd, "w");
@@ -292,7 +303,7 @@
          {
              close(fd);
              as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
-                      "unable to write dependency file `%s'", depend_file);
+                      "unable to write dependency file `%s'", resolved);
              return;
          }
      }
