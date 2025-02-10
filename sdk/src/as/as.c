@@ -1200,7 +1200,6 @@
          return true; // Consider null/empty path as unsafe
  
      char resolved[FILENAME_MAX];
-     char *canon;
  
      // Check for path traversal patterns
      if (strstr(str, "../") || strstr(str, "..\\") ||
