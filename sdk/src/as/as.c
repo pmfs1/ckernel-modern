@@ -1161,20 +1161,32 @@
      char str[2048];
      FILE *f;
  
-     // Prevent path traversal attacks
-     if (has_path_traversal(file))
+     // Validate response file path
+     if (!file || has_path_traversal(file))
      {
          as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
-                  "invalid response file path '%s'", file);
+                  "invalid response file path '%s'", file ? file : "NULL");
          return;
      }
  
-     f = fopen(file, "r");
+     // Get canonical path
+     char resolved[FILENAME_MAX];
+     if (!realpath(file, resolved))
+     {
+         as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
+                  "unable to resolve response file path '%s'", file);
+         return;
+     }
+ 
+     // Open file with validated path
+     f = fopen(resolved, "r");
      if (!f)
      {
-         perror(file);
-         exit(-1);
+         as_error(ERR_FATAL | ERR_NOFILE | ERR_USAGE,
+                  "unable to open response file '%s'", resolved);
+         return;
      }
+ 
      while (fgets(str, sizeof str, f))
      {
          process_args(str);
@@ -1184,23 +1196,47 @@
  
  static bool has_path_traversal(const char *str)
  {
-     if (!str)
-         return true; // Consider null path as unsafe
+     if (!str || !*str)
+         return true; // Consider null/empty path as unsafe
+ 
+     char resolved[FILENAME_MAX];
+     char *canon;
  
      // Check for path traversal patterns
      if (strstr(str, "../") || strstr(str, "..\\") ||
          strstr(str, "/..") || strstr(str, "\\..") ||
          strstr(str, "//") || strstr(str, "\\\\") ||
-         *str == '/' || *str == '\\' ||
-         strstr(str, ":"))
+         strchr(str, ':') ||            // Disallow drive letters/URLs
+         *str == '/' || *str == '\\' || // No absolute paths
+         str[strlen(str) - 1] == '.')   // No trailing dots
          return true;
  
      // Check for non-printable characters
-     while (*str)
+     const unsigned char *p = (const unsigned char *)str;
+     while (*p)
      {
-         if (*str < 32 || *str > 126)
+         if (*p < 32 || *p > 126)
              return true;
-         str++;
+         p++;
+     }
+ 
+     // Try to canonicalize the path
+     if (!realpath(str, resolved))
+     {
+         return true; // Consider failure as unsafe
+     }
+ 
+     // Make sure resolved path is under current directory
+     char cwd[FILENAME_MAX];
+     if (!getcwd(cwd, sizeof(cwd)))
+     {
+         return true;
+     }
+ 
+     // Compare canonicalized paths
+     if (strncmp(cwd, resolved, strlen(cwd)) != 0)
+     {
+         return true; // Path escapes current directory
      }
  
      return false;
@@ -1237,17 +1273,14 @@
          argv++;
          if (argv[0][0] == '@')
          {
-             /* We have a response file, so process this as a set of
-              * arguments like the environment variable. This allows us
-              * to have multiple arguments on a single line, which is
-              * different to the -@resp file processing below for regular
-              * AS.
-              */
+             /* We have a response file */
              const char *respfile = argv[0] + 1;
-             if (has_path_traversal(respfile))
+ 
+             // Validate response file path before processing
+             if (!respfile || has_path_traversal(respfile))
              {
                  as_error(ERR_NONFATAL | ERR_NOFILE | ERR_USAGE,
-                          "invalid response file path '%s'", respfile);
+                          "invalid response file path '%s'", respfile ? respfile : "NULL");
              }
              else
              {
