@@ -1617,32 +1617,20 @@ static int is_valid_path(const char *path)
         p++;
     }
 
-    // Reject absolute paths
-    if (path[0] == '/' || path[0] == '\\')
+    // Allow absolute paths since def files may be in system locations
+    // Allow file extensions for .def files
+    const char *ext = strrchr(path, '.');
+    if (!ext || (strcasecmp(ext, ".def") != 0))
         return 0;
-
-#ifdef _WIN32
-    // Reject Windows drive letters
-    if (isalpha((unsigned char)path[0]) && path[1] == ':')
-        return 0;
-
-    // Reject Windows UNC paths
-    if (path[0] == '\\' && path[1] == '\\')
-        return 0;
-#endif
 
     // Reject paths with control characters
+    p = path;
     while (*p)
     {
         if (iscntrl((unsigned char)*p))
             return 0;
         p++;
     }
-
-    // Only allow specific file extensions
-    const char *ext = strrchr(path, '.');
-    if (!ext || (strcasecmp(ext, ".map") != 0))
-        return 0;
 
     return 1;
 }
@@ -1977,8 +1965,8 @@ int pe_output_file(CCState *s1, const char *filename)
     pe.filename = filename;
     pe.s1 = s1;
 
-    // Validate the .def file path if one was provided
-    if (s1->def_file && !is_valid_path(s1->def_file))
+    // Only validate .def file if one was provided and we're building a DLL
+    if (s1->def_file && s1->output_type == CC_OUTPUT_DLL && !is_valid_path(s1->def_file))
     {
         error_noabort("invalid .def file path");
         return -1;
