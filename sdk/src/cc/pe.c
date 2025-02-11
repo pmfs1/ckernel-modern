@@ -1604,47 +1604,96 @@ static int is_valid_path(const char *path)
     if (!path || !*path)
         return 0;
 
-    // Check for path traversal attempts
-    if (strstr(path, ".."))
-        return 0;
+    // Reject any path with directory traversal sequences
+    const char *p = path;
+    while (*p)
+    {
+        if (p[0] == '.' && p[1] == '.')
+            return 0;
+        if (p[0] == '/' && p[1] == '.')
+            return 0;
+        if (p[0] == '\\' && p[1] == '.')
+            return 0;
+        p++;
+    }
 
-    // Check for absolute paths starting with / or \
+    // Reject absolute paths
     if (path[0] == '/' || path[0] == '\\')
-    return 0;
+        return 0;
 
 #ifdef _WIN32
-    // Check for Windows drive letters
-    if (isalpha(path[0]) && path[1] == ':')
+    // Reject Windows drive letters
+    if (isalpha((unsigned char)path[0]) && path[1] == ':')
         return 0;
 
-    // Check for Windows UNC paths
+    // Reject Windows UNC paths
     if (path[0] == '\\' && path[1] == '\\')
         return 0;
 #endif
 
-    // Check for control characters
-    for (const char *p = path; *p; p++)
+    // Reject paths with control characters
+    while (*p)
     {
         if (iscntrl((unsigned char)*p))
             return 0;
+        p++;
     }
+
+    // Only allow specific file extensions
+    const char *ext = strrchr(path, '.');
+    if (!ext || (strcasecmp(ext, ".map") != 0))
+        return 0;
 
     return 1;
 }
 
+static char *sanitize_path(char *buf, size_t bufsize, const char *path)
+{
+    if (!path || !buf || bufsize == 0)
+        return NULL;
+
+    // Get basename of the path
+    const char *basename = path;
+    const char *p = path;
+    while (*p)
+    {
+        if (*p == '/' || *p == '\\')
+            basename = p + 1;
+        p++;
+    }
+
+    // Create sanitized filename with .map extension
+    if (snprintf(buf, bufsize, "%s.map", basename) >= bufsize)
+    {
+        return NULL;
+    }
+
+    return buf;
+}
+
 static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
 {
-    // Use the improved path validation
-    if (!is_valid_path(fname))
+    char sanitized[260];
+
+    // Sanitize the filename
+    if (!sanitize_path(sanitized, sizeof(sanitized), fname))
     {
         snprintf(errbuf, errsize, "invalid map filename '%s'", fname);
         return NULL;
     }
 
-    int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
+    // Validate the sanitized path
+    if (!is_valid_path(sanitized))
+    {
+        snprintf(errbuf, errsize, "invalid map filename '%s'", sanitized);
+        return NULL;
+    }
+
+    // Open file with proper permissions
+    int fd = open(sanitized, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
     if (fd < 0)
     {
-        snprintf(errbuf, errsize, "could not create '%s': %s", fname, strerror(errno));
+        snprintf(errbuf, errsize, "could not create '%s': %s", sanitized, strerror(errno));
         return NULL;
     }
 
@@ -1652,7 +1701,7 @@ static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
     if (!f)
     {
         close(fd);
-        snprintf(errbuf, errsize, "could not open '%s' for writing", fname);
+        snprintf(errbuf, errsize, "could not open '%s' for writing", sanitized);
         return NULL;
     }
 
