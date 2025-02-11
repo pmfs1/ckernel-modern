@@ -1599,21 +1599,43 @@ static int pe_print_section(FILE *f, Section *s)
     return 0;
 }
 
-static int is_valid_map_path(const char *path)
+static int is_valid_path(const char *path)
 {
     if (!path || !*path)
         return 0;
 
-    // Only check for path traversal attempts
+    // Check for path traversal attempts
     if (strstr(path, ".."))
         return 0;
+
+    // Check for absolute paths starting with / or \
+    if (path[0] == '/' || path[0] == '\\')
+    return 0;
+
+#ifdef _WIN32
+    // Check for Windows drive letters
+    if (isalpha(path[0]) && path[1] == ':')
+        return 0;
+
+    // Check for Windows UNC paths
+    if (path[0] == '\\' && path[1] == '\\')
+        return 0;
+#endif
+
+    // Check for control characters
+    for (const char *p = path; *p; p++)
+    {
+        if (iscntrl((unsigned char)*p))
+            return 0;
+    }
 
     return 1;
 }
 
 static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
 {
-    if (!is_valid_map_path(fname))
+    // Use the improved path validation
+    if (!is_valid_path(fname))
     {
         snprintf(errbuf, errsize, "invalid map filename '%s'", fname);
         return NULL;
@@ -1905,6 +1927,13 @@ int pe_output_file(CCState *s1, const char *filename)
     memset(&pe, 0, sizeof pe);
     pe.filename = filename;
     pe.s1 = s1;
+
+    // Validate the .def file path if one was provided
+    if (s1->def_file && !is_valid_path(s1->def_file))
+    {
+        error_noabort("invalid .def file path");
+        return -1;
+    }
 
     // Generate relocation information by default for krlean.
     if (s1->imagebase == 0xFFFFFFFF)
