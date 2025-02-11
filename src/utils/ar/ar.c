@@ -10,6 +10,9 @@
 #include <time.h>
 #include <sys/stat.h>
 #include <netinet/in.h>
+#include <ctype.h>
+#include <limits.h>
+#include <errno.h>
 
 #define AR_MAGIC "!<arch>\012"
 
@@ -513,71 +516,115 @@ void usage()
     fprintf(stderr, "  -m            Add individual entries in input archives.\n");
 }
 
-int is_safe_filename(const char *filename)
-{
+char *normalize_path(const char *path) {
+    if (!path) return NULL;
+
+    // Allocate space for normalized path
+    char *normalized = (char *)malloc(PATH_MAX);
+    if (!normalized) return NULL;
+
+    char *out = normalized;
+    const char *in = path;
+    size_t len = 0;
+
+    // Skip leading spaces
+    while (isspace(*in)) in++;
+
+    // Process each character
+    while (*in && len < PATH_MAX - 1) {
+        // Convert backslashes to forward slashes
+        if (*in == '\\') {
+            *out = '/';
+        } else {
+            *out = *in;
+        }
+        
+        // Remove consecutive slashes
+        if (*out == '/' && len > 0 && *(out-1) == '/') {
+            in++;
+            continue;
+        }
+
+        out++;
+        in++;
+        len++;
+    }
+
+    // Null terminate
+    *out = '\0';
+
+    // Remove trailing slashes (except for root)
+    while (len > 1 && normalized[len-1] == '/') {
+        normalized[--len] = '\0';
+    }
+
+    return normalized;
+}
+
+int is_safe_filename(const char *filename) {
     // Reject empty filenames
-    if (!filename || !*filename)
-        return 0;
+    if (!filename || !*filename) return 0;
+
+    // Normalize the path first
+    char *normalized = normalize_path(filename);
+    if (!normalized) return 0;
 
     // Reject absolute paths
-    if (filename[0] == '/' || filename[0] == '\\')
+    if (normalized[0] == '/' || normalized[0] == '\\') {
+        free(normalized);
         return 0;
+    }
 
     // Maximum length check
-    if (strlen(filename) > 256)
+    if (strlen(normalized) > 256) {
+        free(normalized);
         return 0;
+    }
 
-    const char *p = filename;
+    const char *p = normalized;
     int segment_length = 0;
-    int had_dot = 0;
+    int dots = 0;
 
-    while (*p)
-    {
+    while (*p) {
         char c = *p;
 
-        // Check for path traversal components
-        if (c == '.')
-        {
-            had_dot++;
-            if (had_dot > 2)
+        // Handle dots for path traversal detection
+        if (c == '.') {
+            dots++;
+            if (dots > 2) {
+                free(normalized);
                 return 0;
-        }
-        else
-        {
-            had_dot = 0;
-        }
-
-        // Check for path separators
-        if (c == '/' || c == '\\')
-        {
-            // Reject empty segments
-            if (segment_length == 0)
+            }
+        } else if (c == '/') {
+            // Check segment
+            if (segment_length == 0 || dots == 2) {
+                free(normalized);
                 return 0;
-
-            // Check if previous segment was ".."
-            if (had_dot == 2)
-                return 0;
-
+            }
             segment_length = 0;
-            had_dot = 0;
-        }
-        else
-        {
+            dots = 0;
+        } else {
+            dots = 0;
             segment_length++;
         }
 
-        // Reject control characters and other dangerous characters
+        // Reject dangerous characters
         if (c < 32 || c == ':' || c == '*' || c == '?' || c == '"' ||
-            c == '<' || c == '>' || c == '|' || c == ';')
+            c == '<' || c == '>' || c == '|' || c == ';') {
+            free(normalized);
             return 0;
+        }
 
         p++;
     }
 
     // Check final segment
-    if (segment_length == 0 || (had_dot == 2))
+    if (segment_length == 0 || dots == 2) {
+        free(normalized);
         return 0;
+    }
 
+    free(normalized);
     return 1;
 }
 
@@ -614,10 +661,15 @@ int main(int argc, char *argv[])
     }
     archive_filename = argv[optind++];
 
-    // Validate archive filename
-    if (!is_safe_filename(archive_filename))
-    {
+    // Validate and normalize archive filename
+    if (!is_safe_filename(archive_filename)) {
         fprintf(stderr, "%s: Invalid archive filename\n", archive_filename);
+        return 1;
+    }
+    
+    char *normalized_archive = normalize_path(archive_filename);
+    if (!normalized_archive) {
+        fprintf(stderr, "Memory allocation error\n");
         return 1;
     }
 
@@ -685,11 +737,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // Open output archive
-    fd = open(archive_filename, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IWUSR | S_IRUSR);
+    // Open output archive with normalized path
+    fd = open(normalized_archive, O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, S_IWUSR | S_IRUSR);
     if (fd < 0)
     {
-        perror(archive_filename);
+        perror(normalized_archive);
+        free(normalized_archive);
         free_archive(&ar);
         return 1;
     }
@@ -710,5 +763,6 @@ int main(int argc, char *argv[])
     close(fd);
     free_archive(&ar);
 
+    free(normalized_archive);
     return 0;
 }
