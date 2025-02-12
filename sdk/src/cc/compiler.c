@@ -3959,57 +3959,40 @@ int cc_add_dll(CCState *s, const char *filename, int flags)
 // The library name is the same as the argument of the '-l' option
 int cc_add_library(CCState *s, const char *libraryname)
 {
-    char buf[1024];
-    int i, len;
+    char *fullpath;
+    int i, ret = -1;
+    size_t path_len;
 
-    /* first try "lib%s.def" */
-    snprintf(buf, sizeof(buf), "lib%s.def", libraryname);
-    for (i = 0; i < s->nb_library_paths; i++)
+    // First we look for the dynamic library if not static linking
+    if (!s->static_link)
     {
-        len = snprintf(buf, sizeof(buf), "%s/lib%s.def",
-                       s->library_paths[i], libraryname);
-        if (len >= sizeof(buf))
-            continue;
-        if (cc_add_file(s, buf) == 0)
-            return 0;
+        path_len = strlen(libraryname) + 5; // +5 for ".def" and null terminator
+        fullpath = cc_malloc(path_len);
+        if (fullpath)
+        {
+            snprintf(fullpath, path_len, "%s.def", libraryname);
+            ret = cc_add_dll(s, fullpath, 0);
+            cc_free(fullpath);
+            if (ret == 0)
+                return 0;
+        }
     }
 
-    /* then try "%s.def" */
-    snprintf(buf, sizeof(buf), "%s.def", libraryname);
+    // Then we look for the static library
     for (i = 0; i < s->nb_library_paths; i++)
     {
-        len = snprintf(buf, sizeof(buf), "%s/%s.def",
-                       s->library_paths[i], libraryname);
-        if (len >= sizeof(buf))
+        path_len = strlen(s->library_paths[i]) + strlen(libraryname) + 7; // +7 for "/lib", ".a" and null terminator
+        fullpath = cc_malloc(path_len);
+        if (!fullpath)
             continue;
-        if (cc_add_file(s, buf) == 0)
-            return 0;
-    }
 
-    /* then try "lib%s.dll" */
-    for (i = 0; i < s->nb_library_paths; i++)
-    {
-        len = snprintf(buf, sizeof(buf), "%s/lib%s.dll",
-                       s->library_paths[i], libraryname);
-        if (len >= sizeof(buf))
-            continue;
-        if (cc_add_file(s, buf) == 0)
-            return 0;
+        snprintf(fullpath, path_len, "%s/lib%s.a", s->library_paths[i], libraryname);
+        ret = cc_add_file_ex(s, fullpath, 0);
+        cc_free(fullpath);
+        if (ret == 0)
+            break;
     }
-
-    /* then try "%s.dll" */
-    for (i = 0; i < s->nb_library_paths; i++)
-    {
-        len = snprintf(buf, sizeof(buf), "%s/%s.dll",
-                       s->library_paths[i], libraryname);
-        if (len >= sizeof(buf))
-            continue;
-        if (cc_add_file(s, buf) == 0)
-            return 0;
-    }
-
-    error_noabort("library '%s' not found", libraryname);
-    return -1;
+    return ret;
 }
 
 int cc_add_symbol(CCState *s, const char *name, unsigned long val)
