@@ -905,6 +905,42 @@ static int sym_cmp(const void *va, const void *vb)
     return strcmp(ca, cb);
 }
 
+static int is_valid_path(const char *path)
+{
+    if (!path || !*path)
+        return 0;
+
+    // Maximum allowed path length
+    if (strlen(path) > 260)
+        return 0;
+
+    // Check for invalid characters used in path traversal
+    const char *invalid_chars = "<>:\"|?*\n\r\t\f\v";
+    if (strpbrk(path, invalid_chars))
+        return 0;
+
+    // Reject paths containing directory traversal sequences
+    if (strstr(path, ".."))
+        return 0;
+    if (strstr(path, "\\\\"))
+        return 0;
+    if (strstr(path, "//"))
+        return 0;
+
+    // Reject non-printable and control characters
+    const char *p = path;
+    while (*p)
+    {
+        if (iscntrl((unsigned char)*p))
+            return 0;
+        p++;
+    }
+
+    // Allow .map and .def file extensions
+    const char *ext = strrchr(path, '.');
+    return ext && (strcasecmp(ext, ".map") == 0 || strcasecmp(ext, ".def") == 0);
+}
+
 static char *sanitize_def_path(char *buf, size_t bufsize, const char *path)
 {
     const char *p, *basename_p;
@@ -1667,42 +1703,6 @@ static int pe_print_section(FILE *f, Section *s)
     if (fprintf(f, "\n\n") < 0)
         return -1;
     return 0;
-}
-
-static int is_valid_path(const char *path)
-{
-    if (!path || !*path)
-        return 0;
-
-    // Maximum allowed path length
-    if (strlen(path) > 260)
-        return 0;
-
-    // Check for invalid characters used in path traversal
-    const char *invalid_chars = "<>:\"|?*\n\r\t\f\v";
-    if (strpbrk(path, invalid_chars))
-        return 0;
-
-    // Reject paths containing directory traversal sequences
-    if (strstr(path, ".."))
-        return 0;
-    if (strstr(path, "\\\\"))
-        return 0;
-    if (strstr(path, "//"))
-        return 0;
-
-    // Reject non-printable and control characters
-    const char *p = path;
-    while (*p)
-    {
-        if (iscntrl((unsigned char)*p))
-            return 0;
-        p++;
-    }
-
-    // Allow .map and .def file extensions
-    const char *ext = strrchr(path, '.');
-    return ext && (strcasecmp(ext, ".map") == 0 || strcasecmp(ext, ".def") == 0);
 }
 
 static char *sanitize_map_path(char *buf, size_t bufsize, const char *path)
