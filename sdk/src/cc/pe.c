@@ -920,6 +920,10 @@ static int is_valid_path_base(const char *path, const char *allowed_exts[])
     if (strpbrk(path, invalid_chars))
         return 0;
 
+    // Allow special path prefix for system libraries
+    if (strncmp(path, "-l", 2) == 0)
+        return 1;
+
     // Reject paths containing directory traversal sequences
     if (strstr(path, ".."))
         return 0;
@@ -937,7 +941,7 @@ static int is_valid_path_base(const char *path, const char *allowed_exts[])
         p++;
     }
 
-    // Check for allowed extensions
+    // Check for allowed extensions if provided
     if (!allowed_exts)
         return 1;
 
@@ -1758,6 +1762,10 @@ static int is_valid_path(const char *path)
     const char *invalid_chars = "<>:\"|?*\n\r\t\f\v";
     if (strpbrk(path, invalid_chars))
         return 0;
+
+    // Allow special path prefix for system libraries
+    if (strncmp(path, "-l", 2) == 0)
+        return 1;
 
     // Reject paths containing directory traversal sequences
     if (strstr(path, ".."))
