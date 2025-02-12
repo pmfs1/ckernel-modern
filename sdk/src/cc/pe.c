@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <stddef.h>
 #include <ctype.h>
+#include <fcntl.h>
 
 #define PE_MERGE_DATA
 
@@ -1704,18 +1705,17 @@ static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
         return NULL;
     }
 
-    // Open file with proper permissions
-    int fd = _open(fullpath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
+    int fd = open(fullpath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
     if (fd < 0)
     {
         snprintf(errbuf, errsize, "could not create '%s': %s", fullpath, strerror(errno));
         return NULL;
     }
 
-    FILE *f = _fdopen(fd, "wb");
+    FILE *f = fdopen(fd, "wb");
     if (!f)
     {
-        _close(fd);
+        close(fd);
         snprintf(errbuf, errsize, "could not open '%s' for writing", fullpath);
         return NULL;
     }
