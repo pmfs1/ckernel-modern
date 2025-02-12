@@ -1631,9 +1631,9 @@ static int is_valid_path(const char *path)
         p++;
     }
 
-    // Allow only .map file extensions
+    // Allow .map and .def file extensions
     const char *ext = strrchr(path, '.');
-    return ext && strcasecmp(ext, ".map") == 0;
+    return ext && (strcasecmp(ext, ".map") == 0 || strcasecmp(ext, ".def") == 0);
 }
 
 static char *sanitize_map_path(char *buf, size_t bufsize, const char *path)
