@@ -905,6 +905,64 @@ static int sym_cmp(const void *va, const void *vb)
     return strcmp(ca, cb);
 }
 
+static char *sanitize_def_path(char *buf, size_t bufsize, const char *path)
+{
+    const char *p, *basename_p;
+    char sanitized[260];
+    size_t len, remaining;
+    char *dst;
+    const char *src;
+
+    if (!path || !buf || bufsize == 0)
+        return NULL;
+
+    // Get basename of the path - use last component after / or \
+    basename_p = path;
+    p = path;
+    while (*p)
+    {
+        if (*p == '/' || *p == '\\')
+            basename_p = p + 1;
+        p++;
+    }
+
+    // Start with current directory
+    if (getcwd(buf, bufsize) == NULL)
+        return NULL;
+
+    // Add path separator if needed
+    len = strlen(buf);
+    if (len > 0 && len < bufsize - 1 && buf[len - 1] != '/' && buf[len - 1] != '\\')
+    {
+        buf[len++] = '\\';
+        buf[len] = '\0';
+    }
+
+    // Create sanitized filename with .def extension
+    snprintf(sanitized, sizeof(sanitized), "%s.def", basename_p);
+
+    // Filter allowed characters and validate length
+    src = sanitized;
+    dst = buf + len;
+    remaining = bufsize - len;
+
+    while (*src && --remaining > 0)
+    {
+        char c = *src++;
+        if (c >= 'a' && c <= 'z' ||
+            c >= 'A' && c <= 'Z' ||
+            c >= '0' && c <= '9' ||
+            c == '.' || c == '-' || c == '_')
+        {
+            *dst++ = c;
+        }
+    }
+    *dst = '\0';
+
+    // Validate resulting path
+    return (is_valid_path(buf)) ? buf : NULL;
+}
+
 static void pe_build_exports(struct pe_info *pe)
 {
     Elf32_Sym *sym;
@@ -970,27 +1028,38 @@ static void pe_build_exports(struct pe_info *pe)
 
     if (pe->def != NULL)
     {
-        // Write exports to .def file
-        int fd = open(pe->def, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
+        char fullpath[1024];
+
+        // Sanitize and validate def file path
+        if (!sanitize_def_path(fullpath, sizeof(fullpath), pe->def))
+        {
+            error_noabort("invalid def file path '%s'", pe->def);
+            cc_free(sorted);
+            return;
+        }
+
+        int fd = open(fullpath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IWUSR | S_IRUSR);
         if (fd < 0)
         {
-            error_noabort("could not create '%s': %s", pe->def, strerror(errno));
+            error_noabort("could not create '%s': %s", fullpath, strerror(errno));
+            cc_free(sorted);
+            return;
+        }
+
+        op = fdopen(fd, "w");
+        if (op == NULL)
+        {
+            close(fd);
+            error_noabort("could not create '%s': %s", fullpath, strerror(errno));
+            cc_free(sorted);
+            return;
         }
         else
         {
-            op = fdopen(fd, "w");
-            if (op == NULL)
+            fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
+            if (verbose)
             {
-                close(fd);
-                error_noabort("could not create '%s': %s", pe->def, strerror(errno));
-            }
-            else
-            {
-                fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
-                if (verbose)
-                {
-                    printf("<- %s (%d symbols)\n", buf, sym_count);
-                }
+                printf("<- %s (%d symbols)\n", buf, sym_count);
             }
         }
     }
