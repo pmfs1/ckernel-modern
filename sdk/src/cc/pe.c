@@ -905,6 +905,236 @@ static int sym_cmp(const void *va, const void *vb)
     return strcmp(ca, cb);
 }
 
+// Helper functions for path validation and sanitization
+static int is_valid_file_ext(const char *path, const char *ext)
+{
+    const char *file_ext = strrchr(path, '.');
+    return file_ext && strcasecmp(file_ext, ext) == 0;
+}
+
+static int is_valid_path_base(const char *path, const char *allowed_exts[])
+{
+    if (!path || !*path)
+        return 0;
+
+    // Maximum allowed path length
+    if (strlen(path) > 260)
+        return 0;
+
+    // Check for invalid characters used in path traversal
+    const char *invalid_chars = "<>:\"|?*\n\r\t\f\v";
+    if (strpbrk(path, invalid_chars))
+        return 0;
+
+    // Reject paths containing directory traversal sequences
+    if (strstr(path, ".."))
+        return 0;
+    if (strstr(path, "\\\\"))
+        return 0;
+    if (strstr(path, "//"))
+        return 0;
+
+    // Reject non-printable and control characters
+    const char *p = path;
+    while (*p)
+    {
+        if (iscntrl((unsigned char)*p))
+            return 0;
+        p++;
+    }
+
+    // Check for allowed extensions
+    if (!allowed_exts)
+        return 1;
+
+    const char *ext = strrchr(path, '.');
+    if (!ext)
+        return 0;
+
+    for (const char **allowed = allowed_exts; *allowed; allowed++)
+    {
+        if (strcasecmp(ext, *allowed) == 0)
+            return 1;
+    }
+
+    return 0;
+}
+
+static char *sanitize_path_base(char *buf, size_t bufsize, const char *path, const char *ext)
+{
+    const char *p, *basename_p;
+    char sanitized[260];
+    size_t len, remaining;
+    char *dst;
+    const char *src;
+
+    if (!path || !buf || bufsize == 0)
+        return NULL;
+
+    // Get basename of the path - use last component after / or \
+    basename_p = path;
+    p = path;
+    while (*p)
+    {
+        if (*p == '/' || *p == '\\')
+            basename_p = p + 1;
+        p++;
+    }
+
+    // Start with current directory
+    if (getcwd(buf, bufsize) == NULL)
+        return NULL;
+
+    // Add path separator if needed
+    len = strlen(buf);
+    if (len > 0 && len < bufsize - 1 && buf[len - 1] != '/' && buf[len - 1] != '\\')
+    {
+        buf[len++] = '\\';
+        buf[len] = '\0';
+    }
+
+    // Create sanitized filename with extension
+    snprintf(sanitized, sizeof(sanitized), "%s%s", basename_p, ext);
+
+    // Filter allowed characters and validate length
+    src = sanitized;
+    dst = buf + len;
+    remaining = bufsize - len;
+
+    while (*src && --remaining > 0)
+    {
+        char c = *src++;
+        if (c >= 'a' && c <= 'z' ||
+            c >= 'A' && c <= 'Z' ||
+            c >= '0' && c <= '9' ||
+            c == '.' || c == '-' || c == '_')
+        {
+            *dst++ = c;
+        }
+    }
+    *dst = '\0';
+
+    // Return path if valid
+    const char *valid_exts[] = {ext, NULL};
+    return is_valid_path_base(buf, valid_exts) ? buf : NULL;
+}
+
+// Previous functions replaced with calls to base validators
+static int is_valid_def_path(const char *path)
+{
+    const char *valid_exts[] = {".def", NULL};
+    return is_valid_path_base(path, valid_exts);
+}
+
+static char *sanitize_def_path(char *buf, size_t bufsize, const char *path)
+{
+    return sanitize_path_base(buf, bufsize, path, ".def");
+}
+
+static int is_valid_map_path(const char *path)
+{
+    const char *valid_exts[] = {".map", NULL};
+    return is_valid_path_base(path, valid_exts);
+}
+
+static char *sanitize_map_path(char *buf, size_t bufsize, const char *path)
+{
+    return sanitize_path_base(buf, bufsize, path, ".map");
+}
+
+static int is_valid_def_path(const char *path)
+{
+    const char *valid_exts[] = {".def", NULL};
+    return is_valid_path_base(path, valid_exts);
+}
+
+static char *sanitize_def_path(char *buf, size_t bufsize, const char *path)
+{
+    const char *p, *basename_p;
+    char sanitized[260];
+    size_t len, remaining;
+    char *dst;
+    const char *src;
+
+    if (!path || !buf || bufsize == 0)
+        return NULL;
+
+    // Get basename of the path - use last component after / or \
+    basename_p = path;
+    p = path;
+    while (*p)
+    {
+        if (*p == '/' || *p == '\\')
+            basename_p = p + 1;
+        p++;
+    }
+
+    // Start with current directory
+    if (getcwd(buf, bufsize) == NULL)
+        return NULL;
+
+    // Add path separator if needed
+    len = strlen(buf);
+    if (len > 0 && len < bufsize - 1 && buf[len - 1] != '/' && buf[len - 1] != '\\')
+    {
+        buf[len++] = '\\';
+        buf[len] = '\0';
+    }
+
+    // Create sanitized filename with .def extension
+    snprintf(sanitized, sizeof(sanitized), "%s.def", basename_p);
+
+    // Filter allowed characters and validate length
+    src = sanitized;
+    dst = buf + len;
+    remaining = bufsize - len;
+
+    while (*src && --remaining > 0)
+    {
+        char c = *src++;
+        if (c >= 'a' && c <= 'z' ||
+            c >= 'A' && c <= 'Z' ||
+            c >= '0' && c <= '9' ||
+            c == '.' || c == '-' || c == '_')
+        {
+            *dst++ = c;
+        }
+    }
+    *dst = '\0';
+
+    // Validate resulting path
+    return (is_valid_def_path(buf)) ? buf : NULL;
+}
+
+static FILE *open_def_file(const char *fname, char *errbuf, size_t errsize)
+{
+    char fullpath[1024];
+
+    // Sanitize path and convert to absolute path
+    if (!sanitize_def_path(fullpath, sizeof(fullpath), fname))
+    {
+        snprintf(errbuf, errsize, "invalid .def filename '%s'", fname);
+        return NULL;
+    }
+
+    int fd = open(fullpath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IRUSR | S_IWUSR);
+    if (fd < 0)
+    {
+        snprintf(errbuf, errsize, "could not create '%s': %s", fullpath, strerror(errno));
+        return NULL;
+    }
+
+    FILE *f = fdopen(fd, "wb");
+    if (!f)
+    {
+        close(fd);
+        snprintf(errbuf, errsize, "could not open '%s' for writing", fullpath);
+        return NULL;
+    }
+
+    return f;
+}
+
 static void pe_build_exports(struct pe_info *pe)
 {
     Elf32_Sym *sym;
@@ -971,26 +1201,18 @@ static void pe_build_exports(struct pe_info *pe)
     if (pe->def != NULL)
     {
         // Write exports to .def file
-        int fd = open(pe->def, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
-        if (fd < 0)
+        char errbuf[256];
+        op = open_def_file(pe->def, errbuf, sizeof(errbuf));
+        if (!op)
         {
-            error_noabort("could not create '%s': %s", pe->def, strerror(errno));
+            error_noabort("%s", errbuf);
         }
         else
         {
-            op = fdopen(fd, "w");
-            if (op == NULL)
+            fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
+            if (verbose)
             {
-                close(fd);
-                error_noabort("could not create '%s': %s", pe->def, strerror(errno));
-            }
-            else
-            {
-                fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
-                if (verbose)
-                {
-                    printf("<- %s (%d symbols)\n", buf, sym_count);
-                }
+                printf("<- %s (%d symbols)\n", buf, sym_count);
             }
         }
     }
@@ -1511,12 +1733,6 @@ static int pe_print_section(FILE *f, Section *s)
             field_names = fields2; // Use renamed variable
             n = 58;
         }
-
-        for (i = 0; i < n; ++i)
-            if (fprintf(f, "-") < 0)
-                return -1;
-        if (fprintf(f, "\n") < 0)
-            return -1;
 
         for (i = 0; field_names[i]; ++i) // Use renamed variable
             if (fprintf(f, "%s", field_names[i]) < 0)
