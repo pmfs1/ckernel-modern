@@ -967,7 +967,6 @@ static int is_map_def_path(const char *path)
            strcasecmp(ext, ".def") == 0;
 }
 
-// Update sanitize_map_path to use is_map_def_path
 static char *sanitize_map_path(char *buf, size_t bufsize, const char *path)
 {
     const char *p, *basename_p;
@@ -1788,64 +1787,6 @@ static int pe_print_section(FILE *f, Section *s)
     if (fprintf(f, "\n\n") < 0)
         return -1;
     return 0;
-}
-
-static char *sanitize_map_path(char *buf, size_t bufsize, const char *path)
-{
-    const char *p, *basename_p;
-    char sanitized[260];
-    size_t len, remaining;
-    char *dst;
-    const char *src;
-
-    if (!path || !buf || bufsize == 0)
-        return NULL;
-
-    // Get basename of the path - use last component after / or \
-    basename_p = path;
-    p = path;
-    while (*p)
-    {
-        if (*p == '/' || *p == '\\')
-            basename_p = p + 1;
-        p++;
-    }
-
-    // Start with current directory
-    if (getcwd(buf, bufsize) == NULL)
-        return NULL;
-
-    // Add path separator if needed
-    len = strlen(buf);
-    if (len > 0 && len < bufsize - 1 && buf[len - 1] != '/' && buf[len - 1] != '\\')
-    {
-        buf[len++] = '\\';
-        buf[len] = '\0';
-    }
-
-    // Create sanitized filename with .map extension
-    snprintf(sanitized, sizeof(sanitized), "%s.map", basename_p);
-
-    // Filter allowed characters and validate length
-    src = sanitized;
-    dst = buf + len;
-    remaining = bufsize - len;
-
-    while (*src && --remaining > 0)
-    {
-        char c = *src++;
-        if (c >= 'a' && c <= 'z' ||
-            c >= 'A' && c <= 'Z' ||
-            c >= '0' && c <= '9' ||
-            c == '.' || c == '-' || c == '_')
-        {
-            *dst++ = c;
-        }
-    }
-    *dst = '\0';
-
-    // Validate resulting path
-    return (is_valid_path(buf)) ? buf : NULL;
 }
 
 static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
