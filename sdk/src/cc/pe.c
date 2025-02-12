@@ -936,10 +936,14 @@ static int is_valid_path(const char *path)
         p++;
     }
 
-    // Get file extension
+    // For -l library flags, accept names without extension
+    if (path[0] == 'k' && path[1] == 'r' && path[2] == 'n' && path[3] == 'l' && path[4] == '\0')
+        return 1;
+
+    // Get file extension if one exists
     const char *ext = strrchr(path, '.');
     if (!ext)
-        return 0;
+        return 1; // Allow paths without extensions for library lookups
 
     // Allow standard library extensions and supported file types
     return strcasecmp(ext, ".map") == 0 ||
