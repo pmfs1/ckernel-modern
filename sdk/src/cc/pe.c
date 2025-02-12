@@ -909,6 +909,13 @@ static int is_valid_path(const char *path)
 {
     if (!path || !*path)
         return 0;
+    
+    // Special case for runtime libraries like "krnl", "c", "os"
+    if (strcmp(path, "krnl") == 0 ||
+        strcmp(path, "c") == 0 ||
+        strcmp(path, "os") == 0) {
+        return 1;
+    }
 
     // Maximum allowed path length
     if (strlen(path) > 260)
@@ -923,32 +930,21 @@ static int is_valid_path(const char *path)
     if (strstr(path, ".."))
         return 0;
     if (strstr(path, "\\\\"))
-        return 0;
+        return 0; 
     if (strstr(path, "//"))
         return 0;
 
-    // Reject non-printable and control characters
-    const char *p = path;
-    while (*p)
-    {
-        if (iscntrl((unsigned char)*p))
-            return 0;
-        p++;
-    }
-
-    // For -l library flags, accept names without extension
-    if (path[0] == 'k' && path[1] == 'r' && path[2] == 'n' && path[3] == 'l' && path[4] == '\0')
-        return 1;
-
     // Get file extension if one exists
     const char *ext = strrchr(path, '.');
-    if (!ext)
-        return 1; // Allow paths without extensions for library lookups
+    if (!ext) {
+        // Allow paths without extensions for finding libraries
+        return 1;
+    }
 
     // Allow standard library extensions and supported file types
     return strcasecmp(ext, ".map") == 0 ||
            strcasecmp(ext, ".def") == 0 ||
-           strcasecmp(ext, ".lib") == 0 ||
+           strcasecmp(ext, ".lib") == 0 || 
            strcasecmp(ext, ".a") == 0 ||
            strcasecmp(ext, ".o") == 0 ||
            strcasecmp(ext, ".obj") == 0 ||
