@@ -905,150 +905,6 @@ static int sym_cmp(const void *va, const void *vb)
     return strcmp(ca, cb);
 }
 
-static int is_library_name(const char *name)
-{
-    if (!name || !*name)
-        return 0;
-    return strlen(name) < 32 && !strchr(name, '/') && !strchr(name, '\\');
-}
-
-static int is_valid_path(const char *path)
-{
-    // Allow all -l library arguments without restriction
-    return 1;
-}
-
-static int is_map_def_path(const char *path)
-{
-    // Special validation just for .map and .def files
-    if (!path || !*path)
-        return 0;
-
-    // Get file extension
-    const char *ext = strrchr(path, '.');
-    if (!ext)
-        return 0;
-
-    return strcasecmp(ext, ".map") == 0 ||
-           strcasecmp(ext, ".def") == 0;
-}
-
-static char *sanitize_map_path(char *buf, size_t bufsize, const char *path)
-{
-    const char *p, *basename_p;
-    char sanitized[260];
-    size_t len, remaining;
-    char *dst;
-    const char *src;
-
-    if (!path || !buf || bufsize == 0)
-        return NULL;
-
-    // Get basename of the path - use last component after / or \
-    basename_p = path;
-    p = path;
-    while (*p)
-    {
-        if (*p == '/' || *p == '\\')
-            basename_p = p + 1;
-        p++;
-    }
-
-    // Start with current directory
-    if (getcwd(buf, bufsize) == NULL)
-        return NULL;
-
-    // Add path separator if needed
-    len = strlen(buf);
-    if (len > 0 && len < bufsize - 1 && buf[len - 1] != '/' && buf[len - 1] != '\\')
-    {
-        buf[len++] = '\\';
-        buf[len] = '\0';
-    }
-
-    // Create sanitized filename with .map extension
-    snprintf(sanitized, sizeof(sanitized), "%s.map", basename_p);
-
-    // Filter allowed characters and validate length
-    src = sanitized;
-    dst = buf + len;
-    remaining = bufsize - len;
-
-    while (*src && --remaining > 0)
-    {
-        char c = *src++;
-        if (c >= 'a' && c <= 'z' ||
-            c >= 'A' && c <= 'Z' ||
-            c >= '0' && c <= '9' ||
-            c == '.' || c == '-' || c == '_')
-        {
-            *dst++ = c;
-        }
-    }
-    *dst = '\0';
-
-    // Validate resulting path
-    return (is_map_def_path(buf)) ? buf : NULL;
-}
-
-static char *sanitize_def_path(char *buf, size_t bufsize, const char *path)
-{
-    const char *p, *basename_p;
-    char sanitized[260];
-    size_t len, remaining;
-    char *dst;
-    const char *src;
-
-    if (!path || !buf || bufsize == 0)
-        return NULL;
-
-    // Get basename of the path - use last component after / or \
-    basename_p = path;
-    p = path;
-    while (*p)
-    {
-        if (*p == '/' || *p == '\\')
-            basename_p = p + 1;
-        p++;
-    }
-
-    // Start with current directory
-    if (getcwd(buf, bufsize) == NULL)
-        return NULL;
-
-    // Add path separator if needed
-    len = strlen(buf);
-    if (len > 0 && len < bufsize - 1 && buf[len - 1] != '/' && buf[len - 1] != '\\')
-    {
-        buf[len++] = '\\';
-        buf[len] = '\0';
-    }
-
-    // Create sanitized filename with .def extension
-    snprintf(sanitized, sizeof(sanitized), "%s.def", basename_p);
-
-    // Filter allowed characters and validate length
-    src = sanitized;
-    dst = buf + len;
-    remaining = bufsize - len;
-
-    while (*src && --remaining > 0)
-    {
-        char c = *src++;
-        if (c >= 'a' && c <= 'z' ||
-            c >= 'A' && c <= 'Z' ||
-            c >= '0' && c <= '9' ||
-            c == '.' || c == '-' || c == '_')
-        {
-            *dst++ = c;
-        }
-    }
-    *dst = '\0';
-
-    // Validate resulting path
-    return (is_map_def_path(buf)) ? buf : NULL;
-}
-
 static void pe_build_exports(struct pe_info *pe)
 {
     Elf32_Sym *sym;
@@ -1114,38 +970,27 @@ static void pe_build_exports(struct pe_info *pe)
 
     if (pe->def != NULL)
     {
-        char fullpath[1024];
-
-        // Sanitize and validate def file path
-        if (!sanitize_def_path(fullpath, sizeof(fullpath), pe->def))
-        {
-            error_noabort("invalid def file path '%s'", pe->def);
-            cc_free(sorted);
-            return;
-        }
-
-        int fd = open(fullpath, O_WRONLY | O_CREAT | O_TRUNC | O_BINARY, S_IWUSR | S_IRUSR);
+        // Write exports to .def file
+        int fd = open(pe->def, O_WRONLY | O_CREAT, S_IWUSR | S_IRUSR);
         if (fd < 0)
         {
-            error_noabort("could not create '%s': %s", fullpath, strerror(errno));
-            cc_free(sorted);
-            return;
-        }
-
-        op = fdopen(fd, "w");
-        if (op == NULL)
-        {
-            close(fd);
-            error_noabort("could not create '%s': %s", fullpath, strerror(errno));
-            cc_free(sorted);
-            return;
+            error_noabort("could not create '%s': %s", pe->def, strerror(errno));
         }
         else
         {
-            fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
-            if (verbose)
+            op = fdopen(fd, "w");
+            if (op == NULL)
             {
-                printf("<- %s (%d symbols)\n", buf, sym_count);
+                close(fd);
+                error_noabort("could not create '%s': %s", pe->def, strerror(errno));
+            }
+            else
+            {
+                fprintf(op, "LIBRARY %s\n\nEXPORTS\n", dllname);
+                if (verbose)
+                {
+                    printf("<- %s (%d symbols)\n", buf, sym_count);
+                }
             }
         }
     }
@@ -1667,6 +1512,12 @@ static int pe_print_section(FILE *f, Section *s)
             n = 58;
         }
 
+        for (i = 0; i < n; ++i)
+            if (fprintf(f, "-") < 0)
+                return -1;
+        if (fprintf(f, "\n") < 0)
+            return -1;
+
         for (i = 0; field_names[i]; ++i) // Use renamed variable
             if (fprintf(f, "%s", field_names[i]) < 0)
                 return -1;
@@ -1747,6 +1598,100 @@ static int pe_print_section(FILE *f, Section *s)
     if (fprintf(f, "\n\n") < 0)
         return -1;
     return 0;
+}
+
+static int is_valid_path(const char *path)
+{
+    if (!path || !*path)
+        return 0;
+
+    // Maximum allowed path length
+    if (strlen(path) > 260)
+        return 0;
+
+    // Check for invalid characters used in path traversal
+    const char *invalid_chars = "<>:\"|?*\n\r\t\f\v";
+    if (strpbrk(path, invalid_chars))
+        return 0;
+
+    // Reject paths containing directory traversal sequences
+    if (strstr(path, ".."))
+        return 0;
+    if (strstr(path, "\\\\"))
+        return 0;
+    if (strstr(path, "//"))
+        return 0;
+
+    // Reject non-printable and control characters
+    const char *p = path;
+    while (*p)
+    {
+        if (iscntrl((unsigned char)*p))
+            return 0;
+        p++;
+    }
+
+    // Allow .map and .def file extensions
+    const char *ext = strrchr(path, '.');
+    return ext && (strcasecmp(ext, ".map") == 0 || strcasecmp(ext, ".def") == 0);
+}
+
+static char *sanitize_map_path(char *buf, size_t bufsize, const char *path)
+{
+    const char *p, *basename_p;
+    char sanitized[260];
+    size_t len, remaining;
+    char *dst;
+    const char *src;
+
+    if (!path || !buf || bufsize == 0)
+        return NULL;
+
+    // Get basename of the path - use last component after / or \
+    basename_p = path;
+    p = path;
+    while (*p)
+    {
+        if (*p == '/' || *p == '\\')
+            basename_p = p + 1;
+        p++;
+    }
+
+    // Start with current directory
+    if (getcwd(buf, bufsize) == NULL)
+        return NULL;
+
+    // Add path separator if needed
+    len = strlen(buf);
+    if (len > 0 && len < bufsize - 1 && buf[len - 1] != '/' && buf[len - 1] != '\\')
+    {
+        buf[len++] = '\\';
+        buf[len] = '\0';
+    }
+
+    // Create sanitized filename with .map extension
+    snprintf(sanitized, sizeof(sanitized), "%s.map", basename_p);
+
+    // Filter allowed characters and validate length
+    src = sanitized;
+    dst = buf + len;
+    remaining = bufsize - len;
+
+    while (*src && --remaining > 0)
+    {
+        char c = *src++;
+        if (c >= 'a' && c <= 'z' ||
+            c >= 'A' && c <= 'Z' ||
+            c >= '0' && c <= '9' ||
+            c == '.' || c == '-' || c == '_')
+        {
+            *dst++ = c;
+        }
+    }
+    *dst = '\0';
+
+    // Validate resulting path
+    return (is_valid_path(buf)) ? buf : NULL;
 }
 
 static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
