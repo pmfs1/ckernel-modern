@@ -936,9 +936,94 @@ static int is_valid_path(const char *path)
         p++;
     }
 
-    // Allow .map and .def file extensions
+    // Get file extension
     const char *ext = strrchr(path, '.');
-    return ext && (strcasecmp(ext, ".map") == 0 || strcasecmp(ext, ".def") == 0);
+    if (!ext)
+        return 0;
+
+    // Allow standard library extensions and supported file types
+    return strcasecmp(ext, ".map") == 0 ||
+           strcasecmp(ext, ".def") == 0 ||
+           strcasecmp(ext, ".lib") == 0 ||
+           strcasecmp(ext, ".a") == 0 ||
+           strcasecmp(ext, ".o") == 0 ||
+           strcasecmp(ext, ".obj") == 0 ||
+           strcasecmp(ext, ".dll") == 0 ||
+           strcasecmp(ext, ".sys") == 0;
+}
+
+static int is_map_def_path(const char *path)
+{
+    // Special validation just for .map and .def files
+    if (!path || !*path)
+        return 0;
+
+    // Get file extension
+    const char *ext = strrchr(path, '.');
+    if (!ext)
+        return 0;
+
+    return strcasecmp(ext, ".map") == 0 ||
+           strcasecmp(ext, ".def") == 0;
+}
+
+// Update sanitize_map_path to use is_map_def_path
+static char *sanitize_map_path(char *buf, size_t bufsize, const char *path)
+{
+    const char *p, *basename_p;
+    char sanitized[260];
+    size_t len, remaining;
+    char *dst;
+    const char *src;
+
+    if (!path || !buf || bufsize == 0)
+        return NULL;
+
+    // Get basename of the path - use last component after / or \
+    basename_p = path;
+    p = path;
+    while (*p)
+    {
+        if (*p == '/' || *p == '\\')
+            basename_p = p + 1;
+        p++;
+    }
+
+    // Start with current directory
+    if (getcwd(buf, bufsize) == NULL)
+        return NULL;
+
+    // Add path separator if needed
+    len = strlen(buf);
+    if (len > 0 && len < bufsize - 1 && buf[len - 1] != '/' && buf[len - 1] != '\\')
+    {
+        buf[len++] = '\\';
+        buf[len] = '\0';
+    }
+
+    // Create sanitized filename with .map extension
+    snprintf(sanitized, sizeof(sanitized), "%s.map", basename_p);
+
+    // Filter allowed characters and validate length
+    src = sanitized;
+    dst = buf + len;
+    remaining = bufsize - len;
+
+    while (*src && --remaining > 0)
+    {
+        char c = *src++;
+        if (c >= 'a' && c <= 'z' ||
+            c >= 'A' && c <= 'Z' ||
+            c >= '0' && c <= '9' ||
+            c == '.' || c == '-' || c == '_')
+        {
+            *dst++ = c;
+        }
+    }
+    *dst = '\0';
+
+    // Validate resulting path
+    return (is_map_def_path(buf)) ? buf : NULL;
 }
 
 static char *sanitize_def_path(char *buf, size_t bufsize, const char *path)
@@ -996,7 +1081,7 @@ static char *sanitize_def_path(char *buf, size_t bufsize, const char *path)
     *dst = '\0';
 
     // Validate resulting path
-    return (is_valid_path(buf)) ? buf : NULL;
+    return (is_map_def_path(buf)) ? buf : NULL;
 }
 
 static void pe_build_exports(struct pe_info *pe)
