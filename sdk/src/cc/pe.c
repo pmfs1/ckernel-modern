@@ -908,16 +908,17 @@ static int sym_cmp(const void *va, const void *vb)
 // Helper functions for path validation and sanitization
 static int is_valid_path_base(const char *path, const char *allowed_exts[])
 {
+    // Special handling for -l library paths - always allow these first
+    if (path && strncmp(path, "-l", 2) == 0)
+        return 1;
+
+    // For normal paths, continue with validation
     if (!path || !*path)
         return 0;
 
     // Maximum allowed path length
     if (strlen(path) > 260)
         return 0;
-
-    // Allow special path prefix for system libraries
-    if (strncmp(path, "-l", 2) == 0)
-        return 1;
 
     // Check for invalid characters used in path traversal
     const char *invalid_chars = "<>:\"|?*\n\r\t\f\v";
@@ -941,13 +942,14 @@ static int is_valid_path_base(const char *path, const char *allowed_exts[])
         p++;
     }
 
-    // Check for allowed extensions if provided
+    // If no extensions specified, accept the path
     if (!allowed_exts)
         return 1;
 
+    // Check for allowed extensions
     const char *ext = strrchr(path, '.');
     if (!ext)
-        return 0;
+        return 1; // Allow paths without extensions when no specific extensions required
 
     for (const char **allowed = allowed_exts; *allowed; allowed++)
     {
@@ -1751,42 +1753,8 @@ static int pe_print_section(FILE *f, Section *s)
 
 static int is_valid_path(const char *path)
 {
-    if (!path || !*path)
-        return 0;
-
-    // Maximum allowed path length
-    if (strlen(path) > 260)
-        return 0;
-
-    // Allow special path prefix for system libraries
-    if (strncmp(path, "-l", 2) == 0)
-        return 1;
-
-    // Check for invalid characters used in path traversal
-    const char *invalid_chars = "<>:\"|?*\n\r\t\f\v";
-    if (strpbrk(path, invalid_chars))
-        return 0;
-
-    // Reject paths containing directory traversal sequences
-    if (strstr(path, ".."))
-        return 0;
-    if (strstr(path, "\\\\"))
-        return 0;
-    if (strstr(path, "//"))
-        return 0;
-
-    // Reject non-printable and control characters
-    const char *p = path;
-    while (*p)
-    {
-        if (iscntrl((unsigned char)*p))
-            return 0;
-        p++;
-    }
-
-    // Allow .map and .def file extensions
-    const char *ext = strrchr(path, '.');
-    return ext && (strcasecmp(ext, ".map") == 0 || strcasecmp(ext, ".def") == 0);
+    const char *valid_exts[] = {".def", ".map", NULL};
+    return is_valid_path_base(path, valid_exts);
 }
 
 static FILE *open_map_file(const char *fname, char *errbuf, size_t errsize)
