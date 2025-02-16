@@ -3932,31 +3932,63 @@ int cc_add_library_path(CCState *s, const char *pathname)
     return 0;
 }
 
-// Find and load a dll. Return non zero if not found
+// Find and load a dll. Return non zero if not found 
 // TODO: add '-rpath' option support?
-int cc_add_dll(CCState *s, const char *filename, int flags)
+int cc_add_dll(CCState *s, const char *filename, int flags) 
 {
-    char *fullpath;
+    char fullpath[260];
     int i, ret = -1;
-    size_t path_len;
+    const char *libname;
+    
+    // Special handling for -l style library paths
+    if (strncmp(filename, "-l", 2) == 0) {
+        libname = filename + 2;
+        for (i = 0; i < s->nb_library_paths; i++) {
+            // Try lib<n>.def first for DLLs
+            snprintf(fullpath, sizeof(fullpath), "%s/lib%s.def", s->library_paths[i], libname);
+            ret = cc_add_file_ex(s, fullpath, flags & ~AFF_PRINT_ERROR);
+            if (ret == 0) return 0;
 
-    for (i = 0; i < s->nb_library_paths; i++)
-    {
-        path_len = strlen(s->library_paths[i]) + strlen(filename) + 2; // +2 for '/' and null terminator
-        fullpath = cc_malloc(path_len);
-        if (!fullpath)
-            continue;
+            // Try <n>.def second
+            snprintf(fullpath, sizeof(fullpath), "%s/%s.def", s->library_paths[i], libname);
+            ret = cc_add_file_ex(s, fullpath, flags & ~AFF_PRINT_ERROR);
+            if (ret == 0) return 0;
 
-        snprintf(fullpath, path_len, "%s/%s", s->library_paths[i], filename);
-        ret = cc_add_file_ex(s, fullpath, flags);
-        cc_free(fullpath);
-        if (ret == 0)
-            break;
+            // Try lib<n>.sys for kernel modules
+            snprintf(fullpath, sizeof(fullpath), "%s/lib%s.sys", s->library_paths[i], libname);
+            ret = cc_add_file_ex(s, fullpath, flags & ~AFF_PRINT_ERROR); 
+            if (ret == 0) return 0;
+
+            // Try <n>.sys for kernel modules
+            snprintf(fullpath, sizeof(fullpath), "%s/%s.sys", s->library_paths[i], libname);
+            ret = cc_add_file_ex(s, fullpath, flags & ~AFF_PRINT_ERROR);
+            if (ret == 0) return 0;
+
+            // Try lib<n>.a for static libraries
+            snprintf(fullpath, sizeof(fullpath), "%s/lib%s.a", s->library_paths[i], libname);
+            ret = cc_add_file_ex(s, fullpath, flags & ~AFF_PRINT_ERROR);
+            if (ret == 0) return 0;
+
+            // Try <n>.a last
+            snprintf(fullpath, sizeof(fullpath), "%s/%s.a", s->library_paths[i], libname);
+            ret = cc_add_file_ex(s, fullpath, flags & ~AFF_PRINT_ERROR);
+            if (ret == 0) return 0;
+        }
+        
+        if (flags & AFF_PRINT_ERROR)
+            error_noabort("library '%s' not found", libname);
+        return ret;
+    }
+
+    // Regular library path handling
+    for (i = 0; i < s->nb_library_paths; i++) {
+        snprintf(fullpath, sizeof(fullpath), "%s/%s", s->library_paths[i], filename);
+        ret = cc_add_file_ex(s, fullpath, flags & ~AFF_PRINT_ERROR);
+        if (ret == 0) return 0;
     }
     return ret;
 }
 
-// The library name is the same as the argument of the '-l' option
 int cc_add_library(CCState *s, const char *libraryname)
 {
     char *fullpath;
@@ -4035,6 +4067,7 @@ int cc_set_output_type(CCState *s, int output_type)
         put_stabs("", 0, 0, 0, 0);
     }
 
+    // Add library paths
     snprintf(buf, sizeof(buf), "%s/lib", cc_lib_path);
     cc_add_library_path(s, buf);
 
